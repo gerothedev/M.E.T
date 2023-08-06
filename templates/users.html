@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Users
+{% endblock %}
+
+{% block main %}
+
+    <div class="adduser">
+        <h3>Users</h3>
+        <div class="action-menu-wrapper">
+            <button type="button" class="btn btn-primary action-menu-button">
+                Action
+            </button>
+            <button type="button" class="btn btn-primary" id='confirmdel' data-bs-toggle='modal' data-bs-target='#delete-user-modal'>
+                Done
+            </button>
+            <ul class="action-menu" style="display: none;">
+                <li class="action-option"><button type="button" class="addbutton action-option-button" data-bs-toggle="modal" data-bs-target="#add-user-modal">Add User</button></li>
+                {% if not users %}
+                {% else %}
+                        {% if session.user_role == "Super Administrator" %}
+                            {% if user_deletion == 1 %}
+                                <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
+                            {% endif %}
+                        {% elif session.user_role == "Dept Administrator" %}
+                            {% if user_deletion == 2 %}
+                                <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
+                            {% endif %}
+                        {% elif session.user_role == "Administrator" %}
+                            {% if user_deletion == 3 %}
+                                <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
+                            {% endif %}
+                        {% endif %}
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal for adding user from users -->
+    <form action="/users" method="post">
+        <div class="modal fade" id="add-user-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addUserModalLabel">Add User</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% if session.user_role != "Administrator" and session.user_role != "User" %}
+                            <div class="mb-3">
+                                <label for="user_role" class="form-label">Select User Role</label>
+                                {% if session.user_role == "Super Administrator" %}
+                                    <select id="user_role" class="form-select w-auto" name="user_role">
+                                        <option disabled selected>User Role</option>
+                                        <option value="Dept Administrator">Dept. Administrator</option>
+                                        <option value="Administrator">Administrator</option>
+                                        <option value="User">User</option>
+                                    </select>
+                                {% elif session.user_role == "Dept Administrator" %}
+                                    <select id="user_role" class="form-select w-auto" name="user_role">
+                                        <option disabled selected>User Role</option>
+                                        <option value="Administrator">Administrator</option>
+                                        <option value="User">User</option>
+                                    </select>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input autocomplete="off" type="text" class="form-control" id="first_name" name="first_name" placeholder="First Name" aria-describedby="">
+                        </div>
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input autocomplete="off" type="text" class="form-control" id="last_name" name="last_name" placeholder="Last Name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input autocomplete="off" type="email" pattern=".+@.+." class="form-control" id="email" name="email" placeholder="Email@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Temporary Password</label>
+                            <input autocomplete="off" type="password" class="form-control" id="password" name="password" placeholder="Temporary Password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmation" class="form-label">Confirm Password</label>
+                            <input autocomplete="off" type="password" class="form-control" id="confirmation" name="confirmation" placeholder="Confirm Password">
+                        </div>
+                        <p id="nomatch" style="display: none;">Passwords do not match.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="mod-flexbox">
+                            <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal" id="cancelconfirmuser">Close</button>
+                            <button type="submit" class="btn btn-primary modal-footer-buttons" id="confirmuser">Add</button>
+                        </div>
+                        <div class="mod-flexbox">
+                            <p class="emptywarning">Fields cannot be empty.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% if not users %}
+        <h3 class="nodata">No data available.</h3>
+    {% else %}
+        <form action="/users" method="post">
+            <div class="tboundary">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-start">First Name</th>
+                            <th class="text-start">Last Name</th>
+                            <th class="text-end">Email</th>
+                            <th class="text-end">User Role</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tables">
+                        {% for user in users %}
+                            <tr>
+                                {% if session.user_role == "Super Administrator" %}
+                                    {% if user.role_id == 2 or user.role_id == 3 or user.role_id == 4 %}
+                                        <td class="text-start"><input type="checkbox" value="{{ user.email }}" class="deleteuser" name="deluser"> {{ user.first_name }}</td>
+                                    {% else %}
+                                        <td class="text-start">{{ user.first_name }}</td>
+                                    {% endif %}
+                                {% elif session.user_role == "Dept Administrator" %}
+                                    {% if user.role_id == 3 or user.role_id == 4 %}
+                                        <td class="text-start"><input type="checkbox" value="{{ user.email }}" class="deleteuser" name="deluser"> {{ user.first_name }}</td>
+                                    {% else %}
+                                        <td class="text-start">{{ user.first_name }}</td>
+                                    {% endif %}
+                                {% elif session.user_role == "Administrator" %}
+                                    {% if user.role_id == 4 %}
+                                        <td class="text-start"><input type="checkbox" value="{{ user.email }}" class="deleteuser" name="deluser"> {{ user.first_name }}</td>
+                                    {% else %}
+                                        <td class="text-start">{{ user.first_name }}</td>
+                                    {% endif %}
+                                {% endif %}
+                                <td class="text-start">{{ user.last_name }}</td>
+                                <td class="text-end">{{ user.email }}</td>
+                                <td class="text-end">{{ user.role_name }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <!-- Modal for deleting user from users -->
+                <div class="modal fade" id="delete-user-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="deleteUserModalLabel">Delete Item</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm Deletion?</label><br>
+                                    <div class="mod-flexbox">
+                                        <button id="closedel" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
+                                        <button id="completedel" type="submit" class="btn btn-primary modal-footer-buttons">Confirm</button>
+                                    </div>
+                                    <p class="emptyselection" style="display: none;">Please make a selection.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% endif %}
+
+    <nav class="pages" aria-label="Page navigation">
+    </nav>
+
+{% endblock %}
+
+{% block script %}
+
+    <script src="/static/app.js"></script>
+
+{% endblock %}

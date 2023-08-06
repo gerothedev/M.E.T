@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Apology
+{% endblock %}
+
+{% block main %}
+
+    <div  class="apology">
+        <h1>{{ top }}: BAD REQUEST</h1>
+        <h3>{{ bottom }}</h3>
+        <a href="{{ redirct_link }}">Return</a>
+    </div>
+
+{% endblock %}
+
+{% block script %}
+
+    <script src="/static/app.js"></script>
+
+{% endblock %}
+
+{% block mainstyle %}
+
+    main-center-style
+
+{% endblock %}

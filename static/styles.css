@@ -1,0 +1,779 @@
+html, body {
+  overflow: hidden;
+  height: 100%;
+}
+
+main {
+  overflow: hidden;
+  clear: both;
+}
+
+main div.tboundary, .mtboundary {
+  overflow: auto;
+  max-height: 766px;
+  clear: both;
+  margin-bottom: 10px;
+}
+
+main div.additem, main div.adduser, main div.replaceitem, main div.replaceditem, main div.missingitem, main div.offsiteitem, main div.userview, main div.inventory-archive, main div.uploaditem,.cell-content0 {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+main div.additem h3, main div.adduser h3, main div.replaceitem h3, main div.replaceditem h3, main div.missingitem h3, main div.offsiteitem h3, main div.userview h3, main div.inventory-archive h3, 
+main div.uploaditem h3 {
+  float: left;
+}
+
+.addbutton, .delbutton, .replacebutton, .replacedbutton, #see-replaced, #clear-filters {
+  float: right;
+}
+
+@media screen and (max-width: 768px) {
+  main div.additem, main div.adduser, main div.replaceitem, main div.missingitem, main div.offsiteitem, main div.userview, main div.inventory-archive, main div.uploaditem {
+    position: relative;
+    margin-bottom: 15px;
+  }
+  
+  main div.additem h3, main div.adduser h3, main div.replaceitem h3, main div.replaceditem h3, main div.missingitem h3, main div.offsiteitem h3, main div.userview h3, main div.inventory-archive h3,
+  main div.uploaditem h3 {
+    float: none;
+  }
+  
+  .addbutton, .delbutton, .replacebutton, .replacedbutton, #see-replaced, #clear-filters {
+    display: inline-block;
+    width: 100%;
+  }
+
+}
+
+section {
+  background-color: white;
+  overflow-y: auto;
+  flex: 1 0 0%;
+}
+
+table {
+  white-space: nowrap;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background-color: white;
+}
+
+nav.main-nav {
+  border-right: 1px solid #ededed;
+  background: #112e51;
+  flex: 0 0 200px;
+  flex-direction: column;
+  justify-content: center;
+  width: 197px;
+}
+
+nav.main-nav ul {
+  width: 100%;
+}
+
+nav.main-nav ul.logout {
+  width: 100%;
+  background: #112e51;
+}
+
+nav.main-nav ul.logout li a {
+  color: white;
+}
+
+nav.main-nav ul.logout li.logout a:hover {
+  text-decoration: underline;
+}
+
+nav.main-nav ul.navigation li a {
+  color: white;
+}
+
+nav.main-nav ul.navigation li a:hover {
+  background-color: white;
+  color: #112e51;
+}
+
+.wrapper {
+  display: flex;
+  height: 100%;
+}
+
+ul.navpages {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  list-style: none;
+}
+
+ul.navpages li button{
+  border: 1px solid #dee2e6;
+  background-color: transparent;
+  color: #0d6efd;
+  padding: 0.375rem 0.75rem;
+}
+
+ul.navpages li button:hover {
+  background-color: #f8f9fa;
+}
+
+ul.navpages li button:disabled {
+  background-color: #e9ecef;
+}
+
+ul.navpages li button.previous {
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+}
+
+ul.navpages li button.previous:disabled {
+  background-color: #e9ecef;
+}
+
+ul.navpages li button.next {
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+ul.navpages li button.next:disabled {
+  background-color: #e9ecef;
+}
+
+div#searchbar label {
+  display: block;
+}
+
+div#searchbar select {
+  display: inline-block;
+  width: 150px;
+}
+
+div#searchbar select#dselect,  div#searchbar select#rselect, div#searchbar input#firstname, div#searchbar input#lastname, 
+div#searchbar input,  div#searchbar select#statuses, div#searchbar select#action, div#searchbar select#off-site {
+  display: inline-block;
+  width: 100%;
+}
+
+div#searchbar button {
+  float: right;
+}
+
+div#searchbar div {
+  display: flex;
+  flex-direction: row;
+  column-gap: 10px;
+}
+
+@media screen and (max-width: 768px) {
+
+  nav.main-nav {
+    border-right: 1px solid #ededed;
+    background: #112e51;
+    flex: 0 0 12%;
+    flex-direction: column;
+    justify-content: center;
+    position: absolute;
+    height: 100%;
+    z-index: 3;
+    border: none;
+  }
+
+  div#searchbar select {
+    display: inline-block;
+    width: 100%;
+  }
+
+  div#searchbar div {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+  }
+}
+
+.hamburger {
+  width: 35px;
+  height: 5px;
+  background-color: #112e51;
+  margin: 6px 0;
+  border-radius: 0.375rem;
+}
+
+.hamburgerwrap {
+  float: left;
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: transparent;
+  z-index: 2;
+}
+
+.login {
+  width: 360px;
+  height: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: white;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 1rem 1rem 2rem 1rem;
+}
+
+.manage-password {
+  border-color: rgb(71, 71, 71);
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 0.375rem;
+  width: 360px;
+  height: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: white;
+  padding: 1rem;
+}
+
+.loginbody {
+  background-color: #112e51;
+}
+
+.statsummary {
+  width: 264px;
+}
+
+.replacedinventory, .replaceinventory, .missinginventory, .deleteuser, .deleteinventory, .archiveinventory, .unarchiveinventory, #clear-filters, #admin-ls, #admin-edit-ls, #admin-rn, 
+#admin-osls, .editinventory, #items-scanned, #item-count, #already-scanned {
+  display: none;
+}
+
+#items-scanned, #already-scanned {
+  margin-bottom: 1rem;
+}
+
+.replaced {
+  display: inline-block;
+}
+
+#confirmdel, #confirmreplaced, #confirmreplace, #confirmarchive, #confirmunarchive, #confirmmissing, #confirmedit {
+  display: none;
+}
+
+.addbutton, #see-replaced, .replacedbutton, .replacebutton {
+  margin-left: 10px;
+}
+
+#qrcodewrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.statusgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(min(199px,100%),1fr));
+  -moz-column-gap: 20px;
+  grid-column-gap: 20px;
+  column-gap: 20px;
+  grid-row-gap: 3rem;
+  row-gap: 3rem;
+}
+
+@media screen and (max-width: 1517px) {
+  .statusgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(min(309px,100%),1fr));
+    -moz-column-gap: 20px;
+    grid-column-gap: 20px;
+    column-gap: 20px;
+    grid-row-gap: 3rem;
+    row-gap: 3rem;
+  }
+}
+
+@media screen and (max-width: 861px) {
+  .statusgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(min(200px,100%),1fr));
+    -moz-column-gap: 20px;
+    grid-column-gap: 20px;
+    column-gap: 20px;
+    grid-row-gap: 3rem;
+    row-gap: 3rem;
+  }
+}
+
+.statusgrid button {
+  background-color: transparent;
+  border-style: none;
+  padding: 0;
+}
+
+#input-button, #select-button, #edit-input-button, #edit-select-button, #osl-input-button, #osl-select-button {
+  background-color: transparent;
+  border-style: none;
+  padding: 0;
+  color: #0d6efd;
+}
+
+.statusbutton {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  background-color: #0d6efd;
+  width: 100%;
+  height: 200px;
+  border-radius: 15px;
+}
+
+.statuscount {
+  background-color: #0d6efd;
+  color: white;
+  height: 60%;
+  position: relative;
+  border-radius: 15px 15px 0px 0px;
+  border-bottom: 1px solid black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.statuscount h1 {
+  margin: 0%;
+  font-size: 60px;
+}
+
+.statusgrid button .statusbutton h4 {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.emptywarning {
+  display: none;
+  color: red;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+#nomatch, .emptyselection, .notcheckedin, #invalidmatch, .already-missing {
+  color: red;
+  margin: 0;
+  text-align: center;
+}
+ 
+#loginwarning, #manage-password-warning {
+  color: red;
+  margin: 0;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.apology {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.apology {
+  text-align: center;
+}
+
+.nodata {
+  clear: both;
+}
+
+tbody.click_for_info tr td button, #change-password-button {
+  background-color: transparent;
+  border: none;
+  color: #0d6efd;
+}
+
+tbody.click_for_info tr td button.item-option-button {
+  background-color: transparent;
+  border: none;
+  color: #000;
+  padding: 0px 10px;
+  width: 100%;
+  text-align: left;
+}
+
+.action-option-button {
+  background-color: #0d6efd;;
+  border: none;
+  color: #fff;
+  padding: 5px 10px;
+  width: 100%;
+  text-align: left; 
+}
+
+tbody.click_for_info tr td button:hover, #change-password-button:hover {
+  text-decoration: underline;
+}
+
+tbody.click_for_info tr td button.item-option-button:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.downloadqr, .additional-info-buttons, .modal-footer-buttons {
+  width: 100%;
+}
+
+.qrflex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+ul#invcatselect { 
+  background-color: #fff;
+  border-color: rgb(71, 71, 71);
+  border-width: 1px;
+  border-style: solid;
+  width: fit-content;
+  font-size: calc(1.3rem + .6vw);
+  position: absolute;
+  top: calc(1.9rem + .6vw);
+  z-index: 3;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  list-style: none;
+  padding: 0px;
+  margin-bottom: 0px;
+}
+
+ul.item-option-select { 
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: #fff;
+  border-color: rgb(71, 71, 71);
+  border-width: 1px;
+  border-style: solid;
+  width: fit-content;
+  font-size: 20px;
+  position: absolute;
+  bottom: -24%;
+  left: 74%;
+  z-index: 2;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  list-style: none;
+  padding: 0px;
+  margin-bottom: 0px;
+}
+
+#open-inv-select, .filterbutton, .filterButtonDate {
+  border: none;
+  background-color: #fff;
+  padding: 0px;
+}
+
+.filterbutton, .filterButtonDate {
+  font-weight: bold;
+}
+
+#open-inv-select h3:hover, .filterbutton:hover, .filterButtonDate:hover {
+  text-decoration: underline;
+}
+
+li.invcat a {
+  color: black;
+  text-decoration: none;
+  padding: 0px 10px 0px 10px;
+  width: 100%;
+  display: block;
+  background-color: #fff;
+  width: 100%;
+}
+
+li.item-option {  
+  color: black;
+  text-decoration: none;
+  display: block;
+  background-color: #fff;
+  width: 100%;
+}
+
+li.action-option {  
+  text-decoration: none;
+  display: block;
+  width: 100%;
+}
+
+li.invcat a:hover, li.item-option:hover {
+  background-color: rgb(71, 71, 71);
+  color: #fff;
+}
+
+.action-option-button:hover {
+  background-color: #0a58ca;
+}
+
+.fieldcat {
+  display: block;
+}
+
+#filterequipment,
+#filtermodel,
+#filterserial,
+#filteree,
+#filtersbal,
+#filteral,
+#filterad,
+#filterar,
+#filtersbcl,
+#filtercl,
+#filtercd,
+#filtercr,
+#filterosl,
+#filterstatus,
+#filtersb,
+#filterrb,
+#filteraction,
+#filteraddedby {
+  display: none;
+  margin: auto;
+}
+
+#main-style {
+  min-height: calc(100% - 57.3px);
+}
+
+.main-center-style {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100% - 57.3px);
+}
+
+.main-scan-style {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100% - 57.3px);
+}
+
+#startscan, #stopscan {
+  width: 180.13px;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+#start-bulk-scan, #scan-next-item {
+  width: 215px;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+#scan-next-item {
+  width: 190px;
+  margin-bottom: 10px;
+  display: none;
+}
+
+#qriconcontainer {
+  width: 260px;
+  margin: 50px;
+}
+
+#logocontainer {
+  display: block;
+  width: 107px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 10px;
+  background: #112e51;
+  z-index: 3
+}
+
+#login-logocontainer {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.start-date-wrapper, .end-date-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  column-gap: 5px;
+} 
+
+.date-label {
+  margin: 0px;
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.nodate {
+  margin: 0;
+  animation: fadeout 7s;
+}
+
+@keyframes fadeout {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+#reader {
+  margin-bottom: 50px;
+}
+
+.status-summary {
+  width: 100%;
+}
+
+#static-status {
+  text-decoration: none;
+}
+
+#deletion-warning {
+  clear: both;
+}
+
+.mod-flexbox {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  column-gap: 10px;
+  width: 100%;
+}
+
+#warnings {
+  flex-direction: column;
+}
+
+#chicken-wrap {
+  display: flex;
+  min-height: 0px;
+  align-items: center;
+  flex: 1;
+}
+
+#wrap-meat {
+  overflow: auto;
+  width: 199px;
+  flex: 1;
+}
+
+#wrap-sauce {
+  height: 100%;
+  background-color: #112e51;
+}
+
+#logowrapper {
+  padding-top: calc(2.1rem + 0.6vw);
+  width: 100%;
+  background: #112e51;
+  z-index: 3
+}
+
+@media screen and (max-height: 330px){
+  #chicken-wrap {
+    display: flex;
+    min-height: 0px;
+    flex: 1;
+  }
+
+  #wrap-sauce {
+    height: 154px;
+    background-color: #112e51;
+  }
+}
+
+@media screen and (max-width: 320px){
+  .login {
+    width: 265px;
+    height: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: white;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 1rem 1rem 2rem 1rem;
+  }
+}
+
+#remove-padding {
+  padding-right: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+}
+
+.action-menu-wrapper {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  right: 0;
+  align-items: flex-end;
+  z-index: 2;
+}
+
+.action-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background-color: #0d6efd;
+  border-width: 0;
+  border-style: solid;
+  border-color: #0d6efd;
+  border-radius: 0.375rem;
+  font-size: 18px;
+  width: fit-content;
+  overflow: hidden;
+}
+
+.action-menu-button {
+  z-index: 1;
+}
+
+thead {
+  z-index: 1;
+}
+
+
+@media screen and (max-width: 1060px) {
+  ul.item-option-select { 
+    left: 85%;
+  }
+
+}
+
+@media screen and (min-width: 1061px) and (max-width: 1600px) {
+  ul.item-option-select { 
+    left: 80%;
+  }
+
+}
+
+#filtersbal, #filteral, #filterad, #filterar {
+  width: 179px;
+  margin: auto;
+}
+
+#change-password-button-padding {
+  padding: 0.5rem 1rem;
+}
+
+#change-password-button {
+  padding: 0;
+}

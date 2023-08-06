@@ -1,0 +1,697 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Missing
+{% endblock %}
+
+{% block main %}
+
+    <div class="missingitem">
+        <button type="button" id="open-inv-select"><h3>Missing</h3></button>
+        <ul id="invcatselect" style="display: none;">
+            <li class="invcat"><a href="/archive">Archive</a></li>
+            {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+                <li class="invcat"><a href="/admin_inventory">Inventory</a></li>
+            {% elif session.user_role == "User"  %}
+                <li class="invcat"><a href="/inventory">Inventory</a></li>
+            {% endif %}
+            <li class="invcat"><a href="/off-site">Off-site</a></li>
+            <li class="invcat"><a href="/replace">Replace</a></li>
+        </ul>
+        {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+            {% if not inventory %}
+            {% else %}
+                <div class="action-menu-wrapper">
+                    <button type="button" class="btn btn-primary action-menu-button">
+                        Action
+                    </button>
+                        <button type="button" class="btn btn-primary" id='confirmreplaced' data-bs-toggle='modal' data-bs-target='#staticBackdropdel'>
+                            Done
+                        </button>
+                    <ul class="action-menu" style="display: none;">
+                        <li class="action-option"><button type='button' class='action-option-button' id="clear-filters">Clear Filters</button></li>
+                        <li class="action-option"><button type="button" class="action-option-button replacedbutton">Mark as Replaced</button></li>
+                    </ul>
+                </div>
+            {% endif %}
+        {% elif session.user_role == "User"%}
+            <button type='button' class='btn btn-primary' id="clear-filters">
+                Clear Filters
+            </button>
+        {% endif %}
+    </div>
+
+    {% if not inventory %}
+        <h3 class="nodata">No data available.</h3>
+    {% else %}
+        {% if no_date_match %}
+            {% if no_date_match == 1 %}
+            <h3 class="nodate">No date matches filter selection.</h3>
+            {% endif %}
+        {% endif %}
+        <!-- Table -->
+        <div class="tboundary">
+            <table class="table table-striped">
+                <form action="/missing" method="get" id="filterform">
+                    <thead>
+                        <tr>
+
+                            <!-- Equipment filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Equipment
+                                </button>
+                                <select id="filterequipment" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filterequipment %}
+                                        <option hidden selected>{{ filterequipment }}</option>
+                                        <option>Equipment</option>
+                                    {% else %}
+                                        <option selected>Equipment</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["equipment"] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Model location filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Model
+                                </button>
+                                <select id="filtermodel" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filtermodel %}
+                                        <option hidden selected>{{ filtermodel }}</option>
+                                        <option>Model</option>
+                                    {% else %}
+                                        <option selected>Model</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["model"] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Serial filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Serial
+                                </button>
+                                <select id="filterserial" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filterserial %}
+                                        <option hidden selected>{{ filterserial }}</option>
+                                        <option>Serial</option>
+                                    {% else %}
+                                        <option selected>Serial</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["serial"] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- EE filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    EE
+                                </button>
+                                <select id="filteree" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filteree %}
+                                        <option hidden selected>{{ filteree }}</option>
+                                        <option>EE</option>
+                                    {% else %}
+                                        <option selected>EE</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["ee"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Assigned location filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Assigned Location
+                                </button>
+                                <!-- Filter search by -->
+                                <select id="filtersbal" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filtersbal %}
+                                        {% if filtersbal == "Assigned Location" %}
+                                            <option hidden selected>{{ filtersbal }}</option>
+                                            <option>Location</option>
+                                            <option>Department</option>
+                                            <option>Room</option>
+                                        {% else %}
+                                            <option>Assigned Location</option>
+                                            {% if filtersbal == "Location" %}
+                                                <option selected>Location</option>
+                                                <option>Department</option>
+                                                <option>Room</option>
+                                            {% elif filtersbal == "Department" %}
+                                                <option>Location</option>
+                                                <option selected>Department</option>
+                                                <option>Room</option>
+                                            {% elif filtersbal == "Room" %}
+                                                <option>Location</option>
+                                                <option>Department</option>
+                                                <option selected>Room</option>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        <option hidden selected>Assigned Location</option>
+                                        <option>Location</option>
+                                        <option>Department</option>
+                                        <option>Room</option>
+                                    {% endif %}
+                                </select>
+                                <!-- Filter location -->
+                                <select id="filteral" class="form-select" name="filter" style="display: none;">
+                                    {% if filteral %}
+                                        <option hidden selected>{{ filteral }}</option>
+                                        <option>Location</option>
+                                    {% else %}
+                                        <option selected>Location</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["assigned_location"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                                <!-- Filter department -->
+                                <select id="filterad" class="form-select" name="filter" style="display: none;">
+                                    {% if filterad %}
+                                        <option hidden selected>{{ filterad }}</option>
+                                        <option>Department</option>
+                                    {% else %}
+                                        <option selected>Department</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["assigned_department"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                                <!-- Filter room -->
+                                <select id="filterar" class="form-select" name="filter" style="display: none;">
+                                    {% if filterar %}
+                                        <option hidden selected>{{ filterar }}</option>
+                                        <option>Room</option>
+                                    {% else %}
+                                        <option selected>Room</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["assigned_room"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Current location filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Current Location
+                                </button>
+                                <!-- Filter search by -->
+                                <select id="filtersbcl" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filtersbcl %}
+                                        {% if filtersbcl == "Current Location" %}
+                                            <option hidden selected>{{ filtersbcl }}</option>
+                                            <option>Location</option>
+                                            <option>Department</option>
+                                            <option>Room</option>
+                                            <option>Off-site Location</option>
+                                        {% else %}
+                                            <option>Current Location</option>
+                                            {% if filtersbcl == "Location" %}
+                                                <option selected>Location</option>
+                                                <option>Department</option>
+                                                <option>Room</option>
+                                                <option>Off-site Location</option>
+                                            {% elif filtersbcl == "Department" %}
+                                                <option>Location</option>
+                                                <option selected>Department</option>
+                                                <option>Room</option>
+                                                <option>Off-site Location</option>
+                                            {% elif filtersbcl == "Room" %}
+                                                <option>Location</option>
+                                                <option>Department</option>
+                                                <option selected>Room</option>
+                                                <option>Off-site Location</option>
+                                            {% elif filtersbcl == "Off-site Location" %}
+                                                <option>Location</option>
+                                                <option>Department</option>
+                                                <option>Room</option>
+                                                <option selected>Off-site Location</option>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        <option hidden selected>Current Location</option>
+                                        <option>Location</option>
+                                        <option>Department</option>
+                                        <option>Room</option>
+                                        <option>Off-site Location</option>
+                                    {% endif %}
+                                </select>
+                                <!-- Filter location -->
+                                <select id="filtercl" class="form-select" name="filter" style="display: none;">
+                                    {% if filtercl %}
+                                        <option hidden selected>{{ filtercl }}</option>
+                                        <option>Location</option>
+                                    {% else %}
+                                        <option selected>Location</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                            <option>{{ item["current_location"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                                <!-- Filter department -->
+                                <select id="filtercd" class="form-select" name="filter" style="display: none;">
+                                    {% if filtercd %}
+                                        <option hidden selected>{{ filtercd }}</option>
+                                        <option>Department</option>
+                                    {% else %}
+                                        <option selected>Department</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                            <option>{{ item["current_department"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                                <!-- Filter room -->
+                                <select id="filtercr" class="form-select" name="filter" style="display: none;">
+                                    {% if filtercr %}
+                                        <option hidden selected>{{ filtercr }}</option>
+                                        <option>Room</option>
+                                    {% else %}
+                                        <option selected>Room</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                            <option>{{ item["current_room"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                                 <!-- Filter off-site location -->
+                                <select id="filterosl" class="form-select" name="filter" style="display: none;">
+                                    {% if filterosl %}
+                                        <option hidden selected>{{ filterosl }}</option>
+                                        <option>Off-site Location</option>
+                                    {% else %}
+                                        <option selected>Off-site Location</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                            <option>{{ item["off_site_location"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Status (no filter) -->
+                            <th class="text-center">Status</th>
+                            
+                            <!-- Scanned Name filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Scanned By
+                                </button>
+                                <select id="filtersb" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filtersb %}
+                                        <option hidden selected>{{ filtersb }}</option>
+                                        <option>Scanned By</option>
+                                    {% else %}
+                                        <option selected>Scanned By</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        {% if item["scanned_first_name"] == "NA" %}
+                                            <option>{{ item["scanned_first_name"] }}</option> 
+                                        {% else %}
+                                            <option>{{ item["scanned_name"] }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Received Name filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Received By
+                                </button>
+                                <select id="filterrb" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filterrb %}
+                                        <option hidden selected>{{ filterrb }}</option>
+                                        <option>Received By</option>
+                                    {% else %}
+                                        <option selected>Received By</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        {% if item["received_first_name"] == "NA" %}
+                                            <option>{{ item["received_first_name"] }}</option> 
+                                        {% else %}
+                                            <option>{{ item["received_name"] }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Action filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Action
+                                </button>
+                                <select id="filteraction" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filteraction %}
+                                        <option hidden selected>{{ filteraction }}</option>
+                                        <option>Action</option>
+                                    {% else %}
+                                        <option selected>Action</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["action"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Date of action filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterButtonDate">
+                                    Date of Action
+                                </button>
+                                <div class="start-date-wrapper">
+                                    {% if filter_start_doa %}
+                                        <p class="date-label" style="display: none;">Start Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-doa" name="filterdate" value="{{ filter_start_doa }}" style="display: none;">
+                                    {% else %}
+                                        <p class="date-label" style="display: none;">Start Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-doa" name="filterdate" style="display: none;">
+                                    {% endif %}
+                                </div>
+                                <div class="end-date-wrapper">
+                                    {% if filter_end_doa %}
+                                        <p class="date-label" style="display: none;">End Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-doa" name="filterdate" value="{{ filter_end_doa }}" style="display: none;">
+                                    {% else %}
+                                        <p class="date-label" style="display: none;">End Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-doa" name="filterdate" style="display: none;">
+                                    {% endif %}
+                                </div>
+                            </th>
+                            
+                            <!-- Point of contat filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Point of Contact
+                                </button>
+                                <select id="filterpoc" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filterpoc %}
+                                        <option hidden selected>{{ filterpoc }}</option>
+                                        <option>Point of Contact</option>
+                                    {% else %}
+                                        <option selected>Point of Contact</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["point_of_contact"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Phone Number filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Phone Number
+                                </button>
+                                <select id="filterpn" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filterpn %}
+                                        <option hidden selected>{{ filterpn }}</option>
+                                        <option>Phone Number</option>
+                                    {% else %}
+                                        <option selected>Phone Number</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["phone_number"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Patient Name filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Patient Name
+                                </button>
+                                <select id="filterpatient" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filterpatient %}
+                                        <option hidden selected>{{ filterpatient }}</option>
+                                        <option>Patient Name</option>
+                                    {% else %}
+                                        <option selected>Patient Name</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        {% if item["patient_first_name"] == "NA" %}
+                                            <option>{{ item["patient_first_name"] }}</option> 
+                                        {% else %}
+                                            <option>{{ item["patient_name"] }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Date added filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterButtonDate">
+                                    Date Added
+                                </button>
+                                <div class="start-date-wrapper">
+                                    {% if filter_start_da %}
+                                        <p class="date-label" style="display: none;">Start Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate" value="{{ filter_start_da }}" style="display: none;">
+                                    {% else %}
+                                        <p class="date-label" style="display: none;">Start Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate"  style="display: none;">
+                                    {% endif %}
+                                </div>
+                                <div class="end-date-wrapper">
+                                    {% if filter_end_da %}
+                                        <p class="date-label" style="display: none;">End Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate" value="{{ filter_end_da }}"  style="display: none;">
+                                    {% else %}
+                                        <p class="date-label" style="display: none;">End Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate"  style="display: none;">
+                                    {% endif %}
+                                </div>
+                            </th>
+
+                            <!-- Added by filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterbutton">
+                                    Added By
+                                </button>
+                                <select id="filteraddedby" class="form-select w-auto" name="filter" style="display: none;">
+                                    {% if filteraddedby %}
+                                        <option hidden selected>{{ filteraddedby }}</option>
+                                        <option>Added By</option>
+                                    {% else %}
+                                        <option selected>Added By</option>
+                                    {% endif %}
+                                    {% for item in inventory %} 
+                                        <option>{{ item["added_name"] }}</option> 
+                                    {% endfor %}
+                                </select>
+                            </th>
+
+                            <!-- Replace date filter -->
+                            <th class="text-center">
+                                <button type="button" class="filterButtonDate">
+                                    Replace Date
+                                </button>
+                                <div class="start-date-wrapper">
+                                    {% if filter_start_rd %}
+                                        <p class="date-label" style="display: none;">Start Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" value="{{ filter_start_rd }}" style="display: none;">
+                                    {% else %}
+                                        <p class="date-label" style="display: none;">Start Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" style="display: none;"> 
+                                    {% endif %}
+                                </div>
+                                <div class="end-date-wrapper">
+                                    {% if filter_end_rd %}
+                                        <p class="date-label" style="display: none;">End Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" value="{{ filter_end_rd }}" style="display: none;">
+                                    {% else %}
+                                        <p class="date-label" style="display: none;">End Date:</p>
+                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" style="display: none;">
+                                    {% endif %}
+                                </div>
+                            </th>
+
+                        </tr>
+                    </thead>
+                </form>
+                <form action="/missing" method="post">
+                    <tbody id="tables" class="click_for_info">
+                        {% for i in range(inventory | length) %}
+                            <tr class="showrow">
+                                {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+                                    <td class="text-center cell-content0">
+                                        <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="replacedinventory" name="replacedinv">
+                                        <button type="button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">{{ inventory[i]["equipment"] }}</button>
+                                    </td>
+                                {% elif session.user_role == "User" %}
+                                    <td class="text-center cell-content0">{{ inventory[i]["equipment"] }}</td>
+                                {% endif %}
+                                <td class="text-center cell-content1">{{ inventory[i]["model"] }}</td>
+                                <td class="text-center cell-content2">{{ inventory[i]["serial"] }}</td>
+                                <td class="text-center cell-content3">{{ inventory[i]["ee"] }}</td>
+                                <td class="text-center cell-content4">{{ inventory[i]["assigned_room"] }}-{{ inventory[i]["assigned_department"] }}</td>
+                                {% if inventory[i]["off_site_location"] == "NA" %} 
+                                    <td class="text-center cell-content5">{{ inventory[i]["current_room"] }}-{{ inventory[i]["current_department"] }}</td>
+                                {% else %}
+                                    <td class="text-center cell-content5">{{ inventory[i]["off_site_location"] }}</td>
+                                {% endif %}
+                                <td class="text-center cell-content6">{{ inventory[i]["status"] }}</td>
+                                {% if inventory[i]["scanned_first_name"] == "NA" %} 
+                                    <td class="text-center">{{ inventory[i]["scanned_first_name"] }}</td>
+                                {% else %}
+                                    <td class="text-center">{{ inventory[i]["scanned_name"] }}</td>
+                                {% endif %}
+                                {% if inventory[i]["received_first_name"] == "NA" %} 
+                                    <td class="text-center">{{ inventory[i]["received_first_name"] }}</td>
+                                {% else %}
+                                    <td class="text-center">{{ inventory[i]["received_name"] }}</td>
+                                {% endif %}
+                                <td class="text-center cell-content8">{{ inventory[i]["action"] }}</td>
+                                <td class="text-center">{{ inventory[i]["date_of_action"] }}</td>
+                                <td class="text-center cell-content9">{{ inventory[i]["point_of_contact"] }}</td>
+                                <td class="text-center cell-content10">{{ inventory[i]["phone_number"] }}</td>
+                                {% if inventory[i]["patient_first_name"] == "NA" %} 
+                                    <td class="text-center cell-content11">{{ inventory[i]["patient_first_name"] }}</td>
+                                {% else %}
+                                    <td class="text-center cell-content11">{{ inventory[i]["patient_name"] }}</td>
+                                {% endif %}
+                                <td class="text-center">{{ inventory[i]["date_added"] }}</td>
+                                <td class="text-center cell-content12">{{ inventory[i]["added_name"] }}</td>
+                                <td class="text-center">{{ inventory[i]["repl_date"] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+                        <!-- Modal for sending item to replaced items page -->
+                        <div class="modal fade" id="staticBackdropdel" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="staticBackdropdelLabel">Delete Item</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Have these items been replaced?</label><br>
+                                            <div class="mod-flexbox">
+                                                <button id="closereplaced" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
+                                                <button id="completereplaced" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="replaced">Confirm</button>
+                                            </div>
+                                        </div>
+                                        <p class="emptyselection" style="display: none;">Please make a selection.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </form>
+            </table>
+        </div>
+    {% endif %}
+
+    <nav class="pages" aria-label="Page navigation">
+    </nav>
+
+    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%} 
+        <!-- Modal for additional equipment information -->
+        <div class="modal fade" id="moreinfo" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Additional Information</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                    <div class="modal-body">
+                        <label for="qrcode" class="form-label">QR Code</label>
+                        <div class="mb-3 qrflex">
+                            <img class="img-fluid" id="additional-info-qr">
+                        </div>
+                        <div class="mb-3">
+                            <a id="downloadqrcode" href="" download><button type="button" class="btn btn-primary downloadqr">Download QR Code</button></a>
+                        </div>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-primary additional-info-buttons"  data-bs-toggle='modal' data-bs-target='#replaced-single-item-modal'>Mark as Replaced</button>
+                        </div>
+                        <div class="modal-footer" id="remove-padding">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for sending single item to replaced items page -->
+        <form action="/missing" method="post">
+            <div class="modal fade" id="replaced-single-item-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="singleReplacedItemModalLabel">Replaced Item</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Has this item been replaced?</label><br>
+                                <div class="mod-flexbox">
+                                    <input type='hidden' id='hidden-replaced-item' name='hidden-replaced-item'>
+                                    <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% endif %}
+    
+{% endblock %}
+
+{% block script %}
+
+    <script src="/static/app.js"></script>
+    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+        <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+        <script>
+
+            var showinfo = document.getElementsByName("showinfo");
+            var img = document.querySelector("#additional-info-qr");
+            var showmodal = document.querySelector("#showmodal");
+            var myModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+            var pagebutton = document.querySelector(".pages");
+            var nodate = document.querySelector(".nodate");
+            
+            for (let i = 0; i < showinfo.length; i++)
+            {
+                showinfo[i].addEventListener("click", function() {
+                    
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ url_for('missing') }}",
+                        data: {"showinfo" : showinfo[i].value},
+                        success: function(result){ 
+                            img.src = "/static/qrcodes/"+ result['qr_code'] +".png";
+                            document.getElementById("hidden-replaced-item").value = result['qr_code'];
+                            document.getElementById("downloadqrcode").href = "static/qrcodes/"+result['qr_code']+".png";
+                        }
+                    });
+
+                    myModal.show();
+
+                });
+            }
+
+            if (nodate)
+            {
+                nodate.addEventListener("animationend", function() {
+                    nodate.style.display = "none";
+                });
+            }
+
+        </script>
+    {% endif %}
+
+{% endblock %}

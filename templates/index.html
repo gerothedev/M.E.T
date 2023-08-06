@@ -1,0 +1,299 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Recent Activity
+{% endblock %}
+
+{% block main %}
+    <!-- Status Buttons -->
+    <div class="statusgrid">
+    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+        <form action="/admin_inventory" method="get">
+    {% elif session.user_role == "User" %}
+        <form action="/inventory" method="get">
+    {% endif %}
+            <button type="submit" name="sf" value="IN USE" class="status-summary">
+                <div class="statusbutton">
+                    <div class="statuscount"><h1>{{ in_use }}</h1></div>
+                    <h4 class="producttext">In Use</h4>
+                </div>
+            </button>
+        </form>
+    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+        <form action="/admin_inventory" method="get">
+    {% elif session.user_role == "User" %}
+        <form action="/inventory" method="get">
+    {% endif %}
+        <button type="submit" name="sf" value="LOANED" class="status-summary">
+            <div class="statusbutton">
+                <div class="statuscount"><h1>{{ loaned }}</h1></div>
+                <h4 class="producttext">Loaned</h4>
+            </div>
+        </button>
+        </form>
+        <form action="/off-site" method="get">
+            <button type="submit" name="sf" value="OFF-SITE" class="status-summary">
+                <div class="statusbutton">
+                    <div class="statuscount"><h1>{{ off_site }}</h1></div>
+                    <h4 class="producttext">Off-site</h4>
+                </div>
+            </button>
+        </form>
+    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+        <form action="/admin_inventory" method="get">
+    {% elif session.user_role == "User" %}
+        <form action="/inventory" method="get">
+    {% endif %}
+            <button type="submit" name="sf" value="OUT FOR REPAIR" class="status-summary">
+                <div class="statusbutton">
+                    <div class="statuscount"><h1>{{ out_for_repair }}</h1></div>
+                    <h4 class="producttext">Out for Repair</h4>
+                </div>
+            </button>
+        </form>
+        <form action="/replace" method="get">
+            <button type="submit" name="sf" value="REPLACE" class="status-summary">
+                <div class="statusbutton">
+                    <div class="statuscount"><h1>{{ replace }}</h1></div>
+                    <h4 class="producttext">Replace</h4>
+                </div>
+            </button>
+        </form>
+        <form action="/missing" method="get">
+            <button type="submit" name="sf" value="MISSING" class="status-summary">
+                <div class="statusbutton">
+                    <div class="statuscount"><h1>{{ missing }}</h1></div>
+                    <h4 class="producttext">Missing</h4>
+                </div>
+            </button>
+        </form>
+    </div>
+    <br>
+
+    <h3>Recent Activity</h3>
+    
+    {% if not recents %}
+        <h3>No data available.</h3>
+    {% else %}
+        <div class="tboundary">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-center">Equipment</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Scanned By</th>
+                        <th class="text-center">Received By</th>
+                        <th class="text-center">Action</th>
+                        <th class="text-center">Current Location</th>
+                        <th class="text-center">Date of action</th>
+                    </tr>
+                </thead>
+                <tbody  id="tables" class="click_for_info">
+                    {% if not recents %}
+                    {% else %}
+                        {% for i in range(recents | length) %}
+                        <tr>
+                            <td class="text-center"><button type="button" name="showinfo" value="{{ recents[i]['qr_code'] }}">{{ recents[i]["equipment"] }}</button></td>
+                            <td class="text-center">{{ recents[i]["status"] }}</td>
+                            {% if recents[i]["scanned_first_name"] == "NA" %} 
+                                <td class="text-center">{{ recents[i]["scanned_first_name"] }}</td>
+                            {% else %}
+                                <td class="text-center">{{ recents[i]["scanned_name"] }}</td>
+                            {% endif %}
+                            {% if recents[i]["received_first_name"] == "NA" %} 
+                                <td class="text-center">{{ recents[i]["received_first_name"] }}</td>
+                            {% else %}
+                                <td class="text-center">{{ recents[i]["received_name"] }}</td>
+                            {% endif %}
+                            <td class="text-center">{{ recents[i]["action"] }}</td>
+                            {% if recents[i]["off_site_location"] == "NA" %} 
+                                <td class="text-center">{{ recents[i]["current_location"] }}</td>
+                            {% else %}
+                                <td class="text-center">{{ recents[i]["off_site_location"] }}</td>
+                            {% endif %}
+                            <td class="text-center">{{ recents[i]["date_of_action"] }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+
+    <!-- Modal for additional equipment information -->
+    <div class="modal fade" id="moreinfo" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Additional Information</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 fieldcat">
+                        <label for="equipment" class="form-label">Equipment Name</label>
+                        <p id="equipment" name="equipment" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="model" class="form-label">Model</label>
+                        <p id="model" name="model" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="serial" class="form-label">Serial Number</label>
+                        <p id="serial" name="serial" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="ee-number" class="form-label">EE</label>
+                        <p id="ee-number" name="ee-number" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="alocation" class="form-label">Assigned Location</label>
+                        <p id="alocation" name="alocation" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="clocation" class="form-label">Current Location</label>
+                        <p id="clocation" name="clocation" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="status" class="form-label">Status</label>
+                        <p id="status" name="status" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="scanned_name" class="form-label">Scanned By</label>
+                        <p id="scanned_name" name="scanned_name" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="received_name" class="form-label">Received By</label>
+                        <p id="received_name" name="received_name" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="action" class="form-label">Action</label>
+                        <p id="action" name="action" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="date_of_action" class="form-label">Date of Action</label>
+                        <p id="date_of_action" name="date_of_action" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="off-site" class="form-label">Off-site Location</label>
+                        <p id="off-site" name="off-site" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="contact" class="form-label">Point of Contact</label>
+                        <p id="contact" name="contact" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="number" class="form-label">Phone Number</label>
+                        <p id="number" name="number" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="patient" class="form-label">Patient Name</label>
+                        <p id="patient" name="patient" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="date_added" class="form-label">Date Added</label>
+                        <p id="date_added" name="date_added" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="added_by" class="form-label">Added By</label>
+                        <p id="added_by" name="added_by" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="mb-3 fieldcat">
+                        <label for="replace_date" class="form-label">Replace Date</label>
+                        <p id="replace_date" name="replace_date" class="form-control fieldinfo"></p>
+                    </div>
+                    <div class="modal-footer" id="remove-padding">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block script %}
+
+    <script src="/static/app.js"></script>
+    <script>
+
+        var showinfo = document.getElementsByName("showinfo");
+        var myModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+        var fieldinfo = document.getElementsByClassName("fieldinfo")
+        var fieldcat = document.getElementsByClassName("fieldcat")
+        
+        for (let i = 0; i < showinfo.length; i++)
+        {
+            showinfo[i].addEventListener("click", function() {
+                
+                var data = new FormData()
+                data.append("showinfo",  showinfo[i].value)
+                var index_url = "{{ url_for('index') }}"
+                fetch(index_url, {
+                    "method": "POST",
+                    "body": data,
+                }).then((response) => {
+                    
+                    return response.json()
+
+                }).then((text) => {
+                    fieldinfo[0].textContent = text["equipment_name"]
+                    fieldinfo[1].textContent = text["model"]
+                    fieldinfo[2].textContent = text["serial"]
+                    fieldinfo[3].textContent = text["ee"]
+                    fieldinfo[4].textContent = text["assigned_location"]
+                    fieldinfo[5].textContent = text["current_location"]
+                    fieldinfo[6].textContent = text["status"]
+                    if (text["scanned_first_name"] == "NA")
+                    {
+                        fieldinfo[7].textContent = text["scanned_first_name"]
+                    }
+                    else
+                    {
+                        fieldinfo[7].textContent = text["scanned_name"]
+                    }
+                    if (text["received_first_name"] == "NA")
+                    {
+                        fieldinfo[8].textContent = text["received_first_name"]
+                    }
+                    else
+                    {
+                        fieldinfo[8].textContent = text["received_name"]
+                    }
+                    fieldinfo[9].textContent = text["action"]
+                    fieldinfo[10].textContent = text["date_of_action"]
+                    fieldinfo[11].textContent = text["off_site_location"]
+                    fieldinfo[12].textContent = text["point_of_contact"]
+                    fieldinfo[13].textContent = text["phone_number"]
+                    fieldinfo[14].textContent = text["patient_name"]
+                    fieldinfo[15].textContent = text["date_added"]
+                    fieldinfo[16].textContent = text["added_name"]
+                    fieldinfo[17].textContent = text["repl_date"]
+
+                    if (fieldinfo[11].textContent == "NA")
+                    {
+                        fieldcat[11].style.display = "none"
+                        fieldcat[12].style.display = "none"
+                        fieldcat[13].style.display = "none"
+                        fieldcat[14].style.display = "none"
+                        fieldcat[5].style.display = "block"
+                    }
+                    else
+                    {
+                        fieldcat[5].style.display = "none"
+                        fieldcat[11].style.display = "block"
+                        fieldcat[12].style.display = "block"
+                        fieldcat[13].style.display = "block"
+                        fieldcat[14].style.display = "block"
+                    }
+
+                });
+
+                myModal.show();
+
+            });
+        }
+
+    </script>
+
+{% endblock %}

@@ -1,0 +1,470 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Scan Item
+{% endblock %}
+
+{% block main %}
+
+
+    <h3 id="items-scanned">Items Scanned: <span id="item-count">0</span></h3>
+    <h3 id="already-scanned">Item already scanned</h3>
+    <div id="reader" style="width: 600px;"></div>
+    <picture id="qriconcontainer">
+        <img src="/static/icons/qr-code-scanner-icon.png" class="img-fluid">
+    </picture>
+    <div id="qrcodewrapper">
+        <button type="button" class="btn btn-primary mx-auto" id="startscan"> 
+            Scan QR Code
+        </button>
+        <button type="button" class="btn btn-primary mx-auto" id="start-bulk-scan"> 
+            Scan Multiple QR Codes
+        </button>
+        <button type="button" class="btn btn-primary mx-auto" id="scan-next-item"> 
+            Scan Next Item
+        </button>
+        <button type="button" class="btn btn-primary mx-auto" id="finish-scan" style="display: none;"> 
+            Finish Scan
+        </button>
+        <button type="button" class="btn btn-primary mx-auto" id="stopscan" style="display: none;">
+            Stop QR Code Scan
+        </button>
+    </div>
+
+    <input type='hidden' id='hiddenqr' name='hiddenqr'>
+
+    <!-- Modal for checking in/out and updating recent activity -->
+    <form action="/scan" method="post" autocomplete="off">
+        <div class="modal fade" id="changestatus" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="staticBackdropchangeLabel">Scan Item</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="scanned-qr-codes">
+                        </div>
+                        <!-- Input for received by -->
+                        <div class="mb-3 fieldcat">
+                            <label for="recipientSelect" class="form-label">Is Somebody Else Receiving This Item?</label>
+                            <select id="recipientSelect" class="form-select mx-auto" name="recipientSelect">
+                                <option selected>No</option>
+                                <option >Yes</option>
+                            </select>
+                        </div>
+                        <div id="admin-rn">
+                            <div class="mb-3">
+                                <input autocomplete="off" type="text" class="form-control" id="rfn" name="rfn" placeholder="First name of recipient">
+                            </div>
+                            <div class="mb-3">
+                                <input autocomplete="off" type="text" class="form-control" id="rln" name="rln" placeholder="Last name of recipient">
+                            </div>
+                        </div>
+                        <!-- Selection for status -->
+                        <div class="mb-3">
+                            <label for="statuses" class="form-label">Status</label>
+                            <select id="statuses" class="form-select mx-auto" name="statuses">
+                                <option disabled="" selected>Status</option>
+                                {% for i in range(statuses | length)  %}
+                                    <option value="{{ statuses[i] }}">{{ statuses[i] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- Current department input and selection -->
+                        <div class="mb-3 fieldcat">
+                            <label for="location" class="form-label">
+                                <button type="button" id="input-button">Input</button> or <button type="button" id="select-button">Select</button> Current Location
+                            </label>
+                            <!-- Current department input -->
+                            <div id="admin-li" style="display: block;">
+                                <div class="mb-3">
+                                    <input autocomplete="off" type="text" class="form-control" id="dinput" name="dinput" placeholder="Department">
+                                </div>
+                                <div class="mb-3">
+                                    <input autocomplete="off" type="text" class="form-control" id="rinput" name="rinput" placeholder="Room">
+                                </div>
+                            </div>
+                            <!-- Current department selection -->
+                            <div id="admin-ls">
+                                <div class="mb-3">
+                                    <select id="dselect" class="form-select w-auto" name="dselect">
+                                        <option disabled="" selected>Department</option>
+                                        {% for dept in depts %}
+                                            {% if dept.building == "NA" %}
+                                            {% else %}
+                                                <option value="{{ dept.building }}" class="{{ dept.id }}">{{ dept.building }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <select id="rselect" class="form-select w-auto" name="rselect">
+                                        <option disabled="" selected>Room</option>
+                                        {% for room in rooms %}
+                                            {% if room.rooms == "NA" %}
+                                            {% else %}
+                                                <option value="{{ room.rooms }}" class="{{ room.department_id }}">{{ room.rooms }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Off-site input and selection -->
+                        <div class="mb-3 fieldcat">
+                            <label for="location" class="form-label">
+                                <button type="button" id="osl-input-button">Input</button> or <button type="button" id="osl-select-button">Select</button> Off-site Location
+                            </label>
+                            <div id="admin-osli">
+                                <div class="mb-3">
+                                    <input autocomplete="off" autofocus="" class="form-control mx-auto" id="oslinput" name="oslinput" placeholder="Off-site Location" type="text">
+                                </div>
+                            </div>
+                            <div id="admin-osls">
+                                <div class="mb-3">
+                                    <select id="oslselect" class="form-select mx-auto" name="oslselect">
+                                        <option disabled="" selected>Off-site Location</option>
+                                        {% for i in range( osls  | length)  %}
+                                            {% if osls[i]["location"] == "NA" %}
+                                            {% else %}
+                                                <option value="{{ osls[i]['location'] }}">{{  osls[i]["location"] }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Point of contact input-->
+                        <div class="mb-3 fieldcat">
+                            <label for="point_of_contact" class="form-label">Point of Contact</label>
+                            <input autocomplete="off" autofocus="" class="form-control mx-auto" id="point_of_contact" name="point_of_contact" placeholder="Point of Contact" type="text">
+                        </div>
+                        <!-- Phone number input-->
+                        <div class="mb-3 fieldcat">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input autocomplete="off" autofocus="" class="form-control mx-auto" id="phone_number" name="phone_number" placeholder="Phone Number" type="tel">
+                        </div>
+                        <!-- Patient first name input-->
+                        <div class="mb-3 fieldcat">
+                            <label for="first_name" class="form-label">Patient First Name</label>
+                            <input autocomplete="off" autofocus="" class="form-control mx-auto" id="first_name" name="first_name" placeholder="Patient First Name" type="text">
+                        </div>
+                        <!-- Patient last input-->
+                        <div class="mb-3 fieldcat">
+                            <label for="last_name" class="form-label">Patient Last Name</label>
+                            <input autocomplete="off" autofocus="" class="form-control mx-auto" id="last_name" name="last_name" placeholder="Patient Last Name " type="text">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="mod-flexbox">
+                            <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal" id="cancel-change-status">Cancel</button>
+                            <button type="button" class="btn btn-primary modal-footer-buttons" id="check-in" style="display: block;">Check In</button>
+                            <button type="button" class="btn btn-primary modal-footer-buttons" id="check-out" style="display: none;">Check Out</button>
+                        </div>
+                        <div class="mod-flexbox">
+                            <p class="emptywarning" style="display: none;">Fields cannot be empty.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+{% endblock %}
+
+{% block script %}
+
+    <script src="/static/app.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+
+        var myModal = new bootstrap.Modal(document.getElementById("changestatus"));
+        var hiddenqr = document.getElementById("hiddenqr")
+        var reader = document.querySelector("#reader")
+        var alreadyScanned = document.querySelector("#already-scanned")
+        alreadyScanned.style.display = "none"
+
+        reader.style.marginBottom = "0px"
+        
+        // This method will trigger user permissions
+        Html5Qrcode.getCameras().then(devices => {
+            /**
+             * devices would be an array of objects of type:
+             * { id: "id", label: "label" }
+             */
+            if (devices && devices.length) {
+                // Loop through the devices
+                for (device of devices) {
+                    // Find the camera2 0 and back/achter
+                    if (device.label.includes("camera2")) 
+                    {
+                        if (
+                        device.label.includes("back") ||
+                        device.label.includes("achter")
+                        )
+                        // Set the identifier, to be used in qrcode.start()
+                        var cameraId = device.id;
+                    }
+                    else if (device.label.includes("Back Camera"))
+                    {
+                        // Set the identifier, to be used in qrcode.start()
+                        var cameraId = device.id;
+                    }
+                    else if (device.label.includes("HP"))
+                    {
+                        // Set the identifier, to be used in qrcode.start()
+                        var cameraId = device.id;
+                    }
+                }
+            }
+            
+            var scannedCodes = [];
+            var itemcount = 0;
+            var alreadyScanned = false;
+            const html5QrCode = new Html5Qrcode(/* element id */ "reader");
+            
+            // Code for scanning one item
+            document.querySelector("#startscan").addEventListener("click", function() {
+
+                document.querySelector("#startscan").style.display = "none"
+                document.querySelector("#start-bulk-scan").style.display = "none"
+                document.querySelector("#stopscan").style.display = "block"
+                document.querySelector("#finish-scan").style.display = "none"
+                document.querySelector("#qriconcontainer").style.display = "none"
+                reader.style.marginBottom = "50px"
+
+                html5QrCode.start( 
+                cameraId, 
+                {
+                    fps: 20,   // Optional, frame per seconds for qr code scanning
+                    qrbox: { width: 250, height: 250 }  // Optional, if you want bounded box UI
+                },
+                (decodedText, decodedResult) => {
+                    // do something when code is read
+                    console.log(`Code matched = ${decodedText}`, decodedResult);
+                    hiddenqr.value = decodedText;
+                    var data = new FormData()
+                    data.append("hiddenqr", hiddenqr.value)
+                    var scan_url = "{{ url_for('scan') }}"
+                    fetch(scan_url, {
+                        "method": "POST",
+                        "body": data,
+                    }).then((response) => {
+                        return response.json();
+                        console.log(response.json());
+                    }).then((text) => {
+                        document.querySelector("#scanned-qr-codes").insertAdjacentHTML("afterbegin","<input type='hidden' name='qrcode' value='"+ text["qr_code"] +"'>")
+                        console.log(text);
+                    });
+
+                    myModal.show();
+
+                    document.querySelector("#startscan").style.display = "block"
+                    document.querySelector("#start-bulk-scan").style.display = "block"
+                    document.querySelector("#stopscan").style.display = "none"
+                    document.querySelector("#finish-scan").style.display = "none"
+                    document.querySelector("#qriconcontainer").style.display = "block"
+
+                    html5QrCode.stop().then((ignore) => {
+                        // QR Code scanning is stopped.
+                        document.querySelector("#reader").style.marginBottom = "0px"
+                    }).catch((err) => {
+                    // Stop failed, handle it.
+                        console.error("Stop failed");
+                    });
+
+                },
+                (errorMessage) => {
+                    // parse error, ignore it.
+                })
+                .catch((err) => {
+                    // Start failed, handle it.
+                    console.error("Start failed");
+                });
+            });
+
+            // Code for scanning multiple items
+            document.querySelector("#start-bulk-scan").addEventListener("click", function() {
+
+                document.querySelector("#items-scanned").style.marginBottom = "1rem";
+                document.querySelector("#already-scanned").style.display = "none";
+                document.querySelector("#startscan").style.display = "none"
+                document.querySelector("#start-bulk-scan").style.display = "none"
+                document.querySelector("#stopscan").style.display = "block"
+                document.querySelector("#scan-next-item").style.display = "block"
+                document.querySelector("#finish-scan").style.display = "none"
+                document.querySelector("#items-scanned").style.display = "inline-block"
+                document.querySelector("#item-count").style.display = "inline-block"       
+                document.querySelector("#qriconcontainer").style.display = "none"
+                itemcount = 0
+                document.querySelector("#item-count").textContent = itemcount;
+                reader.style.marginBottom = "50px"
+
+                bulkScan()
+            
+            });
+
+            document.querySelector("#scan-next-item").addEventListener("click", function() {
+
+                bulkScan()
+                document.querySelector("#already-scanned").style.display = "none";
+                reader.style.marginBottom = "50px"
+                document.querySelector("#items-scanned").style.marginBottom = "1rem";
+
+            });
+
+            function bulkScan() {
+                    
+                html5QrCode.start( 
+                cameraId, 
+                {
+                    fps: 20,   // Optional, frame per seconds for qr code scanning
+                    qrbox: { width: 250, height: 250 }  // Optional, if you want bounded box UI
+                },
+                (decodedText, decodedResult) => {
+                    // do something when code is read
+                    console.log(`Code matched = ${decodedText}`, decodedResult);
+                    
+                    if (scannedCodes.length == 0)
+                    {
+                        hiddenqr.value = decodedText;
+                        scannedCodes[0] = decodedText;
+                        alreadyScanned = false
+                        itemcount++;
+                        document.querySelector("#item-count").textContent = itemcount;
+                    }
+                    else
+                    {
+                        for (let i = 0; i < scannedCodes.length; i++)
+                        {
+                            if (scannedCodes[i] == decodedText) 
+                            {
+                                document.querySelector("#already-scanned").style.display = "block";
+                                alreadyScanned = true
+                                
+                                if (document.querySelector("#already-scanned").style.display == "block")
+                                {
+                                    document.querySelector("#items-scanned").style.marginBottom = "0.5rem";
+                                }
+
+                                break;
+                            }
+                            else if (i == scannedCodes.length - 1)
+                            {
+                                if (document.querySelector("#already-scanned").style.display == "none")
+                                {
+                                    document.querySelector("#items-scanned").style.marginBottom = "1rem";
+                                }
+
+                                hiddenqr.value = decodedText;
+                                scannedCodes.push(decodedText);
+                                alreadyScanned = false
+                                itemcount++;
+                                document.querySelector("#item-count").textContent = itemcount;
+                                break;
+                            }
+                        }
+                    }
+        
+                    if (alreadyScanned == false)
+                    {
+                        var data = new FormData()
+                        data.append("hiddenqr", hiddenqr.value)
+                        var scan_url = "{{ url_for('scan') }}"
+                        fetch(scan_url, {
+                            "method": "POST",
+                            "body": data,
+                        }).then((response) => {
+                            return response.json();
+                            console.log(response.json());
+                        }).then((text) => {
+                            document.querySelector("#scanned-qr-codes").insertAdjacentHTML("afterbegin","<input type='hidden' name='qrcode' value='"+ text["qr_code"] +"'>")
+                            console.log(text);
+                        });
+                    }
+                    
+                    html5QrCode.stop().then((ignore) => {
+                        // QR Code scanning is stopped.
+                        document.querySelector("#reader").style.marginBottom = "0px"
+                    }).catch((err) => {
+                    // Stop failed, handle it.
+                        console.error("Stop failed");
+                    });
+
+                },
+                (errorMessage) => {
+                    // parse error, ignore it.
+                })
+                .catch((err) => {
+                    // Start failed, handle it.
+                    console.error("Start failed");
+                });
+
+            }
+
+            
+            document.querySelector("#stopscan").addEventListener("click", function() {
+
+                document.querySelector("#already-scanned").style.display = "none";
+                document.querySelector("#startscan").style.display = "block"
+                document.querySelector("#start-bulk-scan").style.display = "block"
+                document.querySelector("#scan-next-item").style.display = "none"
+                document.querySelector("#stopscan").style.display = "none"
+                document.querySelector("#items-scanned").style.display = "none"
+                document.querySelector("#item-count").style.display = "none"  
+                document.querySelector("#qriconcontainer").style.display = "block"
+                reader.style.marginBottom = "0px"
+
+                html5QrCode.stop().then((ignore) => {
+                // QR Code scanning is stopped.
+                }).catch((err) => {
+                // Stop failed, handle it.
+                    console.error("Stop failed");
+                });
+
+            });
+
+            document.querySelector("#finish-scan").addEventListener("click", function() {
+
+                myModal.show();
+
+                document.querySelector("#already-scanned").style.display = "none";
+                document.querySelector("#startscan").style.display = "block"
+                document.querySelector("#start-bulk-scan").style.display = "block"
+                document.querySelector("#stopscan").style.display = "none"
+                document.querySelector("#scan-next-item").style.display = "none"
+                document.querySelector("#finish-scan").style.display = "none"
+                document.querySelector("#items-scanned").style.display = "none"
+                document.querySelector("#item-count").style.display = "none"  
+                document.querySelector("#qriconcontainer").style.display = "block"
+                reader.style.marginBottom = "0px"
+                scannedCodes = []
+
+                html5QrCode.stop().then((ignore) => {
+                // QR Code scanning is stopped.
+                }).catch((err) => {
+                // Stop failed, handle it.
+                    console.error("Stop failed");
+                });
+
+            });
+            
+        }).catch(err => {
+        // handle err
+            var node = document.createElement("p");
+            var textnode = document.createTextNode("No camera available");
+            node.appendChild(textnode);
+            document.querySelector("#qrcodewrapper").appendChild(node);
+            console.error("No camera available");
+        });
+
+    </script>
+
+{% endblock %}
+
+{% block mainstyle %}
+
+    main-scan-style
+
+{% endblock %}

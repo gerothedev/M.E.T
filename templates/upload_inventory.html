@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Upload Inventory
+{% endblock %}
+
+{% block main %}
+
+    <div class="uploaditem">
+        <h3>Upload Inventory</h3>
+        <div class="action-menu-wrapper">
+            <button type="button" class="btn btn-primary action-menu-button">
+                Action
+            </button>
+            <ul class="action-menu" style="display: none;">
+                <li class="action-option">
+                    <form action="/upload_inventory" method="post">
+                        <button type="button" class="uploadbutton action-option-button" data-bs-toggle='modal' data-bs-target='#upload-inventory-modal'>
+                            Upload File
+                        </button>
+                    </form>
+                    <li class="action-option"><a href="/admin_inventory" class="return-inventory-button"><button type="button" class="action-option-button">Return to Inventory</button></a></li>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    {% if not inventory %}
+        <h3 class="nodata">No data available.</h3>
+    {% else %}
+        <!-- Table -->
+        <div class="tboundary">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <!-- Equipment filter -->
+                        <th class="text-center">Equipment</th>
+                        <th class="text-center">Model</th>
+                        <th class="text-center">Serial</th>
+                        <th class="text-center">EE</th>
+                        <th class="text-center">Assigned Location</th>
+                        <th class="text-center">Date Added</th>
+                        <th class="text-center">Added By</th>
+                        <th class="text-center">Replace Date</th>
+                    </tr>
+                </thead>
+                <tbody id="tables" class="click_for_info">
+                    {% for i in range(inventory | length) %}
+                        <tr class="showrow">
+                            <td class="text-center cell-content0">{{ inventory[i]["Equipment Name"] }}</td>
+                            <td class="text-center cell-content1">{{ inventory[i]["Model"] }}</td>
+                            <td class="text-center cell-content2">{{ inventory[i]["Serial"] }}</td>
+                            <td class="text-center cell-content3">{{ inventory[i]["EE #"] }}</td>
+                            <td class="text-center cell-content4">{{ inventory[i]["Location"] }}</td>
+                            <td class="text-center cell-content11">{{ created_date[i] }}</td>
+                            <td class="text-center cell-content12">{{ created_name[i] }}</td>
+                            <td class="text-center cell-content13">{{ replacement_date[i] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <nav class="pages" aria-label="Page navigation">
+    </nav>
+
+    <!-- Modal for uploading inventory -->
+    <form action="/upload_inventory" method="post" enctype="multipart/form-data">
+        <div class="modal fade" id="upload-inventory-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="uploadInventoryModalLabel">Upload Inventory</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="upload-file" class="btn btn-primary" id="upload-file-label">Upload File</label>
+                            <span id="chosen-file">No file chosen</span>
+                            <input type='file' id="upload-file" name='file' hidden>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="mod-flexbox">
+                            <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
+                            <button id="completeupload" type="button" class="btn btn-primary modal-footer-buttons" name="invbutton" value="upload">Confirm Upload</button>
+                        </div>
+                        <div class="mod-flexbox">
+                            <p class="emptywarning">No file selected.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block script %}
+
+    <script src="/static/app.js"></script>
+
+{% endblock %}

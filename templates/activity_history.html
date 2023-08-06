@@ -1,0 +1,50 @@
+<div class="mtboundary">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="text-center">Equipment</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Scanned By</th>
+                <th class="text-center">Received By</th>
+                <th class="text-center">Action</th>
+                <th class="text-center">Current Location</th>
+                <th class="text-center">Date of action</th>
+                <th class="text-center">Point of Contact</th>
+                <th class="text-center">Phone Number</th>
+                <th class="text-center">Patient Name</th>
+            </tr>
+        </thead>
+        <tbody id="tables" class="click_for_info">
+            {% for i in range(showinfo | length) %}
+                <tr>
+                    <td class="text-center">{{ showinfo[i]["equipment"] }}</td>
+                    <td class="text-center">{{ showinfo[i]["status"] }}</td>
+                    {% if showinfo[i]["scanned_first_name"] == "NA" %} 
+                        <td class="text-center">{{ showinfo[i]["scanned_first_name"] }}</td>
+                    {% else %}
+                        <td class="text-center">{{ showinfo[i]["scanned_name"] }}</td>
+                    {% endif %}
+                    {% if showinfo[i]["received_first_name"] == "NA" %} 
+                        <td class="text-center">{{ showinfo[i]["received_first_name"] }}</td>
+                    {% else %}
+                        <td class="text-center">{{ showinfo[i]["received_name"] }}</td>
+                    {% endif %}
+                    <td class="text-center">{{ showinfo[i]["action"] }}</td>
+                    {% if showinfo[i]["off_site_location"] == "NA" %} 
+                        <td class="text-center">{{ showinfo[i]["current_department"] }}-{{ showinfo[i]["current_room"] }}</td>
+                    {% else %}
+                        <td class="text-center">{{ showinfo[i]["off_site_location"] }}</td>
+                    {% endif %}
+                    <td class="text-center">{{ showinfo[i]["date_of_action"] }}</td>
+                    <td class="text-center">{{ showinfo[i]["point_of_contact"] }}</td>
+                    <td class="text-center">{{ showinfo[i]["phone_number"] }}</td>
+                    {% if showinfo[i]["patient_first_name"] == "NA" %} 
+                        <td class="text-center">{{ showinfo[i]["patient_first_name"] }}</td>
+                    {% else %}
+                        <td class="text-center">{{ showinfo[i]["patient_name"] }}</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
