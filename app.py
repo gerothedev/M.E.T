@@ -26,7 +26,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("postgresql://postgres:198104@localhost:5432/met")
+db = SQL("postgres://username:password@host:port/database")
 
 @app.after_request
 def after_request(response):
