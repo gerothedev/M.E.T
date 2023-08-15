@@ -523,7 +523,7 @@
                             <tr class="showrow">
                                 {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
                                     <td class="text-center cell-content0">
-                                        <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="replacedinventory" name="replacedinv">
+                                        <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="replacedinventory inventory-checkbox" name="replacedinv">
                                         <button type="button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">{{ inventory[i]["equipment"] }}</button>
                                     </td>
                                 {% elif session.user_role == "User" %}
@@ -578,7 +578,13 @@
                                             <label class="form-label">Have these items been replaced?</label><br>
                                             <div class="mod-flexbox">
                                                 <button id="closereplaced" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                                <button id="completereplaced" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="replaced">Confirm</button>
+                                                <button id="completereplaced" type="button" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="replaced">
+                                                    <span class="confirm-default-text">Confirm</span>
+                                                    <div class="loading-alert">
+                                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                                        <span role="status">Loading...</span>
+                                                    </div>
+                                                </button>
                                             </div>
                                         </div>
                                         <p class="emptyselection" style="display: none;">Please make a selection.</p>
@@ -638,7 +644,13 @@
                                 <div class="mod-flexbox">
                                     <input type='hidden' id='hidden-replaced-item' name='hidden-replaced-item'>
                                     <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
+                                    <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
+                                        <span class="confirm-default-text">Confirm</span>
+                                        <div class="loading-alert">
+                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                            <span role="status">Loading...</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         </div>

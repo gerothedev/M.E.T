@@ -11,7 +11,7 @@
     <form action="/search" method="get" id="searchform" autocomplete="off">
         <div id="searchbar" class="mb-3">
             <label for="search_by" class="form-label">Seach by Field Name</label>
-            <div>
+            <div id="search-flex">
                 <select id="fieldname" class="form-select" name="search_by">
                     <option disabled="" selected>Field</option>
                     <option value="Equipment">Equipment</option>
@@ -81,7 +81,13 @@
                 </select>
                 <!-- Input for date -->
                 <input class="form-control mx-auto" id="date" name="s" type="date">
-                <button class="btn btn-primary searchbutton" type="submit">Search</button>
+                <button type="submit" class="btn btn-primary prevent-click" id="searchbutton">
+                    <span class="confirm-default-text">Search</span>
+                    <div class="loading-alert">
+                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        <span role="status">Loading...</span>
+                    </div>
+                </button>
             </div>
         </div>
     </form>

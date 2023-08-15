@@ -156,7 +156,7 @@ if (document.querySelector(".tboundary") && (!(document.querySelector(".statusgr
       buttons += "<li><button onclick='sort("+(current - 1)+")'>"+ (current - 1) +"</button></li>";
       buttons += "<li><button onclick='sort("+(current)+")' "+ currbutton +">"+ current +"</button></li>";
       
-      if (!(current + 2 > pageCount)) 
+      if (current != pageCount) 
       {
       buttons += "<li><button onclick='sort("+(current + 1)+")'>"+ (current + 1) +"</button></li>";
       }
@@ -527,25 +527,7 @@ if (document.querySelector(".delbutton"))
     
     for (let i = 0; i < deleteinventory.length; i++)
     {
-      if (deleteinventory[i].className == "deleteuser")
-      {
-        deleteinventory[i].style.display = "inline-block";
-      }
-      else if (deleteinventory[i].className == "deleteinventory")
-      {
-        deleteinventory[i].style.display = "inline-block";
-      }
-    }
-
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = true;
-        }
-      }
+      deleteinventory[i].style.display = "inline-block";
     }
 
   });
@@ -557,27 +539,8 @@ if (document.querySelector(".delbutton"))
 
     for (let i = 0; i < deleteinventory.length; i++)
     {
-      if (deleteinventory[i].className == "deleteuser")
-      {
-        deleteinventory[i].style.display = "none";
-        deleteinventory[i].checked= false;
-      }
-      else if (deleteinventory[i].className == "deleteinventory")
-      {
-        deleteinventory[i].style.display = "none";
-        deleteinventory[i].checked= false;
-      }
-    }
-
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = false;
-        }
-      }
+      deleteinventory[i].style.display = "none";
+      deleteinventory[i].checked= false;
     }
 
   });
@@ -607,17 +570,6 @@ if (document.querySelector(".replacebutton"))
       replaceinventory[i].style.display = "inline-block";
     }
 
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = true;
-        }
-      }
-    }
-
   });
 
   document.querySelector("#closereplace").addEventListener('click', function(e){ 
@@ -629,17 +581,6 @@ if (document.querySelector(".replacebutton"))
     {
       replaceinventory[i].style.display = "none";
       replaceinventory[i].checked= false;
-    }
-
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = false;
-        }
-      }
     }
 
   });
@@ -669,17 +610,6 @@ if (document.querySelector(".replacedbutton"))
       replacedinventory[i].style.display = "inline-block";
     }
 
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = true;
-        }
-      }
-    }
-
   });
 
   document.querySelector("#closereplaced").addEventListener('click', function(e){ 
@@ -691,17 +621,6 @@ if (document.querySelector(".replacedbutton"))
     {
       replacedinventory[i].style.display = "none";
       replacedinventory[i].checked= false;
-    }
-
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = false;
-        }
-      }
     }
 
   });
@@ -732,17 +651,6 @@ if (document.querySelector(".missingbutton"))
       missinginventory[i].style.display = "inline-block";
     }
 
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = true;
-        }
-      }
-    }
-
   });
 
   document.querySelector("#closemissing").addEventListener('click', function(e){ 
@@ -754,17 +662,6 @@ if (document.querySelector(".missingbutton"))
     {
       missinginventory[i].style.display = "none";
       missinginventory[i].checked = false;
-    }
-
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = false;
-        }
-      }
     }
 
   });
@@ -909,9 +806,11 @@ if (document.querySelector(".editbutton"))
 {
  
   var editbutton = document.querySelector(".editbutton");
+  var editSingleItem = document.querySelector("#edit-item");
   var confirmedit = document.querySelector("#confirmedit");
   var editinventory = document.querySelectorAll(".editinventory");
-  
+  var completeEdit = document.querySelector("#completeedit")
+   
   for (let i = 0; i < editinventory.length; i++)
   {
     editinventory[i].style.display = "none"; 
@@ -926,6 +825,7 @@ if (document.querySelector(".editbutton"))
 
     editbutton.style.display = "none";
     confirmedit.style.display = "inline-block";
+    completeEdit.value = "edit"
     document.querySelector("#hidden-edit-item").value = null
     document.querySelector("#editInfoModalLabel").textContent = "Edit Items"
     
@@ -934,18 +834,13 @@ if (document.querySelector(".editbutton"))
       editinventory[i].style.display = "inline-block";
     }
 
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = true;
-        }
-      }
-    }
-
   });
+
+  editSingleItem.addEventListener("click", function() {
+
+    completeEdit.value = "edit-single-item"
+
+  })
 
   document.querySelector("#closeedit").addEventListener('click', function(e){ 
 
@@ -959,17 +854,6 @@ if (document.querySelector(".editbutton"))
       editinventory[i].style.display = "none";
       editinventory[i].checked = false;
 
-    }
-
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = false;
-        }
-      }
     }
 
   });
@@ -1087,25 +971,7 @@ if (document.querySelector(".archivebutton") || document.querySelector(".unarchi
     
     for (let i = 0; i < archiveinventory.length; i++)
     {
-      if (archiveinventory[i].className == "archiveinventory")
-      {
-        archiveinventory[i].style.display = "inline-block";
-      }
-      else if (archiveinventory[i].className == "unarchiveinventory")
-      {
-        archiveinventory[i].style.display = "inline-block";
-      }
-    }
-
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = true;
-        }
-      }
+      archiveinventory[i].style.display = "inline-block";
     }
 
   });
@@ -1117,27 +983,9 @@ if (document.querySelector(".archivebutton") || document.querySelector(".unarchi
 
     for (let i = 0; i < archiveinventory.length; i++)
     {
-      if (archiveinventory[i].className == "archiveinventory")
-      {
-        archiveinventory[i].style.display = "none";
-        archiveinventory[i].checked = false;
-      }
-      else if (archiveinventory[i].className == "unarchiveinventory")
-      {
-        archiveinventory[i].style.display = "none";
-        archiveinventory[i].checked = false;
-      }
-    }
 
-    if (document.querySelector(".navpages"))
-    {
-      for (let i = 0; i < togglenav.length; i++)
-      {
-        if (togglenav[i].firstElementChild.nodeName == "BUTTON")
-        {
-          togglenav[i].firstElementChild.disabled = false;
-        }
-      }
+      archiveinventory[i].style.display = "none";
+      archiveinventory[i].checked = false;
     }
 
   });
@@ -2077,25 +1925,34 @@ if (document.querySelector(".additem"))
     var replaceinv = document.getElementsByName("replaceinv")
     var hiddenaction = document.getElementsByName("hiddenaction")
 
+    if (document.querySelector(".additem"))
+    {
+      var hiddenstatus = document.getElementsByName("hiddenstatus")
+    }
+
     document.querySelector("#confirmreplace").addEventListener("click", function(e) {
 
-      for (let i = 0; i < replaceinv.length; i++)
+      if (document.querySelector(".additem"))
       {
-        if (replaceinv[i].checked == true)
-        { 
-          for (let j = i; j < replaceinv.length; j++)
-          {
-            if (hiddenaction[j].value == "CHECKED OUT" && replaceinv[j].checked == true)
+        for (let i = 0; i < replaceinv.length; i++)
+        {
+          if (replaceinv[i].checked == true)
+          { 
+            for (let j = i; j < replaceinv.length; j++)
             {
-              document.querySelector("#completereplace").type = "button";
-              break;
+              if ((hiddenaction[j].value == "CHECKED OUT" && replaceinv[j].checked == true) || (hiddenstatus[j].value == "REPLACE" && replaceinv[j].checked == true) || 
+              (hiddenstatus[j].value == "REPLACED" && replaceinv[j].checked == true))
+              {
+                document.querySelector("#completereplace").type = "button";
+                break;
+              }
+              else if (j == replaceinv.length - 1)
+              {
+                document.querySelector("#completereplace").type = "submit";
+              }
             }
-            else if (j == replaceinv.length - 1)
-            {
-              document.querySelector("#completereplace").type = "submit";
-            }
+            break;
           }
-          break;
         }
       }
 
@@ -2117,9 +1974,36 @@ if (document.querySelector(".additem"))
 
       for (let i = 0; i < replaceinv.length; i++)
       {
+
+        if (replaceinv[i].checked == true && (hiddenstatus[i].value == "REPLACE" || hiddenstatus[i].value == "REPLACED") && document.querySelector("#completereplace").type == "button")
+        {
+          document.querySelector(".already-replace").style.display = "block";
+
+          for (let j = 0; j < replaceinv.length; j++)
+          {
+            if (hiddenaction[j].value == "CHECKED OUT" && replaceinv[j].checked == true)
+            {
+              document.querySelector(".notcheckedin").style.display = "block";
+              break;
+            }
+          }
+
+          break;
+        }
+
         if (replaceinv[i].checked == true && document.querySelector("#completereplace").type == "button")
         {
           document.querySelector(".notcheckedin").style.display = "block";
+
+          for (let j = 0; j < replaceinv.length; j++)
+          {
+            if ((hiddenstatus[j].value == "REPLACE" || hiddenstatus[j].value == "REPLACED") && replaceinv[j].checked == true)
+            {
+              document.querySelector(".already-replace").style.display = "block";
+              break;
+            }
+          }
+
           break;
         }
         else if (i == replaceinv.length - 1 && document.querySelector("#completereplace").type == "button")
@@ -2136,6 +2020,7 @@ if (document.querySelector(".additem"))
       {
         document.querySelector(".notcheckedin").style.display = "none";
         document.querySelector(".emptyselection").style.display = "none";
+        document.querySelector(".already-replace").style.display = "none";
       }
 
     });
@@ -3086,6 +2971,18 @@ if (document.querySelector(".inventory-archive"))
     })
   }
 
+  document.addEventListener("click", function(e) {
+
+    for (let i = 0; i < showInfoOrHistory.length; i++)
+    {
+      if (!(showInfoOrHistory[i].contains(e.target)))
+      {
+        itemOptionSelect[i].style.display = "none"
+      }
+    }
+
+  });
+
 }
 
 // Code to show chosen file for upload inventory and prevent uploading without file selection
@@ -3127,6 +3024,36 @@ if (document.querySelector(".uploaditem"))
     }
 
   })
+}
+
+// Code to prevent user from clicking button multiple times
+
+if (document.querySelector(".prevent-click"))
+{
+  var preventClick = document.querySelectorAll(".prevent-click")
+
+  for (let i = 0; i < preventClick.length; i ++)
+  {
+    preventClick[i].addEventListener("click", function() {
+
+      setTimeout(function () { 
+        if (preventClick[i].type == "submit")
+        {
+          preventClick[i].disabled = true;
+          preventClick[i].querySelector(".confirm-default-text").style.display = "none"
+          preventClick[i].querySelector(".loading-alert").style.display = "block"
+
+          if (document.querySelector("#searchbutton"))
+          {
+            document.querySelector("#searchbutton").style.width = "155px"
+          }
+
+        }
+      }); 
+    
+    })
+  }
+
 }
 
 // Code to populate filter selection

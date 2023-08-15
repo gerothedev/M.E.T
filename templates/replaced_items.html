@@ -435,7 +435,7 @@
                         <tr class="showrow">
                             {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
                                 <td class="text-center cell-content0">
-                                    <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="archiveinventory" name="archiveinv" form="checkbox-form">
+                                    <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="archiveinventory inventory-checkbox" name="archiveinv" form="checkbox-form">
                                     <button type="button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">{{ inventory[i]["equipment"] }}</button>
                                 </td>
                             {% elif session.user_role == "User" %}
@@ -487,34 +487,16 @@
                                 <label class="form-label">Send to Archive?</label><br>
                                 <div class="mod-flexbox">
                                     <button id="closearchive" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                    <button id="completearchive" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="archive">Confirm</button>
+                                    <button id="completearchive" type="button" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="archive">
+                                        <span class="confirm-default-text">Confirm</span>
+                                        <div class="loading-alert">
+                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                            <span role="status">Loading...</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                             <p class="emptyselection" style="display: none;">Please make a selection.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-            <!-- Modal for marking single item as missing -->
-        <form action="/replaced_items" method="post">
-            <div class="modal fade" id="missing-single-item-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="missingSingleItemModalLabel">Missing Item</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Mark item as missing?</label><br>
-                                <div class="mod-flexbox">
-                                    <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                    <input type='hidden' id='hiddenmissingitem' name='hiddenmissingitem'>
-                                    <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -536,7 +518,13 @@
                                 <div class="mod-flexbox">
                                     <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
                                     <input type='hidden' id='hidden-archive-item' name='hidden-archive-item'>
-                                    <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
+                                    <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
+                                        <span class="confirm-default-text">Confirm</span>
+                                        <div class="loading-alert">
+                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                            <span role="status">Loading...</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div> 
                         </div>
@@ -558,12 +546,6 @@
                             <label for="qrcode" class="form-label">QR Code</label>
                             <div class="mb-3 qrflex">
                                 <img class="img-fluid" id="additional-info-qr">
-                            </div>
-                            <div class="mb-3">
-                                <a id="downloadqrcode" href="" download><button type="button" class="btn btn-primary downloadqr">Download QR Code</button></a>
-                            </div>
-                            <div class="mb-3">
-                                <button type="button" class="btn btn-primary additional-info-buttons"  data-bs-toggle='modal' data-bs-target='#missing-single-item-modal'>Mark as Missing</button>
                             </div>
                             <div class="mb-3">
                                 <button type="button" class="btn btn-primary additional-info-buttons" data-bs-toggle='modal' data-bs-target='#archive-single-item-modal'>Archive Item</button>
@@ -604,9 +586,7 @@
                         data: {"showinfo" : showinfo[i].value},
                         success: function(result){ 
                             img.src = "/static/qrcodes/"+ result['qr_code'] +".png";
-                            document.getElementById("hiddenmissingitem").value = result['qr_code'];
                             document.getElementById("hidden-archive-item").value = result['qr_code'];
-                            document.getElementById("downloadqrcode").href = "static/qrcodes/"+result['qr_code']+".png";
                         }
                     });
 

@@ -278,12 +278,14 @@
                         <tr class="showrow">
                             {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
                                 <td class="text-center cell-content0">
-                                    <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="unarchiveinventory" name="unarchiveinv" form="checkbox-form">
-                                    <button type="button" name="show-info-or-history">{{ inventory[i]["equipment"] }}</button>
-                                    <ul class="item-option-select" style="display: none;">
-                                        <li class="item-option"><button type="button" class="item-option-button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">More Info</button></li>
-                                        <li class="item-option"><button type="button" class="item-option-button" name="showhistory" value="{{ inventory[i]['qr_code'] }}">Item History</button></li>
-                                    </ul>
+                                    <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="unarchiveinventory inventory-checkbox" name="unarchiveinv" form="checkbox-form">
+                                    <div class="show-button-wrapper">
+                                        <button type="button" name="show-info-or-history">{{ inventory[i]["equipment"] }}</button>
+                                        <ul class="item-option-select" style="display: none;">
+                                            <li class="item-option"><button type="button" class="item-option-button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">More Info</button></li>
+                                            <li class="item-option"><button type="button" class="item-option-button" name="showhistory" value="{{ inventory[i]['qr_code'] }}">Item History</button></li>
+                                        </ul>
+                                    </div>
                                 </td>
                             {% else %}
                                 <td class="text-center cell-content0">{{ inventory[i]["equipment"] }}</td>
@@ -320,7 +322,13 @@
                                 <label class="form-label">Unarchive item?</label><br>
                                 <div class="mod-flexbox">
                                     <button id="closeunarchive" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                    <button id="completeunarchive" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="unarchive">Confirm</button>
+                                    <button id="completeunarchive" type="button" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="add">
+                                        <span class="confirm-default-text">Confirm</span>
+                                        <div class="loading-alert">
+                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                            <span role="status">Loading...</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                             <p class="emptyselection" style="display: none;">Please make a selection.</p>
@@ -345,7 +353,13 @@
                                 <div class="mod-flexbox">
                                     <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
                                     <input type='hidden' id='hidden-unarchive' name='hidden-unarchive'>
-                                    <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
+                                    <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
+                                        <span class="confirm-default-text">Confirm</span>
+                                        <div class="loading-alert">
+                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                            <span role="status">Loading...</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                             <p class="emptyselection" style="display: none;">Please make a selection.</p>

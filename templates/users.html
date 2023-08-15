@@ -110,10 +110,10 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th class="text-start">First Name</th>
-                            <th class="text-start">Last Name</th>
-                            <th class="text-end">Email</th>
-                            <th class="text-end">User Role</th>
+                            <th class="text-center">First Name</th>
+                            <th class="text-center">Last Name</th>
+                            <th class="text-center">Email</th>
+                            <th class="text-center">User Role</th>
                         </tr>
                     </thead>
                     <tbody id="tables">
@@ -121,26 +121,26 @@
                             <tr>
                                 {% if session.user_role == "Super Administrator" %}
                                     {% if user.role_id == 2 or user.role_id == 3 or user.role_id == 4 %}
-                                        <td class="text-start"><input type="checkbox" value="{{ user.email }}" class="deleteuser" name="deluser"> {{ user.first_name }}</td>
+                                        <td class="text-center"><input type="checkbox" value="{{ user.email }}" class="deleteuser inventory-checkbox" name="deluser"> {{ user.first_name }}</td>
                                     {% else %}
-                                        <td class="text-start">{{ user.first_name }}</td>
+                                        <td class="text-center">{{ user.first_name }}</td>
                                     {% endif %}
                                 {% elif session.user_role == "Dept Administrator" %}
                                     {% if user.role_id == 3 or user.role_id == 4 %}
-                                        <td class="text-start"><input type="checkbox" value="{{ user.email }}" class="deleteuser" name="deluser"> {{ user.first_name }}</td>
+                                        <td class="text-center"><input type="checkbox" value="{{ user.email }}" class="deleteuser inventory-checkbox" name="deluser"> {{ user.first_name }}</td>
                                     {% else %}
-                                        <td class="text-start">{{ user.first_name }}</td>
+                                        <td class="text-center">{{ user.first_name }}</td>
                                     {% endif %}
                                 {% elif session.user_role == "Administrator" %}
                                     {% if user.role_id == 4 %}
-                                        <td class="text-start"><input type="checkbox" value="{{ user.email }}" class="deleteuser" name="deluser"> {{ user.first_name }}</td>
+                                        <td class="text-center"><input type="checkbox" value="{{ user.email }}" class="deleteuser inventory-checkbox" name="deluser"> {{ user.first_name }}</td>
                                     {% else %}
-                                        <td class="text-start">{{ user.first_name }}</td>
+                                        <td class="text-center">{{ user.first_name }}</td>
                                     {% endif %}
                                 {% endif %}
-                                <td class="text-start">{{ user.last_name }}</td>
-                                <td class="text-end">{{ user.email }}</td>
-                                <td class="text-end">{{ user.role_name }}</td>
+                                <td class="text-center">{{ user.last_name }}</td>
+                                <td class="text-center">{{ user.email }}</td>
+                                <td class="text-center">{{ user.role_name }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

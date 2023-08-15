@@ -21,13 +21,12 @@ app = Flask(__name__)
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-app.config["SESSION_COOKIE_NAME"] 
+app.config['SESSION_COOKIE_NAME'] 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///tracker.db")
-db.execute("PRAGMA foreign_keys = ON")
+db = SQL("postgres://username:password@host:port/database")
 
 @app.after_request
 def after_request(response):
@@ -43,7 +42,8 @@ def after_request(response):
 def index():
 
     qr = request.form.get("showinfo")
-    equipment_info = db.execute("SELECT MAX(recent_activity.id), \
+    equipment_info = db.execute("SELECT DISTINCT ON (inventory.id) inventory.id, \
+                                        recent_activity.id, \
                                         equipment, \
                                         model, \
                                         serial, \
@@ -66,20 +66,51 @@ def index():
                                         (patient_first_name || ' ' || patient_last_name) AS patient_name \
                                    FROM inventory \
                                         JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                  WHERE qr_code = ? GROUP BY inventory.id", qr)
+                                  WHERE qr_code = ? \
+                                  ORDER BY inventory.id, recent_activity.id DESC", qr)
 
-    in_use = db.execute("SELECT MAX(recent_activity.id), status FROM inventory JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                        GROUP BY inventory.id")
-    loaned = db.execute("SELECT MAX(recent_activity.id), status FROM inventory JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                        GROUP BY inventory.id")
-    off_site = db.execute("SELECT MAX(recent_activity.id), status FROM inventory JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                          GROUP BY inventory.id")
-    out_for_repair = db.execute("SELECT MAX(recent_activity.id), status FROM inventory JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                GROUP BY inventory.id")
-    replace = db.execute("SELECT MAX(recent_activity.id), status FROM inventory JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                         GROUP BY inventory.id")
-    missing = db.execute("SELECT MAX(recent_activity.id), status FROM inventory JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                         GROUP BY inventory.id")
+    in_use = db.execute("SELECT DISTINCT ON (inventory.id) inventory.id, \
+                                recent_activity.id, \
+                                status \
+                           FROM inventory \
+                                JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                          ORDER BY inventory.id, recent_activity.id DESC")
+
+    loaned = db.execute("SELECT DISTINCT ON (inventory.id) inventory.id, \
+                                recent_activity.id, \
+                                status \
+                           FROM inventory \
+                                JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                          ORDER BY inventory.id, recent_activity.id DESC")
+
+    off_site =db.execute("SELECT DISTINCT ON (inventory.id) inventory.id, \
+                                recent_activity.id, \
+                                status \
+                           FROM inventory \
+                                JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                          ORDER BY inventory.id, recent_activity.id DESC")
+
+    out_for_repair =db.execute("SELECT DISTINCT ON (inventory.id) inventory.id, \
+                                recent_activity.id, \
+                                status \
+                           FROM inventory \
+                                JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                          ORDER BY inventory.id, recent_activity.id DESC")
+
+    replace =db.execute("SELECT DISTINCT ON (inventory.id) inventory.id, \
+                                recent_activity.id, \
+                                status \
+                           FROM inventory \
+                                JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                          ORDER BY inventory.id, recent_activity.id DESC")
+
+    missing =db.execute("SELECT DISTINCT ON (inventory.id) inventory.id, \
+                                recent_activity.id, \
+                                status \
+                           FROM inventory \
+                                JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                          ORDER BY inventory.id, recent_activity.id DESC")
+
     
     in_use = [i for i in in_use if (i["status"] == "IN USE")]
     loaned = [i for i in loaned if (i["status"] == "LOANED")]
@@ -152,54 +183,57 @@ def index():
 @login_required(role="ANY ADMIN")
 def admin_inventory():
     
-    inventory = db.execute("SELECT MAX(recent_activity.id), \
-                                        inventory.id AS equipment_id, \
-                                        equipment, \
-                                        model, \
-                                        serial, \
-                                        ee, \
-                                        assigned_department, \
-                                        assigned_room, \
-                                        (assigned_room || '-' || assigned_department) AS assigned_location, \
-                                        qr_code, \
-                                        date_added, \
-                                        (added_first_name || ' ' || added_last_name) AS added_name, \
-                                        repl_date, \
-                                	    status, \
-                                        current_department, \
-                                        current_room, \
-                                        (current_room || '-' || current_department) AS current_location, \
-                                        scanned_first_name, \
-                                        (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                        received_first_name, \
-                                        (received_first_name || ' ' || received_last_name) AS received_name, \
-                                        action, \
-                                        date_of_action, \
-                                        SUBSTR(date_of_action, 1, 10) AS doa,\
-                                        off_site_location, \
-                                        point_of_contact, \
-                                        phone_number, \
-                                        patient_first_name, \
-                                        patient_last_name \
-                                   FROM inventory \
-                                        JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                  GROUP BY inventory.id \
-                                  ORDER BY equipment ASC, inventory.id ASC")
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
     
-    depts = db.execute("SELECT * FROM departments")
-    rooms = db.execute("SELECT * FROM rooms")
-    existingdepts = db.execute("SELECT * FROM departments")
-    existingrooms = db.execute("SELECT * FROM rooms")
+    depts = db.execute("SELECT * FROM department")
+    rooms = db.execute("SELECT * FROM room")
+    existingdepts = db.execute("SELECT * FROM department")
+    existingrooms = db.execute("SELECT * FROM room")
     adept_id = 0
     qr = request.form.get("showinfo")
-    equipment_info = db.execute("SELECT MAX(recent_activity.id), \
-                                        qr_code, \
+    equipment_info = db.execute("SELECT DISTINCT ON (inventory.id) qr_code, \
                                         status  \
                                    FROM inventory \
                                         JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                  WHERE qr_code = ? GROUP BY inventory.id", qr)
-    edit_qr = request.form.get("hidden-edit-item")
+                                  WHERE qr_code = ? \
+                                  ORDER BY inventory.id, recent_activity.id DESC", qr)
     edit_fields = request.form.getlist("edit-field")
+    edit_items = None
+    edit_replace_date = request.form.get("edit-date-field")
     delete_qr = request.form.get("hidden-delete-item")
     archive_qr = request.form.get("hidden-archive-item")
     replace_qr = request.form.get("hidden-replace-item")
@@ -218,9 +252,13 @@ def admin_inventory():
     date_format = "%Y-%m-%d"
 
     if request.method == "POST" and (request.form.get("invbutton") == "add" or request.form.get("invbutton") == "replace" or request.form.get("invbutton") == "missing" or 
-    request.form.get("invbutton") == "delete" or (request.form.get("invbutton") == "edit" and not edit_qr) or request.form.get("invbutton") == "archive"):
+    request.form.get("invbutton") == "delete" or (request.form.get("invbutton") == "edit" or request.form.get("invbutton") == "edit-single-item") or request.form.get("invbutton") == "archive"):
 
-        edit_items = request.form.getlist("editinv")
+        if request.form.get("invbutton") == "edit":
+            edit_items = request.form.getlist("editinv")
+        elif request.form.get("invbutton") == "edit-single-item":
+            edit_items = request.form.getlist("hidden-edit-item")
+        
         replace_item = request.form.getlist("replaceinv")
         missing_items = request.form.getlist("missinginv")
         archive_items = request.form.getlist("archiveinv")
@@ -230,6 +268,9 @@ def admin_inventory():
         if edit_items:
             
             inventory_item = [None] * len(edit_items)
+            
+            if edit_replace_date:
+                edit_replace_date = datetime.strptime(edit_replace_date, date_format)
 
             for i in range(len(edit_items)): 
                 for j in range(len(inventory)): 
@@ -249,7 +290,7 @@ def admin_inventory():
                 item_model = editinv[0]["model"]
                 item_serial = editinv[0]["serial"]
                 item_dept = editinv[0]["assigned_department"]
-                adept_id = db.execute("SELECT id FROM departments WHERE building = ?", item_dept)
+                adept_id = db.execute("SELECT id FROM department WHERE building = ?", item_dept)
 
                 if edit_fields[0]:
                     edit_fields[0] = edit_fields[0].strip()
@@ -277,16 +318,16 @@ def admin_inventory():
                     edit_fields[4] = edit_fields[4].upper()
 
                     if existingdepts:
-                        for i in range(len(existingdepts)):
-                            if existingdepts[i]["building"] == edit_fields[4]:
-                                adept_id = db.execute("SELECT id FROM departments WHERE building = ?", edit_fields[4])
+                        for j in range(len(existingdepts)):
+                            if existingdepts[j]["building"] == edit_fields[4]:
+                                adept_id = db.execute("SELECT id FROM department WHERE building = ?", edit_fields[4])
                                 break
-                            elif i == len(existingdepts) - 1:
-                                db.execute("INSERT INTO departments (building) VALUES (?)", edit_fields[4])
-                                adept_id = db.execute("SELECT id FROM departments WHERE building = ?", edit_fields[4])
+                            elif j == len(existingdepts) - 1:
+                                db.execute("INSERT INTO department (building) VALUES (?)", edit_fields[4])
+                                adept_id = db.execute("SELECT id FROM department WHERE building = ?", edit_fields[4])
                     else:
-                        db.execute("INSERT INTO departments (building) VALUES (?)", edit_fields[4])
-                        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", edit_fields[4])
+                        db.execute("INSERT INTO department (building) VALUES (?)", edit_fields[4])
+                        adept_id = db.execute("SELECT id FROM department WHERE building = ?", edit_fields[4])
 
                     db.execute("UPDATE inventory SET assigned_department = ? WHERE qr_code = ?", edit_fields[4], inventory_item[i]["qr_code"])
 
@@ -295,13 +336,13 @@ def admin_inventory():
                     edit_fields[5] = edit_fields[5].upper()
 
                     if existingrooms:
-                        for i in range(len(existingrooms)):
-                            if existingrooms[i]["rooms"] == edit_fields[5] and existingrooms[i]["department_id"] == adept_id[0]["id"]:
+                        for j in range(len(existingrooms)):
+                            if existingrooms[j]["rooms"] == edit_fields[5] and existingrooms[j]["department_id"] == adept_id[0]["id"]:
                                 break
-                            elif i == len(existingrooms) - 1:
-                                db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], edit_fields[5])
+                            elif j == len(existingrooms) - 1:
+                                db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], edit_fields[5])
                     else:
-                        db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], edit_fields[5])
+                        db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], edit_fields[5])
 
                     db.execute("UPDATE inventory SET assigned_room = ? WHERE qr_code = ?", edit_fields[5], inventory_item[i]["qr_code"])
 
@@ -317,11 +358,11 @@ def admin_inventory():
 
                     db.execute("UPDATE inventory SET assigned_room = ? WHERE qr_code = ?", edit_fields[7], inventory_item[i]["qr_code"])
 
-                if edit_fields[8]:
-                    edit_fields[8] = datetime.strptime(edit_fields[8], date_format)
-                    edit_fields[8] = edit_fields[8].strftime("%m/%d/%Y")
-                    edit_fields[8] = edit_fields[8].strip()
-                    db.execute("UPDATE inventory SET repl_date = ? WHERE qr_code = ?", edit_fields[8], inventory_item[i]["qr_code"])
+                if edit_replace_date:
+                    edit_date = edit_replace_date
+                    edit_date = edit_date.strftime("%m/%d/%Y")
+                    edit_date = edit_date.strip()
+                    db.execute("UPDATE inventory SET repl_date = ? WHERE qr_code = ?", edit_date, inventory_item[i]["qr_code"])
 
                 if edit_fields[0] or edit_fields[1] or edit_fields[2]:
                     os.remove(f"static/qrcodes/{inventory_item[i]['qr_code']}.png")
@@ -374,13 +415,13 @@ def admin_inventory():
                 cdept = inventory_item[i]["current_department"]
                 croom = inventory_item[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory_item[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -417,13 +458,13 @@ def admin_inventory():
                 cdept = inventory_item[i]["current_department"]
                 croom = inventory_item[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory_item[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -460,13 +501,13 @@ def admin_inventory():
                 cdept = inventory_item[i]["current_department"]
                 croom = inventory_item[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory_item[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -524,11 +565,11 @@ def admin_inventory():
             if request.form.get("date_added"):
                 date_added = datetime.strptime(request.form.get("date_added"), date_format)
                 date_added = date_added.strftime("%m/%d/%Y")
-            added_by = db.execute("SELECT id FROM users WHERE id = ?", session["user_id"])
+            added_by = db.execute("SELECT id FROM \"user\" WHERE id = ?", session["user_id"])
             added_by = added_by[0]["id"]
-            added_first_name = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+            added_first_name = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
             added_first_name = added_first_name[0]["first_name"]
-            added_last_name = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+            added_last_name = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
             added_last_name = added_last_name[0]["last_name"]
             if request.form.get("replace_date"):
                 repl_date = datetime.strptime(request.form.get("replace_date"), date_format)
@@ -567,23 +608,23 @@ def admin_inventory():
             if existingdepts:
                 for i in range(len(existingdepts)):
                     if existingdepts[i]["building"] == adept:
-                        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", adept)
+                        adept_id = db.execute("SELECT id FROM department WHERE building = ?", adept)
                         break
                     elif i == len(existingdepts) - 1:
-                        db.execute("INSERT INTO departments (building) VALUES (?)", adept)
-                        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", adept)
+                        db.execute("INSERT INTO department (building) VALUES (?)", adept)
+                        adept_id = db.execute("SELECT id FROM department WHERE building = ?", adept)
             else:
-                db.execute("INSERT INTO departments (building) VALUES (?)", adept)
-                adept_id = db.execute("SELECT id FROM departments WHERE building = ?", adept)
+                db.execute("INSERT INTO department (building) VALUES (?)", adept)
+                adept_id = db.execute("SELECT id FROM department WHERE building = ?", adept)
 
             if existingrooms:
                 for i in range(len(existingrooms)):
                     if existingrooms[i]["rooms"] == aroom and existingrooms[i]["department_id"] == adept_id[0]["id"]:
                         break
                     elif i == len(existingrooms) - 1:
-                        db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
+                        db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
             else:
-                db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
+                db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
 
             db.execute("INSERT INTO inventory (equipment, model, serial, ee, assigned_department, assigned_room, qr_code, date_added, added_by, added_first_name, added_last_name, repl_date) \
                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", equipment, model, serial, ee, adept, aroom, qr_code, date_added, added_by, added_first_name, added_last_name, repl_date)
@@ -625,122 +666,6 @@ def admin_inventory():
             
             return redirect("/admin_inventory")
         
-    # Allows user to edit inventory item information
-    elif request.method == "POST" and request.form.get("invbutton") == "edit" and edit_qr:
-            
-        editinv = db.execute("SELECT equipment, model, serial, assigned_department FROM inventory WHERE qr_code = ?", edit_qr)
-        item_name = editinv[0]["equipment"]
-        item_model = editinv[0]["model"]
-        item_serial = editinv[0]["serial"]
-        item_dept = editinv[0]["assigned_department"]
-        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", item_dept)
-
-        for i in range(len(edit_fields)):
-            if edit_fields[i] != "":
-                break 
-            if i == len(edit_fields) - 1:
-                return apology("At least one field must be changed.", 400, "/admin_inventory")
-        
-        if edit_fields[0]:
-            edit_fields[0] = edit_fields[0].strip()
-            edit_fields[0] = edit_fields[0].upper()
-
-            db.execute("UPDATE inventory SET equipment = ? WHERE qr_code = ?", edit_fields[0], edit_qr)
-
-        if edit_fields[1]:
-            edit_fields[1] = edit_fields[1].strip()
-            edit_fields[1] = edit_fields[1].upper()
-            db.execute("UPDATE inventory SET model = ? WHERE qr_code = ?", edit_fields[1], edit_qr)
-
-        if edit_fields[2]:
-            edit_fields[2] = edit_fields[2].strip()
-            edit_fields[2] = edit_fields[2].upper()
-            db.execute("UPDATE inventory SET serial = ? WHERE qr_code = ?", edit_fields[2], edit_qr)
-
-        if edit_fields[3]:
-            edit_fields[3] = edit_fields[3].strip()
-            edit_fields[3] = edit_fields[3].upper()
-            db.execute("UPDATE inventory SET ee = ? WHERE qr_code = ?", edit_fields[3], edit_qr)
-
-        if edit_fields[4]:
-            edit_fields[4] = edit_fields[4].strip()
-            edit_fields[4] = edit_fields[4].upper()
-
-            if existingdepts:
-                for i in range(len(existingdepts)):
-                    if existingdepts[i]["building"] == edit_fields[4]:
-                        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", edit_fields[4])
-                        break
-                    elif i == len(existingdepts) - 1:
-                        db.execute("INSERT INTO departments (building) VALUES (?)", edit_fields[4])
-                        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", edit_fields[4])
-            else:
-                db.execute("INSERT INTO departments (building) VALUES (?)", edit_fields[4])
-                adept_id = db.execute("SELECT id FROM departments WHERE building = ?", edit_fields[4])
-
-            db.execute("UPDATE inventory SET assigned_department = ? WHERE qr_code = ?", edit_fields[4], edit_qr)
-
-        if edit_fields[5]:
-            edit_fields[5] = edit_fields[5].strip()
-            edit_fields[5] = edit_fields[5].upper()
-
-            if existingrooms:
-                for i in range(len(existingrooms)):
-                    if existingrooms[i]["rooms"] == edit_fields[5] and existingrooms[i]["department_id"] == adept_id[0]["id"]:
-                        break
-                    elif i == len(existingrooms) - 1:
-                        db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], edit_fields[5])
-            else:
-                db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], edit_fields[5])
-
-            db.execute("UPDATE inventory SET assigned_room = ? WHERE qr_code = ?", edit_fields[5], edit_qr)
-
-        if edit_fields[6] != "Department":
-            edit_fields[6] = edit_fields[6].strip()
-            edit_fields[6] = edit_fields[6].upper()
-
-            db.execute("UPDATE inventory SET assigned_department = ? WHERE qr_code = ?", edit_fields[6], edit_qr)
-
-        if edit_fields[7] != "Room":
-            edit_fields[7] = edit_fields[7].strip()
-            edit_fields[7] = edit_fields[7].upper()
-
-            db.execute("UPDATE inventory SET assigned_room = ? WHERE qr_code = ?", edit_fields[7], edit_qr)
-
-        if edit_fields[8]:
-            edit_fields[8] = datetime.strptime(edit_fields[8], date_format)
-            edit_fields[8] = edit_fields[8].strftime("%m/%d/%Y")
-            edit_fields[8] = edit_fields[8].strip()
-            db.execute("UPDATE inventory SET repl_date = ? WHERE qr_code = ?", edit_fields[8], edit_qr)
-
-        if edit_fields[0] or edit_fields[1] or edit_fields[2]:
-            os.remove(f"static/qrcodes/{edit_qr}.png")
-
-            img = qrcode.make(edit_qr)
-            type(img)  # qrcode.image.pil.PilImage
-            background = Image.new('RGBA', (290, 340), (255,255,255,255))
-            font = ImageFont.truetype("static/fonts/arial.ttf", 11)
-            draw = ImageDraw.Draw(background)
-            if edit_fields[0]:
-                draw.text((20,290), f"Equipment: {edit_fields[0]}", (0,0,0), font=font)
-                draw.rectangle(((270, 290), (290, 340)), fill="white")
-            else:
-                draw.text((20,290), f"Equipment: {item_name}", (0,0,0), font=font)
-                draw.rectangle(((0, 00), (100, 100)), fill="white")
-            if edit_fields[1]:
-                draw.text((20,305), f"Model: {edit_fields[1]}", (0,0,0), font=font)
-            else:
-                draw.text((20,305), f"Model: {item_model}", (0,0,0), font=font)
-            if edit_fields[2]:
-                draw.text((20,320), f"Serial: {edit_fields[2]}", (0,0,0), font=font)
-            else:
-                draw.text((20,320), f"Serial: {item_serial}", (0,0,0), font=font)
-            draw.rectangle(((270, 290), (290, 340)), fill="white")
-            background.paste(img, (0,1))
-            background.save(f"static/qrcodes/{edit_qr}.png")
-
-        return redirect("/admin_inventory")
-    
     # Allows user to delete item
     elif request.method == "POST" and delete_qr:
 
@@ -761,13 +686,13 @@ def admin_inventory():
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -787,19 +712,26 @@ def admin_inventory():
         
         for i in range(len(inventory)):
             if inventory[i]["qr_code"] == replace_qr:
+
+                if inventory[i]["status"] == "REPLACE" or inventory[i]["status"] == "REPLACED":
+                    return apology("Item status is already set to replace or replaced.", 400, "/admin_inventory")
+                
+                if inventory[i]["action"] == "CHECKED OUT":
+                    return apology("All items must be checked in.", 400, "/admin_inventory")
+
                 # Variables correspond to recent_activity table
                 inventory_id = inventory[i]["equipment_id"]
                 status = "REPLACE"
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -820,19 +752,23 @@ def admin_inventory():
         
         for i in range(len(inventory)):
             if inventory[i]["qr_code"] == missingitem:
+
+                if inventory[i]["status"] == "MISSING":
+                    return apology("Items already marked as missing.", 400, "/admin_inventory")
+
                 # Variables correspond to recent_activity table
                 inventory_id = inventory[i]["equipment_id"]
                 status = "MISSING"
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -1097,35 +1033,38 @@ def admin_inventory():
 @login_required(role="User")
 def inventory():
     
-    inventory = db.execute("SELECT MAX(recent_activity.id), \
-                                    inventory.id AS equipment_id, \
-                                    equipment, \
-                                    model, \
-                                    serial, \
-                                    ee, \
-                                    assigned_department, \
-                                    assigned_room, \
-                                    (assigned_room || '-' || assigned_department) AS assigned_location, \
-                                    qr_code, \
-                                    date_added, \
-                                    (added_first_name || ' ' || added_last_name) AS added_name, \
-                                    repl_date, \
-                                    status, \
-                                    current_department, \
-                                    current_room, \
-                                    (current_room || '-' || current_department) AS current_location, \
-                                    scanned_first_name, \
-                                    (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                    received_first_name, \
-                                    (received_first_name || ' ' || received_last_name) AS received_name, \
-                                    action, \
-                                    date_of_action, \
-                                    SUBSTR(date_of_action, 1, 10) AS doa,\
-                                    off_site_location \
-                               FROM inventory \
-                                    JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                GROUP BY inventory.id \
-                                ORDER BY equipment ASC, inventory.id ASC")
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
+    
     filters = request.args.getlist("filter")
     filterdate = request.args.getlist("filterdate")
     status_filter = request.args.get("sf")
@@ -1377,40 +1316,42 @@ def inventory():
 @login_required(role="ANY")
 def off_site():
 
-    inventory = db.execute("SELECT MAX(recent_activity.id), \
-                                    inventory.id AS equipment_id, \
-                                    equipment, \
-                                    model, \
-                                    serial, \
-                                    ee, \
-                                    assigned_department, \
-                                    assigned_room, \
-                                    (assigned_room || '-' || assigned_department) AS assigned_location, \
-                                    qr_code, \
-                                    date_added, \
-                                    (added_first_name || ' ' || added_last_name) AS added_name, \
-                                    repl_date, \
-                                    status, \
-                                    current_department, \
-                                    current_room, \
-                                    (current_room || '-' || current_department) AS current_location, \
-                                    scanned_first_name, \
-                                    (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                    received_first_name, \
-                                    (received_first_name || ' ' || received_last_name) AS received_name, \
-                                    action, \
-                                    date_of_action, \
-                                    SUBSTR(date_of_action, 1, 10) AS doa,\
-                                    off_site_location, \
-                                    point_of_contact, \
-                                    phone_number, \
-                                    patient_first_name, \
-                                    patient_last_name, \
-                                    (patient_first_name || ' ' || patient_last_name) AS patient_name \
-                               FROM inventory \
-                                    JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                GROUP BY inventory.id \
-                                ORDER BY equipment ASC, inventory.id ASC")
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name, \
+                                           (patient_first_name || ' ' || patient_last_name) AS patient_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
     missingitem =  request.form.get("hiddenmissingitem")
@@ -1454,13 +1395,13 @@ def off_site():
             cdept = inventory_item[i]["current_department"]
             croom = inventory_item[i]["current_room"]
             employee_id = session["user_id"]
-            sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+            sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
             sfn = sfn[0]["first_name"]
-            sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+            sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
             sln = sln[0]["last_name"]
-            rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+            rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
             rfn = rfn[0]["first_name"]
-            rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+            rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
             rln = rln[0]["last_name"]
             action = inventory_item[i]["action"]
             doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -1486,13 +1427,13 @@ def off_site():
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -1629,39 +1570,41 @@ def off_site():
 @login_required(role="ANY")
 def replace():
 
-    inventory = db.execute("SELECT MAX(recent_activity.id), \
-                                        inventory.id AS equipment_id, \
-                                        equipment, \
-                                        model, \
-                                        serial, \
-                                        ee, \
-                                        assigned_department, \
-                                        assigned_room, \
-                                        (assigned_room || '-' || assigned_department) AS assigned_location, \
-                                        qr_code, \
-                                        date_added, \
-                                        (added_first_name || ' ' || added_last_name) AS added_name, \
-                                        repl_date, \
-                                        status, \
-                                        current_department, \
-                                        current_room, \
-                                        (current_room || '-' || current_department) AS current_location, \
-                                        scanned_first_name, \
-                                        (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                        received_first_name, \
-                                        (received_first_name || ' ' || received_last_name) AS received_name, \
-                                        action, \
-                                        date_of_action, \
-                                        SUBSTR(date_of_action, 1, 10) AS doa,\
-                                        off_site_location, \
-                                        point_of_contact, \
-                                        phone_number, \
-                                        patient_first_name, \
-                                        patient_last_name \
-                                    FROM inventory \
-                                        JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                    GROUP BY inventory.id \
-                                    ORDER BY equipment ASC, inventory.id ASC")
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
     replaced_qr = request.form.get("hidden-replaced-item")
@@ -1702,13 +1645,13 @@ def replace():
                 cdept = inventory_item[i]["current_department"]
                 croom = inventory_item[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory_item[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -1727,8 +1670,8 @@ def replace():
         elif not replacedinv:
             return apology("Please make a selection.", 400, "/replace")
         
-    elif request.method == "POST" and request.form.get("invbutton") == "missing":
     # Sends items marked by user to missing page
+    elif request.method == "POST" and request.form.get("invbutton") == "missing":
 
         missing_items = request.form.getlist("missinginv")
 
@@ -1750,13 +1693,13 @@ def replace():
             cdept = inventory_item[i]["current_department"]
             croom = inventory_item[i]["current_room"]
             employee_id = session["user_id"]
-            sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+            sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
             sfn = sfn[0]["first_name"]
-            sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+            sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
             sln = sln[0]["last_name"]
-            rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+            rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
             rfn = rfn[0]["first_name"]
-            rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+            rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
             rln = rln[0]["last_name"]
             action = inventory_item[i]["action"]
             doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -1788,13 +1731,13 @@ def replace():
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -1820,13 +1763,13 @@ def replace():
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -1978,42 +1921,43 @@ def replace():
 @login_required(role="ANY")
 def replaced_items():
 
-    inventory = db.execute("SELECT MAX(recent_activity.id), \
-                                    inventory.id AS equipment_id, \
-                                    equipment, \
-                                    model, \
-                                    serial, \
-                                    ee, \
-                                    assigned_department, \
-                                    assigned_room, \
-                                    (assigned_room || '-' || assigned_department) AS assigned_location, \
-                                    qr_code, \
-                                    date_added, \
-                                    (added_first_name || ' ' || added_last_name) AS added_name, \
-                                    repl_date, \
-                                    status, \
-                                    current_department, \
-                                    current_room, \
-                                    (current_room || '-' || current_department) AS current_location, \
-                                    scanned_first_name, \
-                                    (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                    received_first_name, \
-                                    (received_first_name || ' ' || received_last_name) AS received_name, \
-                                    action, \
-                                    date_of_action, \
-                                    SUBSTR(date_of_action, 1, 10) AS doa,\
-                                    off_site_location, \
-                                    point_of_contact, \
-                                    phone_number, \
-                                    patient_first_name, \
-                                    patient_last_name \
-                                FROM inventory \
-                                    JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                GROUP BY inventory.id \
-                                ORDER BY equipment ASC, inventory.id ASC")
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
-    missingitem =  request.form.get("hiddenmissingitem")
     archive_qr = request.form.get("hidden-archive-item")
     filters = request.args.getlist("filter")
     filterdate = request.args.getlist("filterdate")
@@ -2047,13 +1991,13 @@ def replaced_items():
                 cdept = inventory_item[i]["current_department"]
                 croom = inventory_item[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory_item[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -2075,39 +2019,6 @@ def replaced_items():
 
         return equipment_info
     
-    # Mark item as missing
-    elif request.method == "POST" and missingitem:
-        
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == missingitem:
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "MISSING"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/replaced_items")
-
     # Send single item to archive
     elif request.method == "POST" and archive_qr:
         
@@ -2119,13 +2030,13 @@ def replaced_items():
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -2308,40 +2219,42 @@ def replaced_items():
 @login_required(role="ANY")
 def missing():
 
-    inventory = db.execute("SELECT MAX(recent_activity.id), \
-                                    inventory.id AS equipment_id, \
-                                    equipment, \
-                                    model, \
-                                    serial, \
-                                    ee, \
-                                    assigned_department, \
-                                    assigned_room, \
-                                    (assigned_room || '-' || assigned_department) AS assigned_location, \
-                                    qr_code, \
-                                    date_added, \
-                                    (added_first_name || ' ' || added_last_name) AS added_name, \
-                                    repl_date, \
-                                    status, \
-                                    current_department, \
-                                    current_room, \
-                                    (current_room || '-' || current_department) AS current_location, \
-                                    scanned_first_name, \
-                                    (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                    received_first_name, \
-                                    (received_first_name || ' ' || received_last_name) AS received_name, \
-                                    action, \
-                                    date_of_action, \
-                                    SUBSTR(date_of_action, 1, 10) AS doa,\
-                                    off_site_location, \
-                                    point_of_contact, \
-                                    phone_number, \
-                                    patient_first_name, \
-                                    patient_last_name, \
-                                    (patient_first_name || ' ' || patient_last_name) AS patient_name \
-                               FROM inventory \
-                                    JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                GROUP BY inventory.id \
-                                ORDER BY equipment ASC, inventory.id ASC")
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name, \
+                                           (patient_first_name || ' ' || patient_last_name) AS patient_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
     replaced_qr = request.form.get("hidden-replaced-item")
@@ -2383,13 +2296,13 @@ def missing():
                 cdept = inventory_item[i]["current_department"]
                 croom = inventory_item[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory_item[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -2415,13 +2328,13 @@ def missing():
                 cdept = inventory[i]["current_department"]
                 croom = inventory[i]["current_room"]
                 employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM users WHERE id = ?", session["user_id"])
+                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM users WHERE id = ?", session["user_id"])
+                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
                 rln = rln[0]["last_name"]
                 action = inventory[i]["action"]
                 doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
@@ -2594,9 +2507,9 @@ def missing():
 @login_required(role="ANY")
 def search():
 
-    depts = db.execute("SELECT * FROM departments ORDER BY building ASC")
-    rooms = db.execute("SELECT * FROM rooms ORDER BY rooms ASC")
-    osl = db.execute("SELECT * FROM off_site_locations ORDER BY location ASC")
+    depts = db.execute("SELECT * FROM department ORDER BY building ASC")
+    rooms = db.execute("SELECT * FROM room ORDER BY rooms ASC")
+    osl = db.execute("SELECT * FROM off_site_location ORDER BY location ASC")
     statuses = ["In Use", "Storage", "Loaned", "Off-site", "Out for Repair", "Replace", "Replaced", "Missing", "Archived"]
     action = ["Checked In", "Checked Out", "New Item"]
     selection = ["Equipment", "Model", "Serial", "EE", "Status", "Assigned Location", "Current Location", "Off-site Location", "Scanned By", "Received By", "Action", "Date of Action"]
@@ -2605,35 +2518,37 @@ def search():
 
     if fieldname or request.args.get("s"):
     
-        fields = db.execute("SELECT MAX(recent_activity.id), \
-                                    equipment, \
-                                    model, \
-                                    serial, \
-                                    ee, \
-                                    assigned_department, \
-                                    assigned_room, \
-                                    qr_code, \
-                                    date_added, \
-                                    (added_first_name || ' ' || added_last_name) AS added_name, \
-                                    repl_date, \
-                                    status, \
-                                    current_department, \
-                                    current_room, \
-                                    employee_id, \
-                                    scanned_first_name, \
-                                    scanned_last_name, \
-                                    (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                    received_first_name, \
-                                    received_last_name, \
-                                    (received_first_name || ' ' || received_last_name) AS received_name, \
-                                    action, \
-                                    date_of_action, \
-                                    SUBSTR(date_of_action, 1, 10) AS doa,\
-                                    off_site_location \
-                               FROM inventory \
-                                    JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                              GROUP BY inventory.id \
-                              ORDER BY equipment ASC, inventory.id ASC")
+        fields = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           scanned_first_name, \
+					                       scanned_last_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           received_last_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
 
         # Search for equipment, model, serial, ee
         if  fieldname == selection[0] or fieldname == selection[1] or fieldname == selection[2] or fieldname == selection[3]:
@@ -2681,7 +2596,7 @@ def search():
             sfn = sfn.strip()
             sln = sln.strip()
 
-            user = db.execute("SELECT id FROM users where first_name = ? AND last_name = ?", sfn, sln)
+            user = db.execute("SELECT id FROM \"user\" where first_name = ? AND last_name = ?", sfn, sln)
 
             fields = [i for i in fields if (i["employee_id"] == user[0]["id"])]
 
@@ -2737,39 +2652,42 @@ def search():
 @login_required(role="ANY")
 def archive():
 
-    inventory = db.execute("SELECT MAX(recent_activity.id), \
-                                    inventory.id AS equipment_id, \
-                                    equipment, \
-                                    model, \
-                                    serial, \
-                                    ee, \
-                                    assigned_department, \
-                                    assigned_room, \
-                                    (assigned_room || '-' || assigned_department) AS assigned_location, \
-                                    qr_code, \
-                                    date_added, \
-                                    (added_first_name || ' ' || added_last_name) AS added_name, \
-                                    repl_date, \
-                                    status, \
-                                    current_department, \
-                                    current_room, \
-                                    (current_room || '-' || current_department) AS current_location, \
-                                    scanned_first_name, \
-                                    (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                    received_first_name, \
-                                    (received_first_name || ' ' || received_last_name) AS received_name, \
-                                    action, \
-                                    date_of_action, \
-                                    SUBSTR(date_of_action, 1, 10) AS doa,\
-                                    off_site_location, \
-                                    point_of_contact, \
-                                    phone_number, \
-                                    patient_first_name, \
-                                    patient_last_name \
-                                FROM inventory \
-                                    JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                GROUP BY inventory.id \
-                                ORDER BY equipment ASC, inventory.id ASC")
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name, \
+                                           (patient_first_name || ' ' || patient_last_name) AS patient_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
     unarchive_qr = request.form.get("hidden-unarchive")
@@ -2804,7 +2722,9 @@ def archive():
             
             for i in range(len(inventory_item)):
 
-                previous_activity = db.execute("SELECT MAX(recent_activity.id), * FROM recent_activity WHERE inventory_id = ? AND status != 'ARCHIVED'", inventory_item[i]["equipment_id"])
+                previous_activity = db.execute("SELECT DISTINCT ON (inventory_id) * \
+                                                  FROM recent_activity WHERE inventory_id = ? AND status != 'ARCHIVED' \
+                                                 ORDER BY inventory_id, id DESC", inventory_item[i]["equipment_id"])
 
                 # Variables correspond to recent_activity table
                 inventory_id = inventory_item[i]["equipment_id"]
@@ -2834,7 +2754,9 @@ def archive():
         
         for i in range(len(inventory)):
             if inventory[i]["qr_code"] == unarchive_qr:
-                previous_activity = db.execute("SELECT MAX(recent_activity.id), * FROM recent_activity WHERE inventory_id = ? AND status != 'ARCHIVED'", inventory[i]["equipment_id"])
+                previous_activity = db.execute("SELECT DISTINCT ON (inventory_id) * \
+                                                  FROM recent_activity WHERE inventory_id = ? AND status != 'ARCHIVED' \
+                                                 ORDER BY inventory_id, id DESC", inventory[i]["equipment_id"])
                 
                 # Variables correspond to recent_activity table
                 inventory_id = inventory[i]["equipment_id"]
@@ -2979,6 +2901,12 @@ def upload_inventory():
 
     adept_id = 0
     data = []
+    created_name = []
+    created_date = []
+    replacement_date = []
+    upload_inventory = []
+    duplicate_found = False
+    existing_inventory = db.execute("SELECT * FROM inventory")
 
     if request.method == "POST":
 
@@ -3003,16 +2931,13 @@ def upload_inventory():
                 csv_file = csv.DictReader(file)
                 data = list(csv_file)
         
-        created_name = [None] * len(data)
-        created_date = [None] * len(data)
-        replacement_date = [None] * len(data)
-
         for i in range((len(data))):
             # Add item to inventory
             
             inventory = db.execute("SELECT qr_code FROM inventory")
-            existingdepts = db.execute("SELECT * FROM departments")
-            existingrooms = db.execute("SELECT * FROM rooms")
+            existingdepts = db.execute("SELECT * FROM department")
+            existingrooms = db.execute("SELECT * FROM room")
+            skip_data = 0
 
             generateqr = "".join(random.choice(string.ascii_uppercase + string.digits) for j in range(10))
 
@@ -3042,7 +2967,6 @@ def upload_inventory():
 
             date_added = datetime.strptime(data[i]["Created Date"], "%m/%d/%Y")
             date_added = date_added.strftime("%m/%d/%Y")
-            created_date[i] = date_added
 
             added_by = None
             
@@ -3057,12 +2981,9 @@ def upload_inventory():
 
             added_last_name = created_last_name
             added_last_name = added_last_name.capitalize()
-            
-            created_name[i] = created_first_name + " " + created_last_name
 
             repl_date = datetime.strptime(data[i]["Replacement Date"], "%m/%d/%Y")
             repl_date = repl_date.strftime("%m/%d/%Y")
-            replacement_date[i] = repl_date
 
             equipment = equipment.strip()
             equipment = equipment.upper()
@@ -3077,26 +2998,43 @@ def upload_inventory():
             aroom = aroom.strip()
             aroom = aroom.upper()
 
-            if existingdepts:
-                for j in range(len(existingdepts)):
-                    if existingdepts[j]["building"] == adept:
-                        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", adept)
+            if len(existing_inventory) != 0:
+                for j in range(len(existing_inventory)):
+                    if (existing_inventory[j]["equipment"] == equipment and existing_inventory[j]["model"] == model and existing_inventory[j]["serial"] == serial and existing_inventory[j]["ee"] == ee 
+                        and existing_inventory[j]["assigned_department"] == adept and existing_inventory[j]["assigned_room"] == aroom and existing_inventory[j]["date_added"] == date_added 
+                        and existing_inventory[j]["added_first_name"] == added_first_name and existing_inventory[j]["added_last_name"] == added_last_name and existing_inventory[j]["repl_date"] == repl_date):
+                        skip_data = 1
                         break
-                    elif j == len(existingdepts) - 1:
-                        db.execute("INSERT INTO departments (building) VALUES (?)", adept)
-                        adept_id = db.execute("SELECT id FROM departments WHERE building = ?", adept)
+            
+            if skip_data == 1:
+                duplicate_found = True
+                continue
+
+            upload_inventory.append(data[i])
+            created_name.append(created_first_name + " " + created_last_name)
+            created_date.append(date_added)
+            replacement_date.append(repl_date)
+
+            if existingdepts:
+                for k in range(len(existingdepts)):
+                    if existingdepts[k]["building"] == adept:
+                        adept_id = db.execute("SELECT id FROM department WHERE building = ?", adept)
+                        break
+                    elif k == len(existingdepts) - 1:
+                        db.execute("INSERT INTO department (building) VALUES (?)", adept)
+                        adept_id = db.execute("SELECT id FROM department WHERE building = ?", adept)
             else:
-                db.execute("INSERT INTO departments (building) VALUES (?)", adept)
-                adept_id = db.execute("SELECT id FROM departments WHERE building = ?", adept)
+                db.execute("INSERT INTO department (building) VALUES (?)", adept)
+                adept_id = db.execute("SELECT id FROM department WHERE building = ?", adept)
 
             if existingrooms:
-                for j in range(len(existingrooms)):
-                    if existingrooms[j]["rooms"] == aroom and existingrooms[j]["department_id"] == adept_id[0]["id"]:
+                for k in range(len(existingrooms)):
+                    if existingrooms[k]["rooms"] == aroom and existingrooms[k]["department_id"] == adept_id[0]["id"]:
                         break
-                    elif j == len(existingrooms) - 1:
-                        db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
+                    elif k == len(existingrooms) - 1:
+                        db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
             else:
-                db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
+                db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", adept_id[0]['id'], aroom)
 
             db.execute("INSERT INTO inventory (equipment, model, serial, ee, assigned_department, assigned_room, qr_code, date_added, added_by, added_first_name, added_last_name, repl_date) \
                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", equipment, model, serial, ee, adept, aroom, qr_code, date_added, added_by, added_first_name, added_last_name, repl_date)
@@ -3121,8 +3059,8 @@ def upload_inventory():
             pln = "NA"
 
             db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                       date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                       cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
+                    date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
+                    cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
             
             img = qrcode.make(qr_code)
             type(img)  # qrcode.image.pil.PilImage
@@ -3136,7 +3074,7 @@ def upload_inventory():
             background.paste(img, (0,1))
             background.save(f"static/qrcodes/{qr_code}.png")
         
-        return render_template("upload_inventory.html", inventory=data, created_name=created_name, created_date=created_date, replacement_date=replacement_date)
+        return render_template("upload_inventory.html", inventory=upload_inventory, duplicate_found=duplicate_found, created_name=created_name, created_date=created_date, replacement_date=replacement_date)
 
     else:
 
@@ -3152,8 +3090,8 @@ def users():
                                last_name, \
                                email, \
                                role_name \
-                          FROM users \
-                               JOIN roles on roles.id = users.role_id")
+                          FROM \"user\" \
+                               JOIN role on role.id = \"user\".role_id")
     user_role = 0
     user_deletion = 0
 
@@ -3198,7 +3136,7 @@ def users():
                                 return apology("Cannot delete user.", 400, "/users")
         
             for i in range(len(deluser)):
-                db.execute("DELETE FROM users WHERE email = ?", deluser[i])
+                db.execute("DELETE FROM \"user\" WHERE email = ?", deluser[i])
             
             return redirect("/users")
         
@@ -3260,7 +3198,7 @@ def users():
 
             hashedpassword = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
 
-            db.execute("INSERT INTO users (role_id, first_name, last_name, email, password) VALUES (?,?,?,?,?)", user_role, first_name, last_name, email, hashedpassword)
+            db.execute("INSERT INTO \"user\" (role_id, first_name, last_name, email, password) VALUES (?,?,?,?,?)", user_role, first_name, last_name, email, hashedpassword)
             return redirect("/users")
 
     else:
@@ -3274,8 +3212,8 @@ def scan():
     qr = request.form.get("hiddenqr")
     qr_code = request.form.getlist("qrcode")
     inventory = db.execute("SELECT * FROM inventory")
-    existingdepts = db.execute("SELECT * FROM departments")
-    existingrooms = db.execute("SELECT * FROM rooms")
+    existingdepts = db.execute("SELECT * FROM department")
+    existingrooms = db.execute("SELECT * FROM room")
     cdept_id = 0
     cdept = None
     croom = None
@@ -3286,7 +3224,7 @@ def scan():
         statuses = ["In Use", "Storage", "Loaned", "Off-site", "Out for Repair", "Replace", "Replaced"]
     elif session["user_role"] == "User":
         statuses = ["In Use", "Storage", "Loaned", "Off-site", "Out for Repair"]
-    scanned_name = db.execute("SELECT first_name, last_name FROM users where id = ?", session["user_id"])
+    scanned_name = db.execute("SELECT first_name, last_name FROM \"user\" where id = ?", session["user_id"])
     status = request.form.get("statuses")
     if status:
         status = status.upper()
@@ -3344,9 +3282,9 @@ def scan():
         pln = request.form.get("last_name")
         pln = pln.capitalize()
         pln = pln.strip()
-    depts = db.execute("SELECT * FROM departments")
-    rooms = db.execute("SELECT * FROM rooms")
-    osls = db.execute("SELECT * FROM off_site_locations")
+    depts = db.execute("SELECT * FROM department")
+    rooms = db.execute("SELECT * FROM room")
+    osls = db.execute("SELECT * FROM off_site_location")
 
     if request.method == "POST" and qr:
 
@@ -3404,23 +3342,23 @@ def scan():
         if existingdepts:
             for i in range(len(existingdepts)):
                 if existingdepts[i]["building"] == cdept:
-                    cdept_id = db.execute("SELECT id FROM departments WHERE building = ?", cdept)
+                    cdept_id = db.execute("SELECT id FROM department WHERE building = ?", cdept)
                     break
                 elif i == len(existingdepts) - 1:
-                    db.execute("INSERT INTO departments (building) VALUES (?)", cdept)
-                    cdept_id = db.execute("SELECT id FROM departments WHERE building = ?", cdept)
+                    db.execute("INSERT INTO department (building) VALUES (?)", cdept)
+                    cdept_id = db.execute("SELECT id FROM department WHERE building = ?", cdept)
         else:
-            db.execute("INSERT INTO departments (building) VALUES (?)", cdept)
-            cdept_id = db.execute("SELECT id FROM departments WHERE building = ?", cdept)
+            db.execute("INSERT INTO department (building) VALUES (?)", cdept)
+            cdept_id = db.execute("SELECT id FROM department WHERE building = ?", cdept)
 
         if existingrooms:
             for i in range(len(existingrooms)):
                 if existingrooms[i]["rooms"] == croom and existingrooms[i]["department_id"] == cdept_id[0]["id"]:
                     break
                 elif i == len(existingrooms) - 1:
-                    db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", cdept_id[0]['id'], croom)
+                    db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", cdept_id[0]['id'], croom)
         else:
-            db.execute("INSERT INTO rooms (department_id, rooms) VALUES (?,?)", cdept_id[0]['id'], croom)
+            db.execute("INSERT INTO room (department_id, rooms) VALUES (?,?)", cdept_id[0]['id'], croom)
         
         for i in range(len(inventory_id)):
             db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
@@ -3453,13 +3391,13 @@ def login():
             return login_apology("Must provide password.", 403, "/login")
 
         # Query database for username
-        user_id = db.execute("SELECT * FROM users WHERE email = ?", request.form.get("username"))
+        user_id = db.execute("SELECT * FROM \"user\" WHERE email = ?", request.form.get("username"))
 
         # Check if username exists
         if not user_id:
             return login_apology("Invalid username and/or password.", 403, "/login")
 
-        user_role = db.execute("SELECT role_name FROM roles WHERE id IN (SELECT role_id FROM users WHERE id = ?)",  user_id[0]["id"])
+        user_role = db.execute("SELECT role_name FROM role WHERE id IN (SELECT role_id FROM \"user\" WHERE id = ?)",  user_id[0]["id"])
 
         # Ensure username exists and password is correct
         if len(user_id) != 1 or not check_password_hash(user_id[0]["password"], request.form.get("password")):
