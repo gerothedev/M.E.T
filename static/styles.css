@@ -40,11 +40,6 @@ main div.uploaditem h3 {
     float: none;
   }
   
-  .addbutton, .delbutton, .replacebutton, .replacedbutton, #see-replaced, #clear-filters {
-    display: inline-block;
-    width: 100%;
-  }
-
 }
 
 section {
@@ -162,7 +157,7 @@ div#searchbar button {
   float: right;
 }
 
-div#searchbar div {
+div#searchbar div#search-flex {
   display: flex;
   flex-direction: row;
   column-gap: 10px;
@@ -187,7 +182,7 @@ div#searchbar div {
     width: 100%;
   }
 
-  div#searchbar div {
+  div#searchbar div#search-flex {
     display: flex;
     flex-direction: column;
     row-gap: 10px;
@@ -358,7 +353,7 @@ div#searchbar div {
   text-align: center;
 }
 
-#nomatch, .emptyselection, .notcheckedin, #invalidmatch, .already-missing {
+#nomatch, .emptyselection, .notcheckedin, #invalidmatch, .already-missing, .already-replace {
   color: red;
   margin: 0;
   text-align: center;
@@ -460,8 +455,9 @@ ul.item-option-select {
   width: fit-content;
   font-size: 20px;
   position: absolute;
-  bottom: -24%;
-  left: 74%;
+  bottom: -63%;
+  right: 0px;
+  transform: translateX(100%);
   z-index: 2;
   border-radius: 0.375rem;
   overflow: hidden;
@@ -617,9 +613,10 @@ li.invcat a:hover, li.item-option:hover {
   font-weight: normal;
 }
 
-.nodate {
+.nodate, .duplicate-found {
   margin: 0;
   animation: fadeout 7s;
+  clear: both;
 }
 
 @keyframes fadeout {
@@ -750,21 +747,6 @@ thead {
   z-index: 1;
 }
 
-
-@media screen and (max-width: 1060px) {
-  ul.item-option-select { 
-    left: 85%;
-  }
-
-}
-
-@media screen and (min-width: 1061px) and (max-width: 1600px) {
-  ul.item-option-select { 
-    left: 80%;
-  }
-
-}
-
 #filtersbal, #filteral, #filterad, #filterar {
   width: 179px;
   margin: auto;
@@ -777,3 +759,19 @@ thead {
 #change-password-button {
   padding: 0;
 }
+
+.loading-alert {
+  display: none;
+}
+
+.inventory-checkbox {
+  float: left;
+  position: relative;
+  top: 7.7px;
+}
+
+.show-button-wrapper {
+  position: relative;
+  width: fit-content;
+  margin: auto;
+} 

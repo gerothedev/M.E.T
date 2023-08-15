@@ -45,10 +45,10 @@
                 <li class="action-option"><a href="/upload_inventory" class="upload-inventory-button"><button type="button" class="action-option-button">Upload Inventory</button></a></li>
                 {% if not inventory %}
                 {% else %}
-                <li class="action-option"><button type="button" class="editbutton action-option-button">Edit Items</button></li>
+                    <li class="action-option"><button type="button" class="editbutton action-option-button">Edit Items</button></li>
                     <li class="action-option"><button type="button" class="replacebutton action-option-button">Mark for Replacement</button></li>
                     <li class="action-option"><button type="button" class="missingbutton action-option-button">Mark as Missing</button></li>
-                    <li class="action-option"><button type="button" class="action-option-button archivebutton">Archive Items</button></li>
+                    <li class="action-option"><button type="button" class="archivebutton action-option-button">Archive Items</button></li>
                     <li class="action-option"><button type="button" class="delbutton action-option-button">Delete Items</button></li>
                 {% endif %}
             </ul>
@@ -137,7 +137,13 @@
                     <div class="modal-footer">
                         <div class="mod-flexbox">
                             <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal" id="cancelconfirminv">Close</button>
-                            <button type="button" class="btn btn-primary modal-footer-buttons" id="confirminv" name="invbutton" value="add">Add</button>
+                            <button type="button" class="btn btn-primary modal-footer-buttons prevent-click" id="confirminv" name="invbutton" value="add">
+                                <span class="confirm-default-text">Add</span>
+                                <div class="loading-alert">
+                                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span role="status">Loading...</span>
+                                </div>
+                            </button>
                         </div>
                         <div class="mod-flexbox">
                             <p class="emptywarning">Fields cannot be empty.</p>
@@ -585,11 +591,11 @@
                     {% for i in range(inventory | length) %}
                         <tr class="showrow">
                             <td class="text-center cell-content0">
-                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="editinventory" name="editinv" form="edit-checkbox-form">
-                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="replaceinventory" name="replaceinv" form="checkbox-form">
-                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="missinginventory" name="missinginv" form="checkbox-form">
-                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="archiveinventory" name="archiveinv" form="checkbox-form">
-                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="deleteinventory" name="delinv" form="checkbox-form">
+                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="editinventory inventory-checkbox" name="editinv" form="edit-checkbox-form">
+                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="replaceinventory inventory-checkbox" name="replaceinv" form="checkbox-form">
+                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="missinginventory inventory-checkbox" name="missinginv" form="checkbox-form">
+                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="archiveinventory inventory-checkbox" name="archiveinv" form="checkbox-form">
+                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="deleteinventory inventory-checkbox" name="delinv" form="checkbox-form">
                                 <input type='hidden' name='hiddenaction' value="{{ inventory[i]['action'] }}">
                                 <input type='hidden' name='hiddenstatus' value="{{ inventory[i]['status'] }}">
                                 <button type="button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">{{ inventory[i]["equipment"] }}</button>
@@ -643,11 +649,18 @@
                             <label class="form-label">Send to replace page?</label><br>
                             <div class="mod-flexbox">
                                 <button id="closereplace" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                <button id="completereplace" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="replace">Confirm</button>
+                                <button id="completereplace" type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="replace">
+                                    <span class="confirm-default-text">Confirm</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>                            
                         </div>
                         <p class="emptyselection" style="display: none;">Please make a selection.</p>
                         <p class="notcheckedin" style="display: none;">All items must be checked in.</p>
+                        <p class="already-replace" style="display: none;">Item status already replace or replaced.</p>
                     </div>
                 </div>
             </div>
@@ -665,7 +678,13 @@
                             <label class="form-label">Are these items missing?</label><br>
                             <div class="mod-flexbox">
                                 <button id="closemissing" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                <button id="completemissing" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="missing">Confirm</button>
+                                <button id="completemissing" type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="missing">
+                                    <span class="confirm-default-text">Confirm</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                         <p class="emptyselection" style="display: none;">Please make a selection.</p>
@@ -687,7 +706,13 @@
                             <label class="form-label">Send to archive?</label><br>
                             <div class="mod-flexbox">
                                 <button id="closearchive" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                <button id="completearchive" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="archive">Confirm</button>
+                                <button id="completearchive" type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="archive">
+                                    <span class="confirm-default-text">Confirm</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                         <p class="emptyselection" style="display: none;">Please make a selection.</p>
@@ -708,7 +733,13 @@
                             <label class="form-label">Delete these items?</label><br>
                             <div class="mod-flexbox">
                                 <button id="closedel" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                <button id="completedel" type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton" value="delete">Confirm</button>
+                                <button id="completedel" type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="delete">
+                                    <span class="confirm-default-text">Confirm</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                         <p class="emptyselection" style="display: none;">Please make a selection.</p>
@@ -825,14 +856,20 @@
                         </div>
                         <div class="mb-3">
                             <label for="edit-replace-date" class="form-label">Replacement Date</label>
-                            <input autocomplete="off" type="date" class="form-control" id="edit-replace-date" name="edit-field">
+                            <input autocomplete="off" type="date" class="form-control" id="edit-replace-date" name="edit-date-field">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <div class="mod-flexbox">
                             <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal" id="closeedit">Close</button>
                             <input type='hidden' id='hidden-edit-item' name='hidden-edit-item'>
-                            <button type="button" class="btn btn-primary modal-footer-buttons" id="completeedit" name="invbutton" value="edit">Confirm Edit</button>
+                            <button type="button" class="btn btn-primary modal-footer-buttons prevent-click" id="completeedit" name="invbutton" value="edit">
+                                <span class="confirm-default-text">Confirm Edit</span>
+                                <div class="loading-alert">
+                                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span role="status">Loading...</span>
+                                </div>
+                            </button>
                         </div>
                         <div class="mod-flexbox" id="warnings">
                             <p class="emptywarning">At least one field must be filled out.</p>
@@ -859,7 +896,13 @@
                             <div class="mod-flexbox">
                                 <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
                                 <input type='hidden' id='hidden-replace-item' name='hidden-replace-item'>
-                                <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
+                                <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
+                                    <span class="confirm-default-text">Confirm</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -883,7 +926,13 @@
                             <div class="mod-flexbox">
                                 <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
                                 <input type='hidden' id='hiddenmissingitem' name='hiddenmissingitem'>
-                                <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
+                                <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
+                                    <span class="confirm-default-text">Confirm</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -907,7 +956,13 @@
                             <div class="mod-flexbox">
                                 <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
                                 <input type='hidden' id='hidden-archive-item' name='hidden-archive-item'>
-                                <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm</button>
+                                <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
+                                    <span class="confirm-default-text">Confirm</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                         <p class="emptyselection" style="display: none;">Please make a selection.</p>
@@ -932,7 +987,13 @@
                             <div class="mod-flexbox">
                                 <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
                                 <input type='hidden' id='hidden-delete-item' name='hidden-delete-item'>
-                                <button type="submit" class="btn btn-primary modal-footer-buttons" name="invbutton">Confirm Deletion</button>
+                                <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
+                                    <span class="confirm-default-text">Confirm Deletion</span>
+                                    <div class="loading-alert">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span role="status">Loading...</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                     </div>

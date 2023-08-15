@@ -27,7 +27,13 @@
 
     {% if not inventory %}
         <h3 class="nodata">No data available.</h3>
+        {% if duplicate_found == True %}
+            <h3 class="duplicate-found">Found uploaded items in inventory.</h3>
+        {% endif %}
     {% else %}
+        {% if duplicate_found == True %}
+            <h3 class="duplicate-found">No date matches filter selection.</h3>
+        {% endif %}
         <!-- Table -->
         <div class="tboundary">
             <table class="table table-striped">
@@ -84,7 +90,13 @@
                     <div class="modal-footer">
                         <div class="mod-flexbox">
                             <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                            <button id="completeupload" type="button" class="btn btn-primary modal-footer-buttons" name="invbutton" value="upload">Confirm Upload</button>
+                            <button id="completeupload" type="button" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="upload">
+                                <span class="confirm-default-text">Confirm upload</span>
+                                <div class="loading-alert">
+                                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span role="status">Loading...</span>
+                                </div>
+                            </button>
                         </div>
                         <div class="mod-flexbox">
                             <p class="emptywarning">No file selected.</p>
@@ -100,5 +112,16 @@
 {% block script %}
 
     <script src="/static/app.js"></script>
+    <script>
+        var duplicateFound = document.querySelector(".duplicate-found");
+
+        if (duplicateFound)
+        {
+            duplicateFound.addEventListener("animationend", function() {
+                duplicateFound.style.display = "none"
+            });
+        }
+
+    </script>
 
 {% endblock %}
