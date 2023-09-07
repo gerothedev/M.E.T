@@ -8,32 +8,34 @@
 
     <div class="adduser">
         <h3>Users</h3>
-        <div class="action-menu-wrapper">
-            <button type="button" class="btn btn-primary action-menu-button">
-                Action
-            </button>
-            <button type="button" class="btn btn-primary" id='confirmdel' data-bs-toggle='modal' data-bs-target='#delete-user-modal'>
-                Done
-            </button>
-            <ul class="action-menu" style="display: none;">
-                <li class="action-option"><button type="button" class="addbutton action-option-button" data-bs-toggle="modal" data-bs-target="#add-user-modal">Add User</button></li>
-                {% if not users %}
-                {% else %}
-                        {% if session.user_role == "Super Administrator" %}
-                            {% if user_deletion == 1 %}
-                                <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
+        <div id="insert-action-menu">
+            <div class="action-menu-wrapper">
+                <button type="button" class="btn btn-primary action-menu-button">
+                    Action
+                </button>
+                <button type="button" class="btn btn-primary" id='confirmdel' data-bs-toggle='modal' data-bs-target='#delete-user-modal'>
+                    Done
+                </button>
+                <ul class="action-menu" style="display: none;">
+                    <li class="action-option"><button type="button" class="addbutton action-option-button" data-bs-toggle="modal" data-bs-target="#add-user-modal">Add User</button></li>
+                    {% if not users %}
+                    {% else %}
+                            {% if session.user_role == "Super Administrator" %}
+                                {% if user_deletion == 1 %}
+                                    <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
+                                {% endif %}
+                            {% elif session.user_role == "Dept Administrator" %}
+                                {% if user_deletion == 2 %}
+                                    <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
+                                {% endif %}
+                            {% elif session.user_role == "Administrator" %}
+                                {% if user_deletion == 3 %}
+                                    <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
+                                {% endif %}
                             {% endif %}
-                        {% elif session.user_role == "Dept Administrator" %}
-                            {% if user_deletion == 2 %}
-                                <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
-                            {% endif %}
-                        {% elif session.user_role == "Administrator" %}
-                            {% if user_deletion == 3 %}
-                                <li class="action-option"><button type="button" class="delbutton action-option-button">Delete User</button></li>
-                            {% endif %}
-                        {% endif %}
-                {% endif %}
-            </ul>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -160,8 +162,8 @@
                                         <button id="closedel" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
                                         <button id="completedel" type="submit" class="btn btn-primary modal-footer-buttons">Confirm</button>
                                     </div>
-                                    <p class="emptyselection" style="display: none;">Please make a selection.</p>
                                 </div>
+                                <p class="emptyselection" style="display: none;">Please make a selection.</p>
                             </div>
                         </div>
                     </div>

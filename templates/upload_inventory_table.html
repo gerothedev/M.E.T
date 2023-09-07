@@ -1,0 +1,44 @@
+<div id="inventory-table">
+    {% if not inventory %}
+        <h3 class="nodata">No data available.</h3>
+        {% if duplicate_found == True %}
+            <h3 class="duplicate-found">Found uploaded items in inventory.</h3>
+        {% endif %}
+    {% else %}
+        {% if duplicate_found == True %}
+            <h3 class="duplicate-found">Found uploaded items in inventory.</h3>
+        {% endif %}
+        <!-- Table -->
+        <div class="tboundary">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <!-- Equipment filter -->
+                        <th class="text-center">Equipment</th>
+                        <th class="text-center">Model</th>
+                        <th class="text-center">Serial</th>
+                        <th class="text-center">EE</th>
+                        <th class="text-center">Assigned Location</th>
+                        <th class="text-center">Date Added</th>
+                        <th class="text-center">Added By</th>
+                        <th class="text-center">Replace Date</th>
+                    </tr>
+                </thead>
+                <tbody id="tables" class="click_for_info">
+                    {% for i in range(inventory | length) %}
+                        <tr class="showrow">
+                            <td class="text-center cell-content0">{{ inventory[i]["Equipment Name"] }}</td>
+                            <td class="text-center cell-content1">{{ inventory[i]["Model"] }}</td>
+                            <td class="text-center cell-content2">{{ inventory[i]["Serial"] }}</td>
+                            <td class="text-center cell-content3">{{ inventory[i]["EE #"] }}</td>
+                            <td class="text-center cell-content4">{{ inventory[i]["Location"] }}</td>
+                            <td class="text-center cell-content11">{{ created_date[i] }}</td>
+                            <td class="text-center cell-content12">{{ created_name[i] }}</td>
+                            <td class="text-center cell-content13">{{ replacement_date[i] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>

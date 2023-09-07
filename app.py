@@ -1,7 +1,7 @@
 import os
 import csv
 
-from flask import Flask, redirect, render_template, request, session, jsonify, send_file
+from flask import Flask, redirect, render_template, request, session, jsonify, send_file, url_for
 from flask_session import Session
 from cs50 import SQL
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -11,7 +11,7 @@ import qrcode
 from PIL import Image, ImageDraw, ImageFont
 import random, string
 
-from helpers import login_required, apology, login_apology
+from helpers import login_required, apology, login_apology, upload_apology
 
 UPLOAD_FOLDER = 'static/uploads/'
 ALLOWED_EXTENSIONS = {'csv'}
@@ -233,36 +233,44 @@ def admin_inventory():
                                   ORDER BY inventory.id, recent_activity.id DESC", qr)
     edit_fields = request.form.getlist("edit-field")
     edit_items = None
+    replace_item = None
+    missing_items = None
+    archive_items = None
+    delete_items = None
     edit_replace_date = request.form.get("edit-date-field")
-    delete_qr = request.form.get("hidden-delete-item")
-    archive_qr = request.form.get("hidden-archive-item")
-    replace_qr = request.form.get("hidden-replace-item")
-    missingitem = request.form.get("hiddenmissingitem")
-    filters = request.args.getlist("filter")
-    filterdate = request.args.getlist("filterdate")
     status_filter = request.args.get("sf")
-    filter_start_doa = ""
-    filter_end_doa = ""
-    filter_start_da = ""
-    filter_end_da = ""
-    filter_start_rd = ""
-    filter_end_rd = ""
-    no_date_match = 0
     today = date.today().strftime("%Y-%m-%d") 
     date_format = "%Y-%m-%d"
 
-    if request.method == "POST" and (request.form.get("invbutton") == "add" or request.form.get("invbutton") == "replace" or request.form.get("invbutton") == "missing" or 
-    request.form.get("invbutton") == "delete" or (request.form.get("invbutton") == "edit" or request.form.get("invbutton") == "edit-single-item") or request.form.get("invbutton") == "archive"):
+    if request.method == "POST" and (request.form.get("invbutton") == "add" or (request.form.get("invbutton") == "replace" or request.form.get("invbutton") == "replace-single-item") 
+                                     or (request.form.get("invbutton") == "missing" or request.form.get("invbutton") == "missing-single-item") or (request.form.get("invbutton") == "delete" 
+                                     or request.form.get("invbutton") == "delete-single-item") or (request.form.get("invbutton") == "edit" or request.form.get("invbutton") == "edit-single-item") 
+                                     or (request.form.get("invbutton") == "archive" or request.form.get("invbutton") == "archive-single-item")):
 
         if request.form.get("invbutton") == "edit":
             edit_items = request.form.getlist("editinv")
         elif request.form.get("invbutton") == "edit-single-item":
             edit_items = request.form.getlist("hidden-edit-item")
         
-        replace_item = request.form.getlist("replaceinv")
-        missing_items = request.form.getlist("missinginv")
-        archive_items = request.form.getlist("archiveinv")
-        delete_items = request.form.getlist("delinv")
+        if request.form.get("invbutton") == "replace":
+            replace_item = request.form.getlist("replaceinv")
+        elif request.form.get("invbutton") == "replace-single-item":
+            replace_item = request.form.getlist("hidden-replace-item")
+
+        if request.form.get("invbutton") == "missing":
+            missing_items = request.form.getlist("missinginv")
+        elif request.form.get("invbutton") == "missing-single-item":
+            missing_items = request.form.getlist("hiddenmissingitem")
+
+        if request.form.get("invbutton") == "archive":
+            archive_items = request.form.getlist("archiveinv")
+        elif request.form.get("invbutton") == "archive-single-item":
+            archive_items = request.form.getlist("hidden-archive-item")
+
+        if request.form.get("invbutton") == "delete":
+            delete_items = request.form.getlist("delinv")
+        elif request.form.get("invbutton") == "delete-single-item":
+            delete_items = request.form.getlist("hidden-delete-item")
 
         # Allows user to edit multiple inventory item information
         if edit_items:
@@ -666,124 +674,6 @@ def admin_inventory():
             
             return redirect("/admin_inventory")
         
-    # Allows user to delete item
-    elif request.method == "POST" and delete_qr:
-
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == delete_qr:
-                db.execute("DELETE FROM inventory WHERE qr_code = ?", delete_qr)
-                os.remove(f"static/qrcodes/{inventory[i]['qr_code']}.png")
-        
-        return redirect("/admin_inventory")
-    
-    elif request.method == "POST" and archive_qr:
-        
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == archive_qr:
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "ARCHIVED"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/admin_inventory")
-
-    elif request.method == "POST" and replace_qr:
-        
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == replace_qr:
-
-                if inventory[i]["status"] == "REPLACE" or inventory[i]["status"] == "REPLACED":
-                    return apology("Item status is already set to replace or replaced.", 400, "/admin_inventory")
-                
-                if inventory[i]["action"] == "CHECKED OUT":
-                    return apology("All items must be checked in.", 400, "/admin_inventory")
-
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "REPLACE"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/admin_inventory")
-
-    # Allows user to mark item as 
-    elif request.method == "POST" and missingitem:
-        
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == missingitem:
-
-                if inventory[i]["status"] == "MISSING":
-                    return apology("Items already marked as missing.", 400, "/admin_inventory")
-
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "MISSING"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/admin_inventory")
-
     # Shows additional information    
     elif request.method == "POST" and qr:
 
@@ -792,176 +682,8 @@ def admin_inventory():
 
         return equipment_info
 
-    # Return info based on filter selection
-    elif request.method == "GET" and filters:
-        
-        # Automatically marks items to be replaced  
-        for i in range(len(inventory)):
-           if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
-                and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
-                and inventory[i]["status"] != "MISSING" and inventory[i]["status"] != "ARCHIVED"):
-
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "REPLACE"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = None
-                sfn = "NA"
-                sln = "NA"
-                rfn = "NA"
-                rln = "NA"
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = "NA"
-                poc = "NA"
-                pn = "NA"
-                pfn = "NA"
-                pln = "NA"
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-
-        if filters[0] != "Equipment":
-            inventory = [i for i in inventory if (i["equipment"] == filters[0])]
-
-        if filters[1] != "Model":
-            inventory = [i for i in inventory if (i["model"] == filters[1])]
-
-        if filters[2] != "Serial":
-            inventory = [i for i in inventory if (i["serial"] == filters[2])]
-
-        if filters[3] != "EE":
-            inventory = [i for i in inventory if (i["ee"] == filters[3])]
-
-        if filters[4] == "Location":
-            if filters[5] != "Location":
-                inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
-
-        if filters[4] == "Department":
-            if filters[6] != "Department":
-                inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
-
-        if filters[4] == "Room":
-            if filters[7] != "Room":
-                inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
-
-        if filters[8] == "Location":
-            if filters[9] != "Location":
-                inventory = [i for i in inventory if (i["current_location"] == filters[9])]
-
-        if filters[8] == "Department":
-            if filters[10] != "Department":
-                inventory = [i for i in inventory if (i["current_department"] == filters[10])]
-
-        if filters[8] == "Room":
-            if filters[11] != "Room":
-                inventory = [i for i in inventory if (i["current_room"] == filters[11])]
-
-        if filters[8] == "Off-site Location":
-            if filters[12] != "Off-site Location":
-                inventory = [i for i in inventory if (i["off_site_location"] == filters[12])]
-
-        if filters[13] != "Status":
-            inventory = [i for i in inventory if (i["status"] == filters[13])]
-
-        if filters[14] != "Scanned By":
-            if filters[14] == "NA":
-                inventory = [i for i in inventory if (i["scanned_first_name"] == filters[14])]
-            else:   
-                inventory = [i for i in inventory if (i["scanned_name"] == filters[14])]
-
-        if filters[15] != "Received By":
-            if filters[15] == "NA":
-                inventory = [i for i in inventory if (i["received_first_name"] == filters[15])]
-            else:   
-                inventory = [i for i in inventory if (i["received_name"] == filters[15])]
-
-        if filters[16] != "Action":
-            inventory = [i for i in inventory if (i["action"] == filters[16])]
-
-        if filterdate[0] != "" and filterdate[1] != "":
-            filterdate[0] = datetime.strptime(filterdate[0], date_format)
-            filter_start_doa = filterdate[0].strftime(date_format)
-            filterdate[0] = filterdate[0].strftime("%m/%d/%Y")
-            filterdate[1] = datetime.strptime(filterdate[1], date_format)
-            filter_end_doa = filterdate[1].strftime(date_format)
-            filterdate[1] = filterdate[1].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["doa"] >= filterdate[0] and inventory[i]["doa"] <= filterdate[1]:
-                    inventory = [i for i in inventory if (i["doa"] >= filterdate[0] and i["doa"] <= filterdate[1])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        if filterdate[2] != "" and filterdate[3] != "":
-            filterdate[2] = datetime.strptime(filterdate[2], date_format)
-            filter_start_da = filterdate[2].strftime(date_format)
-            filterdate[2] = filterdate[2].strftime("%m/%d/%Y")
-            filterdate[3] = datetime.strptime(filterdate[3], date_format)
-            filter_end_da = filterdate[3].strftime(date_format)
-            filterdate[3] = filterdate[3].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["date_added"] >= filterdate[2] and inventory[i]["date_added"] <= filterdate[3]:
-                    inventory = [i for i in inventory if (i["date_added"] >= filterdate[2] and i["date_added"] <= filterdate[3])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        if filters[17] != "Added By":
-            inventory = [i for i in inventory if (i["added_name"] == filters[17])]
-
-        if filterdate[4] != "" and filterdate[5] != "":
-            filterdate[4] = datetime.strptime(filterdate[4], date_format)
-            filter_start_rd = filterdate[4].strftime(date_format)
-            filterdate[4] = filterdate[4].strftime("%m/%d/%Y")
-            filterdate[5] = datetime.strptime(filterdate[5], date_format)
-            filter_end_rd = filterdate[5].strftime(date_format)
-            filterdate[5] = filterdate[5].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["repl_date"] >= filterdate[4] and inventory[i]["repl_date"] <= filterdate[5]:
-                    inventory = [i for i in inventory if (i["repl_date"] >= filterdate[4] and i["repl_date"] <= filterdate[5])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
-
-        return render_template("admin_inventory.html", 
-                               inventory=inventory, 
-                               today=today, 
-                               depts=depts, 
-                               rooms=rooms, 
-                               filterequipment=filters[0], 
-                               filtermodel=filters[1], 
-                               filterserial=filters[2], 
-                               filteree=filters[3], 
-                               filtersbal=filters[4],
-                               filteral =filters[5],
-                               filterad=filters[6],
-                               filterar=filters[7],
-                               filtersbcl=filters[8], 
-                               filtercl=filters[9], 
-                               filtercd= filters[10], 
-                               filtercr= filters[11], 
-                               filterosl = filters[12], 
-                               filterstatus=filters[13], 
-                               filtersb=filters[14], 
-                               filterrb=filters[15],
-                               filteraction=filters[16], 
-                               filter_start_doa=filter_start_doa,  
-                               filter_end_doa=filter_end_doa, 
-                               filter_start_da=filter_start_da, 
-                               filter_end_da=filter_end_da, 
-                               filteraddedby=filters[17], 
-                               filter_start_rd=filter_start_rd, 
-                               filter_end_rd=filter_end_rd,
-                               no_date_match=no_date_match)
-
     elif request.method == "GET" and status_filter:
 
-        # Automatically marks items to be replaced  
         for i in range(len(inventory)):
             if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
                 and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
@@ -989,10 +711,9 @@ def admin_inventory():
                         date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
                         cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
 
-        inventory = [i for i in inventory if (i["status"] == status_filter)]
         inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
 
-        return render_template("admin_inventory.html", inventory=inventory, today=today, depts=depts, rooms=rooms, filterstatus=status_filter)
+        return render_template("admin_inventory.html", inventory=inventory, today=today, depts=depts, rooms=rooms, status_filter=status_filter)
 
     # Renders inventory page and automatically marks items to be replaced  
     else: 
@@ -1027,7 +748,292 @@ def admin_inventory():
         inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
         
         return render_template("admin_inventory.html", inventory=inventory, today=today, depts=depts, rooms=rooms)
+
+
+@app.route("/admin_inventory_table", methods=["GET", "POST"])
+@login_required(role="ANY ADMIN")
+def admin_inventory_table():
+    inventory = db.execute("SELECT * \
+                            FROM (SELECT DISTINCT ON (inventory.id) \
+                                        inventory.id AS equipment_id, \
+                                        recent_activity.id, \
+                                        equipment, \
+                                        model, \
+                                        serial, \
+                                        ee, \
+                                        assigned_department, \
+                                        assigned_room, \
+                                        (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                        qr_code, \
+                                        date_added, \
+                                        (added_first_name || ' ' || added_last_name) AS added_name, \
+                                        repl_date, \
+                                        status, \
+                                        current_department, \
+                                        current_room, \
+                                        (current_room || '-' || current_department) AS current_location, \
+                                        scanned_first_name, \
+                                        (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                        received_first_name, \
+                                        (received_first_name || ' ' || received_last_name) AS received_name, \
+                                        action, \
+                                        date_of_action, \
+                                        SUBSTR(date_of_action, 1, 10) AS doa,\
+                                        off_site_location, \
+                                        point_of_contact, \
+                                        phone_number, \
+                                        patient_first_name, \
+                                        patient_last_name \
+                                    FROM inventory \
+                                        JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                    ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                            ORDER BY equipment")
+    filters = request.form.getlist("filter")
+    filterdate = request.form.getlist("filterdate")
+    status_filter = request.form.get("sf")
+    filter_start_doa = ""
+    filter_end_doa = ""
+    filter_start_da = ""
+    filter_end_da = ""
+    filter_start_rd = ""
+    filter_end_rd = ""
+    search_inventory = request.form.get("search")
+    if search_inventory:
+        search_inventory = search_inventory.upper()
+        search_inventory = search_inventory.strip()
+        search_name = string.capwords(search_inventory)
+    search_results = None
+    no_date_match = 0
+    no_results = 0
+    date_format = "%Y-%m-%d"
     
+        # Return info based on filter selection
+    if request.method == "POST" and (filters or search_inventory):
+        
+        # Automatically marks items to be replaced  
+        for i in range(len(inventory)):
+           if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
+                and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
+                and inventory[i]["status"] != "MISSING" and inventory[i]["status"] != "ARCHIVED"):
+
+                # Variables correspond to recent_activity table
+                inventory_id = inventory[i]["equipment_id"]
+                status = "REPLACE"
+                cdept = inventory[i]["current_department"]
+                croom = inventory[i]["current_room"]
+                employee_id = None
+                sfn = "NA"
+                sln = "NA"
+                rfn = "NA"
+                rln = "NA"
+                action = inventory[i]["action"]
+                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
+                osl = "NA"
+                poc = "NA"
+                pn = "NA"
+                pfn = "NA"
+                pln = "NA"
+
+                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
+                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
+                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
+
+        if filters[0] != "No Filter":
+            inventory = [i for i in inventory if (i["equipment"] == filters[0])]
+
+        if filters[1] != "No Filter":
+            inventory = [i for i in inventory if (i["model"] == filters[1])]
+
+        if filters[2] != "No Filter":
+            inventory = [i for i in inventory if (i["serial"] == filters[2])]
+
+        if filters[3] != "No Filter":
+            inventory = [i for i in inventory if (i["ee"] == filters[3])]
+
+        if filters[4] == "Location":
+            if filters[5] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
+
+        if filters[4] == "Department":
+            if filters[6] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
+
+        if filters[4] == "Room":
+            if filters[7] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
+
+        if filters[8] == "Location":
+            if filters[9] != "No Filter":
+                inventory = [i for i in inventory if (i["current_location"] == filters[9])]
+
+        if filters[8] == "Department":
+            if filters[10] != "No Filter":
+                inventory = [i for i in inventory if (i["current_department"] == filters[10])]
+
+        if filters[8] == "Room":
+            if filters[11] != "No Filter":
+                inventory = [i for i in inventory if (i["current_room"] == filters[11])]
+
+        if filters[8] == "Off-site Location":
+            if filters[12] != "No Filter":
+                inventory = [i for i in inventory if (i["off_site_location"] == filters[12])]
+
+        if filters[13] != "No Filter":
+            inventory = [i for i in inventory if (i["status"] == filters[13])]
+
+        if filters[14] != "No Filter":
+            if filters[14] == "NA":
+                inventory = [i for i in inventory if (i["scanned_first_name"] == filters[14])]
+            else:   
+                inventory = [i for i in inventory if (i["scanned_name"] == filters[14])]
+
+        if filters[15] != "No Filter":
+            if filters[15] == "NA":
+                inventory = [i for i in inventory if (i["received_first_name"] == filters[15])]
+            else:   
+                inventory = [i for i in inventory if (i["received_name"] == filters[15])]
+
+        if filters[16] != "No Filter":
+            inventory = [i for i in inventory if (i["action"] == filters[16])]
+
+        if filterdate[0] != "" and filterdate[1] != "":
+            filterdate[0] = datetime.strptime(filterdate[0], date_format)
+            filter_start_doa = filterdate[0].strftime(date_format)
+            filterdate[0] = filterdate[0].strftime("%m/%d/%Y")
+            filterdate[1] = datetime.strptime(filterdate[1], date_format)
+            filter_end_doa = filterdate[1].strftime(date_format)
+            filterdate[1] = filterdate[1].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["doa"] >= filterdate[0] and inventory[i]["doa"] <= filterdate[1]:
+                    inventory = [i for i in inventory if (i["doa"] >= filterdate[0] and i["doa"] <= filterdate[1])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+            if len(inventory) == 0:
+                no_date_match = 1
+
+        if filterdate[2] != "" and filterdate[3] != "":
+            filterdate[2] = datetime.strptime(filterdate[2], date_format)
+            filter_start_da = filterdate[2].strftime(date_format)
+            filterdate[2] = filterdate[2].strftime("%m/%d/%Y")
+            filterdate[3] = datetime.strptime(filterdate[3], date_format)
+            filter_end_da = filterdate[3].strftime(date_format)
+            filterdate[3] = filterdate[3].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["date_added"] >= filterdate[2] and inventory[i]["date_added"] <= filterdate[3]:
+                    inventory = [i for i in inventory if (i["date_added"] >= filterdate[2] and i["date_added"] <= filterdate[3])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+            if len(inventory) == 0:
+                no_date_match = 1
+
+        if filters[17] != "No Filter":
+            inventory = [i for i in inventory if (i["added_name"] == filters[17])]
+
+        if filterdate[4] != "" and filterdate[5] != "":
+            filterdate[4] = datetime.strptime(filterdate[4], date_format)
+            filter_start_rd = filterdate[4].strftime(date_format)
+            filterdate[4] = filterdate[4].strftime("%m/%d/%Y")
+            filterdate[5] = datetime.strptime(filterdate[5], date_format)
+            filter_end_rd = filterdate[5].strftime(date_format)
+            filterdate[5] = filterdate[5].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["repl_date"] >= filterdate[4] and inventory[i]["repl_date"] <= filterdate[5]:
+                    inventory = [i for i in inventory if (i["repl_date"] >= filterdate[4] and i["repl_date"] <= filterdate[5])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+            if len(inventory) == 0:
+                no_date_match = 1
+
+        if search_inventory:
+            if search_inventory == "NA" or "NA-NA" or "NA NA":
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_name in i["added_name"]) or (search_inventory in i["scanned_name"]) or (search_inventory in i["received_name"]))] 
+            else:
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) 
+                                                    or (search_inventory in i["repl_date"]) or (search_inventory in i["status"]) or (search_inventory in i["current_location"]) 
+                                                    or (search_name in i["scanned_name"]) or (search_name in i["received_name"]) or (search_inventory in i["action"]) or (search_inventory in i["doa"]) 
+                                                    or (search_inventory in i["off_site_location"]))] 
+            
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
+        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
+
+        return render_template("admin_inventory_table.html", 
+                               inventory=inventory, 
+                               filterequipment=filters[0], 
+                               filtermodel=filters[1], 
+                               filterserial=filters[2], 
+                               filteree=filters[3], 
+                               filtersbal=filters[4],
+                               filteral =filters[5],
+                               filterad=filters[6],
+                               filterar=filters[7],
+                               filtersbcl=filters[8], 
+                               filtercl=filters[9], 
+                               filtercd= filters[10], 
+                               filtercr= filters[11], 
+                               filterosl = filters[12], 
+                               filterstatus=filters[13], 
+                               filtersb=filters[14], 
+                               filterrb=filters[15],
+                               filteraction=filters[16], 
+                               filter_start_doa=filter_start_doa,  
+                               filter_end_doa=filter_end_doa, 
+                               filter_start_da=filter_start_da, 
+                               filter_end_da=filter_end_da, 
+                               filteraddedby=filters[17], 
+                               filter_start_rd=filter_start_rd, 
+                               filter_end_rd=filter_end_rd,
+                               no_date_match=no_date_match,
+                               no_results=no_results)
+
+    elif request.method == "POST" and status_filter:
+
+        # Automatically marks items to be replaced  
+        for i in range(len(inventory)):
+            if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
+                and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
+                and inventory[i]["status"] != "MISSING" and inventory[i]["status"] != "ARCHIVED"):
+
+                # Variables correspond to recent_activity table
+                inventory_id = inventory[i]["equipment_id"]
+                status = "REPLACE"
+                cdept = inventory[i]["current_department"]
+                croom = inventory[i]["current_room"]
+                employee_id = None
+                sfn = "NA"
+                sln = "NA"
+                rfn = "NA"
+                rln = "NA"
+                action = inventory[i]["action"]
+                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
+                osl = "NA"
+                poc = "NA"
+                pn = "NA"
+                pfn = "NA"
+                pln = "NA"
+
+                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
+                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
+                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
+
+        inventory = [i for i in inventory if (i["status"] == status_filter)]
+        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
+
+        return render_template("admin_inventory_table.html", inventory=inventory, filterstatus=status_filter)
+    
+    else:
+
+        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
+        return render_template("admin_inventory_table.html", inventory=inventory)
+
 
 @app.route("/inventory", methods=["GET", "POST"])
 @login_required(role="User")
@@ -1065,183 +1071,9 @@ def inventory():
                                      ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
                              ORDER BY equipment")
     
-    filters = request.args.getlist("filter")
-    filterdate = request.args.getlist("filterdate")
     status_filter = request.args.get("sf")
-    filter_start_doa = ""
-    filter_end_doa = ""
-    filter_start_da = ""
-    filter_end_da = ""
-    filter_start_rd = ""
-    filter_end_rd = ""
-    no_date_match = 0 
-    date_format = "%Y-%m-%d"
 
-    # Return info based on filter selection
-    if request.method == "GET" and filters:
-        
-        # Automatically marks items to be replaced  
-        for i in range(len(inventory)):
-           if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
-                and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
-                and inventory[i]["status"] != "MISSING" and inventory[i]["status"] != "ARCHIVED"):
-
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "REPLACE"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = None
-                sfn = "NA"
-                sln = "NA"
-                rfn = "NA"
-                rln = "NA"
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = "NA"
-                poc = "NA"
-                pn = "NA"
-                pfn = "NA"
-                pln = "NA"
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-
-        if filters[0] != "Equipment":
-            inventory = [i for i in inventory if (i["equipment"] == filters[0])]
-
-        if filters[1] != "Model":
-            inventory = [i for i in inventory if (i["model"] == filters[1])]
-
-        if filters[2] != "Serial":
-            inventory = [i for i in inventory if (i["serial"] == filters[2])]
-
-        if filters[3] != "EE":
-            inventory = [i for i in inventory if (i["ee"] == filters[3])]
-
-        if filters[4] == "Location":
-            if filters[5] != "Location":
-                inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
-
-        if filters[4] == "Department":
-            if filters[6] != "Department":
-                inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
-
-        if filters[4] == "Room":
-            if filters[7] != "Room":
-                inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
-
-        if filters[8] == "Location":
-            if filters[9] != "Location":
-                inventory = [i for i in inventory if (i["current_location"] == filters[9])]
-
-        if filters[8] == "Department":
-            if filters[10] != "Department":
-                inventory = [i for i in inventory if (i["current_department"] == filters[10])]
-
-        if filters[8] == "Room":
-            if filters[11] != "Room":
-                inventory = [i for i in inventory if (i["current_room"] == filters[11])]
-
-        if filters[8] == "Off-site Location":
-            if filters[12] != "Off-site Location":
-                inventory = [i for i in inventory if (i["off_site_location"] == filters[12])]
-
-        if filters[13] != "Status":
-            inventory = [i for i in inventory if (i["status"] == filters[13])]
-
-        if filters[14] != "Scanned By":
-            if filters[14] == "NA":
-                inventory = [i for i in inventory if (i["scanned_first_name"] == filters[14])]
-            else:   
-                inventory = [i for i in inventory if (i["scanned_name"] == filters[14])]
-
-        if filters[15] != "Received By":
-            if filters[15] == "NA":
-                inventory = [i for i in inventory if (i["received_first_name"] == filters[15])]
-            else:   
-                inventory = [i for i in inventory if (i["received_name"] == filters[15])]
-
-        if filters[16] != "Action":
-            inventory = [i for i in inventory if (i["action"] == filters[16])]
-
-        if filterdate[0] != "" and filterdate[1] != "":
-            filterdate[0] = datetime.strptime(filterdate[0], date_format)
-            filter_start_doa = filterdate[0].strftime(date_format)
-            filterdate[0] = filterdate[0].strftime("%m/%d/%Y")
-            filterdate[1] = datetime.strptime(filterdate[1], date_format)
-            filter_end_doa = filterdate[1].strftime(date_format)
-            filterdate[1] = filterdate[1].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["doa"] >= filterdate[0] and inventory[i]["doa"] <= filterdate[1]:
-                    inventory = [i for i in inventory if (i["doa"] >= filterdate[0] and i["doa"] <= filterdate[1])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        if filterdate[2] != "" and filterdate[3] != "":
-            filterdate[2] = datetime.strptime(filterdate[2], date_format)
-            filter_start_da = filterdate[2].strftime(date_format)
-            filterdate[2] = filterdate[2].strftime("%m/%d/%Y")
-            filterdate[3] = datetime.strptime(filterdate[3], date_format)
-            filter_end_da = filterdate[3].strftime(date_format)
-            filterdate[3] = filterdate[3].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["date_added"] >= filterdate[2] and inventory[i]["date_added"] <= filterdate[3]:
-                    inventory = [i for i in inventory if (i["date_added"] >= filterdate[2] and i["date_added"] <= filterdate[3])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        if filters[17] != "Added By":
-            inventory = [i for i in inventory if (i["added_name"] == filters[17])]
-
-        if filterdate[4] != "" and filterdate[5] != "":
-            filterdate[4] = datetime.strptime(filterdate[4], date_format)
-            filter_start_rd = filterdate[4].strftime(date_format)
-            filterdate[4] = filterdate[4].strftime("%m/%d/%Y")
-            filterdate[5] = datetime.strptime(filterdate[5], date_format)
-            filter_end_rd = filterdate[5].strftime(date_format)
-            filterdate[5] = filterdate[5].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["repl_date"] >= filterdate[4] and inventory[i]["repl_date"] <= filterdate[5]:
-                    inventory = [i for i in inventory if (i["repl_date"] >= filterdate[4] and i["repl_date"] <= filterdate[5])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
-
-        return render_template("inventory.html", 
-                               inventory=inventory,
-                               filterequipment=filters[0], 
-                               filtermodel=filters[1], 
-                               filterserial=filters[2], 
-                               filteree=filters[3], 
-                               filtersbal=filters[4],
-                               filteral =filters[5],
-                               filterad=filters[6],
-                               filterar=filters[7],
-                               filtersbcl=filters[8], 
-                               filtercl=filters[9], 
-                               filtercd= filters[10], 
-                               filtercr= filters[11], 
-                               filterosl = filters[12], 
-                               filterstatus=filters[13], 
-                               filtersb=filters[14], 
-                               filterrb=filters[15],
-                               filteraction=filters[16], 
-                               filter_start_doa=filter_start_doa,  
-                               filter_end_doa=filter_end_doa, 
-                               filter_start_da=filter_start_da, 
-                               filter_end_da=filter_end_da, 
-                               filteraddedby=filters[17], 
-                               filter_start_rd=filter_start_rd, 
-                               filter_end_rd=filter_end_rd,
-                               no_date_match=no_date_match)
-
-    elif request.method == "GET" and status_filter:
+    if request.method == "POST" and status_filter:
 
         # Automatically marks items to be replaced  
         for i in range(len(inventory)):
@@ -1274,7 +1106,7 @@ def inventory():
         inventory = [i for i in inventory if (i["status"] == status_filter)]
         inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
 
-        return render_template("inventory.html", inventory=inventory, filterstatus=status_filter)
+        return render_template("inventory.html", inventory=inventory, filterstatus=status_filter, status_filter=status_filter)
     
     # Renders inventory page and automatically marks items to be replaced  
     else: 
@@ -1310,6 +1142,313 @@ def inventory():
         inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
         
         return render_template("inventory.html", inventory=inventory)
+
+
+@app.route("/inventory_table", methods=["GET", "POST"])
+@login_required(role="User")
+def inventory_table():
+    
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
+    
+    filters = request.form.getlist("filter")
+    filterdate = request.form.getlist("filterdate")
+    status_filter = request.form.get("sf")
+    filter_start_doa = ""
+    filter_end_doa = ""
+    filter_start_da = ""
+    filter_end_da = ""
+    filter_start_rd = ""
+    filter_end_rd = ""
+    search_inventory = request.form.get("search")
+    if search_inventory:
+        search_inventory = search_inventory.upper()
+        search_inventory = search_inventory.strip()
+        search_name = string.capwords(search_inventory)
+    search_results = None
+    no_date_match = 0 
+    no_results = 0
+    date_format = "%Y-%m-%d"
+
+    # Return info based on filter selection
+    if request.method == "POST" and (filters or search_inventory):
+        
+        # Automatically marks items to be replaced  
+        for i in range(len(inventory)):
+           if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
+                and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
+                and inventory[i]["status"] != "MISSING" and inventory[i]["status"] != "ARCHIVED"):
+
+                # Variables correspond to recent_activity table
+                inventory_id = inventory[i]["equipment_id"]
+                status = "REPLACE"
+                cdept = inventory[i]["current_department"]
+                croom = inventory[i]["current_room"]
+                employee_id = None
+                sfn = "NA"
+                sln = "NA"
+                rfn = "NA"
+                rln = "NA"
+                action = inventory[i]["action"]
+                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
+                osl = "NA"
+                poc = "NA"
+                pn = "NA"
+                pfn = "NA"
+                pln = "NA"
+
+                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
+                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
+                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
+
+        if filters[0] != "No Filter":
+            inventory = [i for i in inventory if (i["equipment"] == filters[0])]
+
+        if filters[1] != "No Filter":
+            inventory = [i for i in inventory if (i["model"] == filters[1])]
+
+        if filters[2] != "No Filter":
+            inventory = [i for i in inventory if (i["serial"] == filters[2])]
+
+        if filters[3] != "No Filter":
+            inventory = [i for i in inventory if (i["ee"] == filters[3])]
+
+        if filters[4] == "Location":
+            if filters[5] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
+
+        if filters[4] == "Department":
+            if filters[6] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
+
+        if filters[4] == "Room":
+            if filters[7] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
+
+        if filters[8] == "Location":
+            if filters[9] != "No Filter":
+                inventory = [i for i in inventory if (i["current_location"] == filters[9])]
+
+        if filters[8] == "Department":
+            if filters[10] != "No Filter":
+                inventory = [i for i in inventory if (i["current_department"] == filters[10])]
+
+        if filters[8] == "Room":
+            if filters[11] != "No Filter":
+                inventory = [i for i in inventory if (i["current_room"] == filters[11])]
+
+        if filters[8] == "Off-site Location":
+            if filters[12] != "No Filter":
+                inventory = [i for i in inventory if (i["off_site_location"] == filters[12])]
+
+        if filters[13] != "No Filter":
+            inventory = [i for i in inventory if (i["status"] == filters[13])]
+
+        if filters[14] != "No Filter":
+            if filters[14] == "NA":
+                inventory = [i for i in inventory if (i["scanned_first_name"] == filters[14])]
+            else:   
+                inventory = [i for i in inventory if (i["scanned_name"] == filters[14])]
+
+        if filters[15] != "No Filter":
+            if filters[15] == "NA":
+                inventory = [i for i in inventory if (i["received_first_name"] == filters[15])]
+            else:   
+                inventory = [i for i in inventory if (i["received_name"] == filters[15])]
+
+        if filters[16] != "No Filter":
+            inventory = [i for i in inventory if (i["action"] == filters[16])]
+
+        if filterdate[0] != "" and filterdate[1] != "":
+            filterdate[0] = datetime.strptime(filterdate[0], date_format)
+            filter_start_doa = filterdate[0].strftime(date_format)
+            filterdate[0] = filterdate[0].strftime("%m/%d/%Y")
+            filterdate[1] = datetime.strptime(filterdate[1], date_format)
+            filter_end_doa = filterdate[1].strftime(date_format)
+            filterdate[1] = filterdate[1].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["doa"] >= filterdate[0] and inventory[i]["doa"] <= filterdate[1]:
+                    inventory = [i for i in inventory if (i["doa"] >= filterdate[0] and i["doa"] <= filterdate[1])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+
+        if filterdate[2] != "" and filterdate[3] != "":
+            filterdate[2] = datetime.strptime(filterdate[2], date_format)
+            filter_start_da = filterdate[2].strftime(date_format)
+            filterdate[2] = filterdate[2].strftime("%m/%d/%Y")
+            filterdate[3] = datetime.strptime(filterdate[3], date_format)
+            filter_end_da = filterdate[3].strftime(date_format)
+            filterdate[3] = filterdate[3].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["date_added"] >= filterdate[2] and inventory[i]["date_added"] <= filterdate[3]:
+                    inventory = [i for i in inventory if (i["date_added"] >= filterdate[2] and i["date_added"] <= filterdate[3])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+
+        if filters[17] != "No Filter":
+            inventory = [i for i in inventory if (i["added_name"] == filters[17])]
+
+        if filterdate[4] != "" and filterdate[5] != "":
+            filterdate[4] = datetime.strptime(filterdate[4], date_format)
+            filter_start_rd = filterdate[4].strftime(date_format)
+            filterdate[4] = filterdate[4].strftime("%m/%d/%Y")
+            filterdate[5] = datetime.strptime(filterdate[5], date_format)
+            filter_end_rd = filterdate[5].strftime(date_format)
+            filterdate[5] = filterdate[5].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["repl_date"] >= filterdate[4] and inventory[i]["repl_date"] <= filterdate[5]:
+                    inventory = [i for i in inventory if (i["repl_date"] >= filterdate[4] and i["repl_date"] <= filterdate[5])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+
+        if search_inventory:
+            if search_inventory == "NA" or "NA-NA" or "NA NA":
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_name in i["added_name"]) or (search_inventory in i["scanned_name"]) or (search_inventory in i["received_name"]))] 
+            else:
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) 
+                                                    or (search_inventory in i["repl_date"]) or (search_inventory in i["status"]) or (search_inventory in i["current_location"]) 
+                                                    or (search_name in i["scanned_name"]) or (search_name in i["received_name"]) or (search_inventory in i["action"]) or (search_inventory in i["doa"]) 
+                                                    or (search_inventory in i["off_site_location"]))] 
+            
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
+        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
+
+        return render_template("inventory_table.html", 
+                               inventory=inventory,
+                               filterequipment=filters[0], 
+                               filtermodel=filters[1], 
+                               filterserial=filters[2], 
+                               filteree=filters[3], 
+                               filtersbal=filters[4],
+                               filteral =filters[5],
+                               filterad=filters[6],
+                               filterar=filters[7],
+                               filtersbcl=filters[8], 
+                               filtercl=filters[9], 
+                               filtercd= filters[10], 
+                               filtercr= filters[11], 
+                               filterosl = filters[12], 
+                               filterstatus=filters[13], 
+                               filtersb=filters[14], 
+                               filterrb=filters[15],
+                               filteraction=filters[16], 
+                               filter_start_doa=filter_start_doa,  
+                               filter_end_doa=filter_end_doa, 
+                               filter_start_da=filter_start_da, 
+                               filter_end_da=filter_end_da, 
+                               filteraddedby=filters[17], 
+                               filter_start_rd=filter_start_rd, 
+                               filter_end_rd=filter_end_rd,
+                               no_date_match=no_date_match,
+                               no_results=no_results)
+
+    elif request.method == "POST" and status_filter:
+
+        # Automatically marks items to be replaced  
+        for i in range(len(inventory)):
+            if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
+                and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
+                and inventory[i]["status"] != "MISSING" and inventory[i]["status"] != "ARCHIVED"):
+
+                # Variables correspond to recent_activity table
+                inventory_id = inventory[i]["equipment_id"]
+                status = "REPLACE"
+                cdept = inventory[i]["current_department"]
+                croom = inventory[i]["current_room"]
+                employee_id = None
+                sfn = "NA"
+                sln = "NA"
+                rfn = "NA"
+                rln = "NA"
+                action = inventory[i]["action"]
+                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
+                osl = "NA"
+                poc = "NA"
+                pn = "NA"
+                pfn = "NA"
+                pln = "NA"
+
+                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
+                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
+                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
+
+        inventory = [i for i in inventory if (i["status"] == status_filter)]
+        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
+
+        return render_template("inventory_table.html", inventory=inventory, filterstatus=status_filter)
+    
+    # Renders inventory page and automatically marks items to be replaced  
+    else: 
+
+        # Automatically marks items to be replaced  
+        for i in range(len(inventory)):
+            if ((inventory[i]["repl_date"] == datetime.today().strftime("%m/%d/%Y")) or (datetime.strptime(inventory[i]["repl_date"], "%m/%d/%Y") < datetime.today())) \
+                and (inventory[i]["action"] == "CHECKED IN" or inventory[i]["action"] == "NEW ITEM") and (inventory[i]["status"] != "REPLACE" and inventory[i]["status"] != "REPLACED" 
+                and inventory[i]["status"] != "MISSING" and inventory[i]["status"] != "ARCHIVED"):
+
+                # Variables correspond to recent_activity table
+                inventory_id = inventory[i]["equipment_id"]
+                status = "REPLACE"
+                cdept = inventory[i]["current_department"]
+                croom = inventory[i]["current_room"]
+                employee_id = None
+                sfn = "NA"
+                sln = "NA"
+                rfn = "NA"
+                rln = "NA"
+                action = inventory[i]["action"]
+                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
+                osl = "NA"
+                poc = "NA"
+                pn = "NA"
+                pfn = "NA"
+                pln = "NA"
+
+                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
+                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
+                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
+
+        inventory = [i for i in inventory if (i["status"] != "ARCHIVED")]
+        
+        return render_template("inventory_table.html", inventory=inventory)
 
 
 @app.route("/off-site", methods=["GET", "POST"])
@@ -1354,17 +1493,6 @@ def off_site():
                              ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
-    missingitem =  request.form.get("hiddenmissingitem")
-    filters = request.args.getlist("filter")
-    filterdate = request.args.getlist("filterdate")
-    filter_start_doa = ""
-    filter_end_doa = ""
-    filter_start_da = ""
-    filter_end_da = ""
-    filter_start_rd = ""
-    filter_end_rd = ""
-    no_date_match = 0
-    date_format = "%Y-%m-%d"
     
     if request.method == "POST" and qr:
 
@@ -1375,7 +1503,10 @@ def off_site():
     elif request.method == "POST" and request.form.get("invbutton") == "missing":
     # Sends items marked by user to missing page
 
-        missing_items = request.form.getlist("missinginv")
+        if request.form.get("invbutton") == "missing":
+            missing_items = request.form.getlist("missinginv")
+        elif request.form.get("invbutton") == "missing-single-item":
+            missing_items = request.form.getlist("hiddenmissingitem")
 
         inventory_item = [None] * len(missing_items)
 
@@ -1417,68 +1548,101 @@ def off_site():
         
         return redirect("/off-site")
 
-    elif request.method == "POST" and missingitem:
+    else:
     
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == missingitem:
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "MISSING"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
+        inventory = [i for i in inventory if (i["status"] == "OFF-SITE")]
 
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/off-site")
+        return render_template("off-site.html", inventory=inventory)
+    
+
+@app.route("/off-site_table", methods=["GET", "POST"])
+@login_required(role="ANY")
+def off_site_table():
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name, \
+                                           (patient_first_name || ' ' || patient_last_name) AS patient_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
+    filters = request.form.getlist("filter")
+    filterdate = request.form.getlist("filterdate")
+    filter_start_doa = ""
+    filter_end_doa = ""
+    filter_start_da = ""
+    filter_end_da = ""
+    filter_start_rd = ""
+    filter_end_rd = ""
+    search_inventory = request.form.get("search")
+    if search_inventory:
+        search_inventory = search_inventory.upper()
+        search_inventory = search_inventory.strip()
+        search_name = string.capwords(search_inventory)
+    search_results = None
+    no_results = 0
+    no_date_match = 0
+    date_format = "%Y-%m-%d"
+    
+        # Return info based on filter selection
+    if request.method == "POST" and (filters or search_inventory):
         
-    elif request.method == "GET" and filters:
-        
-        if filters[0] != "Equipment":
+        if filters[0] != "No Filter":
             inventory = [i for i in inventory if (i["equipment"] == filters[0])]
 
-        if filters[1] != "Model":
+        if filters[1] != "No Filter":
             inventory = [i for i in inventory if (i["model"] == filters[1])]
 
-        if filters[2] != "Serial":
+        if filters[2] != "No Filter":
             inventory = [i for i in inventory if (i["serial"] == filters[2])]\
             
-        if filters[3] != "EE":
+        if filters[3] != "No Filter":
             inventory = [i for i in inventory if (i["ee"] == filters[3])]
 
-        if filters[4] != "Off-site Location":
+        if filters[4] != "No Filter":
             inventory = [i for i in inventory if (i["off_site_location"] == filters[4])]
 
-        if filters[5] != "Scanned By":
+        if filters[5] != "No Filter":
             if filters[5] == "NA":
                 inventory = [i for i in inventory if (i["scanned_first_name"] == filters[5])]
             else:   
                 inventory = [i for i in inventory if (i["scanned_name"] == filters[5])]
 
-        if filters[6] != "Received By":
+        if filters[6] != "No Filter":
             if filters[6] == "NA":
                 inventory = [i for i in inventory if (i["received_first_name"] == filters[6])]
             else:   
                 inventory = [i for i in inventory if (i["received_name"] == filters[6])]
 
-        if filters[7] != "Action":
+        if filters[7] != "No Filter":
             inventory = [i for i in inventory if (i["action"] == filters[7])]
 
         if filterdate[0] != "" and filterdate[1] != "":
@@ -1495,13 +1659,13 @@ def off_site():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
         
-        if filters[8] != "Point of Contact":
+        if filters[8] != "No Filter":
             inventory = [i for i in inventory if (i["point_of_contact"] == filters[8])]
 
-        if filters[9] != "Phone Number":
+        if filters[9] != "No Filter":
             inventory = [i for i in inventory if (i["phone_number"] == filters[9])]
 
-        if filters[10] != "Patient Name":
+        if filters[10] != "No Filter":
             inventory = [i for i in inventory if (i["patient_name"] == filters[10])]
 
         if filterdate[2] != "" and filterdate[3] != "":
@@ -1518,7 +1682,7 @@ def off_site():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
-        if filters[11] != "Added By":
+        if filters[11] != "No Filter":
             inventory = [i for i in inventory if (i["added_name"] == filters[11])]
 
         if filterdate[4] != "" and filterdate[5] != "":
@@ -1535,9 +1699,27 @@ def off_site():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
+        if search_inventory:
+            if search_inventory == "NA" or "NA-NA" or "NA NA":
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_name in i["added_name"]) or (search_inventory in i["scanned_name"]) or (search_inventory in i["received_name"]) 
+                                                    or (search_inventory in i["off_site_location"]) or (search_inventory in i["point_of_contact"]) or (search_inventory in i["patient_name"]))] 
+            else:
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) 
+                                                    or (search_inventory in i["repl_date"]) or (search_inventory in i["status"]) or (search_name in i["scanned_name"]) 
+                                                    or (search_name in i["received_name"]) or (search_inventory in i["action"]) or (search_inventory in i["doa"]) 
+                                                    or (search_inventory in i["off_site_location"]) or (search_inventory in i["point_of_contact"]) or (search_inventory in i["phone_number"]) 
+                                                    or (search_inventory in i["patient_name"]))] 
+
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
         inventory = [i for i in inventory if (i["status"] == "OFF-SITE")]
 
-        return render_template("off-site.html", 
+        return render_template("off-site_table.html", 
                                inventory=inventory, 
                                filterequipment=filters[0], 
                                filtermodel=filters[1], 
@@ -1557,13 +1739,13 @@ def off_site():
                                filteraddedby=filters[11], 
                                filter_start_rd=filter_start_rd, 
                                filter_end_rd=filter_end_rd,
-                               no_date_match=no_date_match)
-    
-    else:
-    
-        inventory = [i for i in inventory if (i["status"] == "OFF-SITE")]
+                               no_date_match=no_date_match,
+                               no_results=no_results)
 
-        return render_template("off-site.html", inventory=inventory)
+    else:
+
+        inventory = [i for i in inventory if (i["status"] == "OFF-SITE")]
+        return render_template("off-site_table.html", inventory=inventory)
 
 
 @app.route("/replace", methods=["GET", "POST"])
@@ -1607,22 +1789,13 @@ def replace():
                              ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
-    replaced_qr = request.form.get("hidden-replaced-item")
-    missingitem =  request.form.get("hiddenmissingitem")
-    filters = request.args.getlist("filter")
-    filterdate = request.args.getlist("filterdate")
-    filter_start_doa = ""
-    filter_end_doa = ""
-    filter_start_da = ""
-    filter_end_da = ""
-    filter_start_rd = ""
-    filter_end_rd = ""
-    no_date_match = 0
-    date_format = "%Y-%m-%d"
     
-    if request.method == "POST" and request.form.get("invbutton") == "replaced":
+    if request.method == "POST" and (request.form.get("invbutton") == "replaced" or request.form.get("invbutton") == "replaced-single-item"):
 
-        replacedinv = request.form.getlist("replacedinv")
+        if request.form.get("invbutton") == "replaced":
+            replacedinv = request.form.getlist("replacedinv")
+        elif request.form.get("invbutton") == "replaced-single-item":
+            replacedinv = request.form.getlist("hidden-replaced-item")
 
         # Send items to replaced items page
         if replacedinv:
@@ -1671,9 +1844,12 @@ def replace():
             return apology("Please make a selection.", 400, "/replace")
         
     # Sends items marked by user to missing page
-    elif request.method == "POST" and request.form.get("invbutton") == "missing":
+    elif request.method == "POST" and (request.form.get("invbutton") == "missing" or request.form.get("invbutton") == "hiddenmissingitem"):
 
-        missing_items = request.form.getlist("missinginv")
+        if request.form.get("invbutton") == "missing":
+            missing_items = request.form.getlist("missinginv")
+        elif request.form.get("invbutton") == "missing-single-item":
+            missing_items = request.form.getlist("hiddenmissingitem")
 
         inventory_item = [None] * len(missing_items)
 
@@ -1721,122 +1897,121 @@ def replace():
 
         return equipment_info
     
-    elif request.method == "POST" and replaced_qr:
+    else:
     
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == replaced_qr:
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "REPLACED"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
+        inventory = [i for i in inventory if (i["status"] == "REPLACE")]
 
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/replace")
+        return render_template("replace.html", inventory=inventory)
+
+
+@app.route("/replace_table", methods=["GET", "POST"])
+@login_required(role="ANY")
+def replace_table():
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
+    filters = request.form.getlist("filter")
+    filterdate = request.form.getlist("filterdate")
+    filter_start_doa = ""
+    filter_end_doa = ""
+    filter_start_da = ""
+    filter_end_da = ""
+    filter_start_rd = ""
+    filter_end_rd = ""
+    search_inventory = request.form.get("search")
+    if search_inventory:
+        search_inventory = search_inventory.upper()
+        search_inventory = search_inventory.strip()
+        search_name = string.capwords(search_inventory)
+    search_results = None
+    no_date_match = 0
+    no_results = 0
+    date_format = "%Y-%m-%d"
     
-    elif request.method == "POST" and missingitem:
-    
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == missingitem:
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "MISSING"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/replace")
-
     # Return info based on filter selection
-    elif request.method == "GET" and filters:
+    if request.method == "POST" and (filters or search_inventory):
         
-        if filters[0] != "Equipment":
+        if filters[0] != "No Filter":
             inventory = [i for i in inventory if (i["equipment"] == filters[0])]
 
-        if filters[1] != "Model":
+        if filters[1] != "No Filter":
             inventory = [i for i in inventory if (i["model"] == filters[1])]
 
-        if filters[2] != "Serial":
+        if filters[2] != "No Filter":
             inventory = [i for i in inventory if (i["serial"] == filters[2])]
 
-        if filters[3] != "EE":
+        if filters[3] != "No Filter":
             inventory = [i for i in inventory if (i["ee"] == filters[3])]
 
         if filters[4] == "Location":
-            if filters[5] != "Location":
+            if filters[5] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
 
         if filters[4] == "Department":
-            if filters[6] != "Department":
+            if filters[6] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
 
         if filters[4] == "Room":
-            if filters[7] != "Room":
+            if filters[7] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
 
         if filters[8] == "Location":
-            if filters[9] != "Location":
+            if filters[9] != "No Filter":
                 inventory = [i for i in inventory if (i["current_location"] == filters[9])]
 
         if filters[8] == "Department":
-            if filters[10] != "Department":
+            if filters[10] != "No Filter":
                 inventory = [i for i in inventory if (i["current_department"] == filters[10])]
 
         if filters[8] == "Room":
-            if filters[11] != "Room":
+            if filters[11] != "No Filter":
                 inventory = [i for i in inventory if (i["current_room"] == filters[11])]
 
-        if filters[12] != "Scanned By":
+        if filters[12] != "No Filter":
             if filters[12] == "NA":
                 inventory = [i for i in inventory if (i["scanned_first_name"] == filters[12])]
             else:   
                 inventory = [i for i in inventory if (i["scanned_name"] == filters[12])]
 
-        if filters[13] != "Received By":
+        if filters[13] != "No Filter":
             if filters[13] == "NA":
                 inventory = [i for i in inventory if (i["received_first_name"] == filters[13])]
             else:   
                 inventory = [i for i in inventory if (i["received_name"] == filters[13])]
 
-        if filters[14] != "Action":
+        if filters[14] != "No Filter":
             inventory = [i for i in inventory if (i["action"] == filters[14])]
 
         if filterdate[0] != "" and filterdate[1] != "":
@@ -1867,7 +2042,7 @@ def replace():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
-        if filters[15] != "Added By":
+        if filters[15] != "No Filter":
             inventory = [i for i in inventory if (i["added_name"] == filters[15])]
 
         if filterdate[4] != "" and filterdate[5] != "":
@@ -1884,9 +2059,25 @@ def replace():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
+        if search_inventory:
+            if search_inventory == "NA" or "NA-NA" or "NA NA":
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_name in i["added_name"]) or (search_inventory in i["scanned_name"]) or (search_inventory in i["received_name"]))] 
+            else:
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) 
+                                                    or (search_inventory in i["repl_date"]) or (search_inventory in i["status"]) or (search_inventory in i["current_location"]) 
+                                                    or (search_name in i["scanned_name"]) or (search_name in i["received_name"]) or (search_inventory in i["action"]) or (search_inventory in i["doa"]) 
+                                                    or (search_inventory in i["off_site_location"]))] 
+            
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
         inventory = [i for i in inventory if (i["status"] == "REPLACE")]
 
-        return render_template("replace.html", 
+        return render_template("replace_table.html", 
                                inventory=inventory, 
                                filterequipment=filters[0], 
                                filtermodel=filters[1], 
@@ -1910,11 +2101,13 @@ def replace():
                                filteraddedby=filters[15], 
                                filter_start_rd=filter_start_rd, 
                                filter_end_rd=filter_end_rd,
-                               no_date_match=no_date_match)
-    
-    inventory = [i for i in inventory if (i["status"] == "REPLACE")]
+                               no_date_match=no_date_match,
+                               no_results=no_results)
 
-    return render_template("replace.html", inventory=inventory)
+    else:
+
+        inventory = [i for i in inventory if (i["status"] == "REPLACE")]
+        return render_template("replace_table.html", inventory=inventory)
 
 
 @app.route("/replaced_items", methods=["GET", "POST"])
@@ -1958,21 +2151,13 @@ def replaced_items():
                              ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
-    archive_qr = request.form.get("hidden-archive-item")
-    filters = request.args.getlist("filter")
-    filterdate = request.args.getlist("filterdate")
-    filter_start_doa = ""
-    filter_end_doa = ""
-    filter_start_da = ""
-    filter_end_da = ""
-    filter_start_rd = ""
-    filter_end_rd = ""
-    no_date_match = 0
-    date_format = "%Y-%m-%d"
     
-    if request.method == "POST" and request.form.get("invbutton") == "archive":
+    if request.method == "POST" and (request.form.get("invbutton") == "archive" or request.form.get("invbutton") == "archive-single-item"):
 
-        archive_items = request.form.getlist("archiveinv")
+        if request.form.get("invbutton") == "archive":
+            archive_items = request.form.getlist("archiveinv")
+        elif request.form.get("invbutton") == "archive-single-item":
+            archive_items = request.form.getlist("hidden-archive-item")
 
         # Sends items marked by user to archive page
         if archive_items:
@@ -2019,166 +2204,6 @@ def replaced_items():
 
         return equipment_info
     
-    # Send single item to archive
-    elif request.method == "POST" and archive_qr:
-        
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == archive_qr:
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "ARCHIVED"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
-
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/replaced_items")
-            
-    # Return info based on filter selection
-    elif request.method == "GET" and filters:
-        
-        if filters[0] != "Equipment":
-            inventory = [i for i in inventory if (i["equipment"] == filters[0])]
-
-        if filters[1] != "Model":
-            inventory = [i for i in inventory if (i["model"] == filters[1])]
-
-        if filters[2] != "Serial":
-            inventory = [i for i in inventory if (i["serial"] == filters[2])]
-
-        if filters[3] != "EE":
-            inventory = [i for i in inventory if (i["ee"] == filters[3])]
-
-        if filters[4] == "Location":
-            if filters[5] != "Location":
-                inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
-
-        if filters[4] == "Department":
-            if filters[6] != "Department":
-                inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
-
-        if filters[4] == "Room":
-            if filters[7] != "Room":
-                inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
-
-        if filters[8] == "Location":
-            if filters[9] != "Location":
-                inventory = [i for i in inventory if (i["current_location"] == filters[9])]
-
-        if filters[8] == "Department":
-            if filters[10] != "Department":
-                inventory = [i for i in inventory if (i["current_department"] == filters[10])]
-
-        if filters[8] == "Room":
-            if filters[11] != "Room":
-                inventory = [i for i in inventory if (i["current_room"] == filters[11])]
-
-        if filters[12] != "Scanned By":
-            if filters[12] == "NA":
-                inventory = [i for i in inventory if (i["scanned_first_name"] == filters[12])]
-            else:   
-                inventory = [i for i in inventory if (i["scanned_name"] == filters[12])]
-
-        if filters[13] != "Received By":
-            if filters[13] == "NA":
-                inventory = [i for i in inventory if (i["received_first_name"] == filters[13])]
-            else:   
-                inventory = [i for i in inventory if (i["received_name"] == filters[13])]
-
-        if filters[14] != "Action":
-            inventory = [i for i in inventory if (i["action"] == filters[14])]
-
-        if filterdate[0] != "" and filterdate[1] != "":
-            filterdate[0] = datetime.strptime(filterdate[0], date_format)
-            filter_start_doa = filterdate[0].strftime(date_format)
-            filterdate[0] = filterdate[0].strftime("%m/%d/%Y")
-            filterdate[1] = datetime.strptime(filterdate[1], date_format)
-            filter_end_doa = filterdate[1].strftime(date_format)
-            filterdate[1] = filterdate[1].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["doa"] >= filterdate[0] and inventory[i]["doa"] <= filterdate[1]:
-                    inventory = [i for i in inventory if (i["doa"] >= filterdate[0] and i["doa"] <= filterdate[1])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-        
-        if filterdate[2] != "" and filterdate[3] != "":
-            filterdate[2] = datetime.strptime(filterdate[2], date_format)
-            filter_start_da = filterdate[2].strftime(date_format)
-            filterdate[2] = filterdate[2].strftime("%m/%d/%Y")
-            filterdate[3] = datetime.strptime(filterdate[3], date_format)
-            filter_end_da = filterdate[3].strftime(date_format)
-            filterdate[3] = filterdate[3].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["date_added"] >= filterdate[2] and inventory[i]["date_added"] <= filterdate[3]:
-                    inventory = [i for i in inventory if (i["date_added"] >= filterdate[2] and i["date_added"] <= filterdate[3])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        if filters[15] != "Added By":
-            inventory = [i for i in inventory if (i["added_name"] == filters[15])]
-
-        if filterdate[4] != "" and filterdate[5] != "":
-            filterdate[4] = datetime.strptime(filterdate[4], date_format)
-            filter_start_rd = filterdate[4].strftime(date_format)
-            filterdate[4] = filterdate[4].strftime("%m/%d/%Y")
-            filterdate[5] = datetime.strptime(filterdate[5], date_format)
-            filter_end_rd = filterdate[5].strftime(date_format)
-            filterdate[5] = filterdate[5].strftime("%m/%d/%Y")
-            for i in range(len(inventory)):
-                if inventory[i]["repl_date"] >= filterdate[4] and inventory[i]["repl_date"] <= filterdate[5]:
-                    inventory = [i for i in inventory if (i["repl_date"] >= filterdate[4] and i["repl_date"] <= filterdate[5])]
-                    break
-                elif i == len(inventory) - 1:
-                    no_date_match = 1
-
-        inventory = [i for i in inventory if (i["status"] == "REPLACED")]
-
-        return render_template("replaced_items.html", 
-                               inventory=inventory, 
-                               filterequipment=filters[0], 
-                               filtermodel=filters[1], 
-                               filterserial=filters[2], 
-                               filteree=filters[3], 
-                               filtersbal=filters[4],
-                               filteral =filters[5],
-                               filterad=filters[6],
-                               filterar=filters[7],
-                               filtersbcl=filters[8], 
-                               filtercl=filters[9], 
-                               filtercd= filters[10], 
-                               filtercr= filters[11], 
-                               filtersb=filters[12], 
-                               filterrb=filters[13],
-                               filteraction=filters[14], 
-                               filter_start_doa=filter_start_doa,  
-                               filter_end_doa=filter_end_doa, 
-                               filter_start_da=filter_start_da, 
-                               filter_end_da=filter_end_da, 
-                               filteraddedby=filters[15], 
-                               filter_start_rd=filter_start_rd, 
-                               filter_end_rd=filter_end_rd,
-                               no_date_match=no_date_match)
-    
     else:
 
         # Automatically sends items to archive
@@ -2213,6 +2238,212 @@ def replaced_items():
         inventory = [i for i in inventory if (i["status"] == "REPLACED")]
         
         return render_template("replaced_items.html", inventory=inventory)
+
+
+@app.route("/replaced_items_table", methods=["GET", "POST"])
+@login_required(role="ANY")
+def replaced_items_table():
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
+    filters = request.form.getlist("filter")
+    filterdate = request.form.getlist("filterdate")
+    filter_start_doa = ""
+    filter_end_doa = ""
+    filter_start_da = ""
+    filter_end_da = ""
+    filter_start_rd = ""
+    filter_end_rd = ""
+    search_inventory = request.form.get("search")
+    if search_inventory:
+        search_inventory = search_inventory.upper()
+        search_inventory = search_inventory.strip()
+        search_name = string.capwords(search_inventory)
+    search_results = None
+    no_date_match = 0
+    no_results = 0
+    date_format = "%Y-%m-%d"
+
+    # Return info based on filter selection
+    if request.method == "POST" and (filters or search_inventory):
+        
+        if filters[0] != "No Filter":
+            inventory = [i for i in inventory if (i["equipment"] == filters[0])]
+
+        if filters[1] != "No Filter":
+            inventory = [i for i in inventory if (i["model"] == filters[1])]
+
+        if filters[2] != "No Filter":
+            inventory = [i for i in inventory if (i["serial"] == filters[2])]
+
+        if filters[3] != "No Filter":
+            inventory = [i for i in inventory if (i["ee"] == filters[3])]
+
+        if filters[4] == "Location":
+            if filters[5] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
+
+        if filters[4] == "Department":
+            if filters[6] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
+
+        if filters[4] == "Room":
+            if filters[7] != "No Filter":
+                inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
+
+        if filters[8] == "Location":
+            if filters[9] != "No Filter":
+                inventory = [i for i in inventory if (i["current_location"] == filters[9])]
+
+        if filters[8] == "Department":
+            if filters[10] != "No Filter":
+                inventory = [i for i in inventory if (i["current_department"] == filters[10])]
+
+        if filters[8] == "Room":
+            if filters[11] != "No Filter":
+                inventory = [i for i in inventory if (i["current_room"] == filters[11])]
+
+        if filters[12] != "No Filter":
+            if filters[12] == "NA":
+                inventory = [i for i in inventory if (i["scanned_first_name"] == filters[12])]
+            else:   
+                inventory = [i for i in inventory if (i["scanned_name"] == filters[12])]
+
+        if filters[13] != "No Filter":
+            if filters[13] == "NA":
+                inventory = [i for i in inventory if (i["received_first_name"] == filters[13])]
+            else:   
+                inventory = [i for i in inventory if (i["received_name"] == filters[13])]
+
+        if filters[14] != "No Filter":
+            inventory = [i for i in inventory if (i["action"] == filters[14])]
+
+        if filterdate[0] != "" and filterdate[1] != "":
+            filterdate[0] = datetime.strptime(filterdate[0], date_format)
+            filter_start_doa = filterdate[0].strftime(date_format)
+            filterdate[0] = filterdate[0].strftime("%m/%d/%Y")
+            filterdate[1] = datetime.strptime(filterdate[1], date_format)
+            filter_end_doa = filterdate[1].strftime(date_format)
+            filterdate[1] = filterdate[1].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["doa"] >= filterdate[0] and inventory[i]["doa"] <= filterdate[1]:
+                    inventory = [i for i in inventory if (i["doa"] >= filterdate[0] and i["doa"] <= filterdate[1])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+        
+        if filterdate[2] != "" and filterdate[3] != "":
+            filterdate[2] = datetime.strptime(filterdate[2], date_format)
+            filter_start_da = filterdate[2].strftime(date_format)
+            filterdate[2] = filterdate[2].strftime("%m/%d/%Y")
+            filterdate[3] = datetime.strptime(filterdate[3], date_format)
+            filter_end_da = filterdate[3].strftime(date_format)
+            filterdate[3] = filterdate[3].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["date_added"] >= filterdate[2] and inventory[i]["date_added"] <= filterdate[3]:
+                    inventory = [i for i in inventory if (i["date_added"] >= filterdate[2] and i["date_added"] <= filterdate[3])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+
+        if filters[15] != "No Filter":
+            inventory = [i for i in inventory if (i["added_name"] == filters[15])]
+
+        if filterdate[4] != "" and filterdate[5] != "":
+            filterdate[4] = datetime.strptime(filterdate[4], date_format)
+            filter_start_rd = filterdate[4].strftime(date_format)
+            filterdate[4] = filterdate[4].strftime("%m/%d/%Y")
+            filterdate[5] = datetime.strptime(filterdate[5], date_format)
+            filter_end_rd = filterdate[5].strftime(date_format)
+            filterdate[5] = filterdate[5].strftime("%m/%d/%Y")
+            for i in range(len(inventory)):
+                if inventory[i]["repl_date"] >= filterdate[4] and inventory[i]["repl_date"] <= filterdate[5]:
+                    inventory = [i for i in inventory if (i["repl_date"] >= filterdate[4] and i["repl_date"] <= filterdate[5])]
+                    break
+                elif i == len(inventory) - 1:
+                    no_date_match = 1
+
+        if search_inventory:
+            if search_inventory == "NA" or "NA-NA" or "NA NA":
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_name in i["added_name"]) or (search_inventory in i["scanned_name"]) or (search_inventory in i["received_name"]))] 
+            else:
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) 
+                                                    or (search_inventory in i["repl_date"]) or (search_inventory in i["status"]) or (search_inventory in i["current_location"]) 
+                                                    or (search_name in i["scanned_name"]) or (search_name in i["received_name"]) or (search_inventory in i["action"]) or (search_inventory in i["doa"]))] 
+            
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
+        inventory = [i for i in inventory if (i["status"] == "REPLACED")]
+
+        return render_template("replaced_items_table.html", 
+                               inventory=inventory, 
+                               filterequipment=filters[0], 
+                               filtermodel=filters[1], 
+                               filterserial=filters[2], 
+                               filteree=filters[3], 
+                               filtersbal=filters[4],
+                               filteral =filters[5],
+                               filterad=filters[6],
+                               filterar=filters[7],
+                               filtersbcl=filters[8], 
+                               filtercl=filters[9], 
+                               filtercd= filters[10], 
+                               filtercr= filters[11], 
+                               filtersb=filters[12], 
+                               filterrb=filters[13],
+                               filteraction=filters[14], 
+                               filter_start_doa=filter_start_doa,  
+                               filter_end_doa=filter_end_doa, 
+                               filter_start_da=filter_start_da, 
+                               filter_end_da=filter_end_da, 
+                               filteraddedby=filters[15], 
+                               filter_start_rd=filter_start_rd, 
+                               filter_end_rd=filter_end_rd,
+                               no_date_match=no_date_match,
+                               no_results=no_results)
+    
+    else:
+        
+        inventory = [i for i in inventory if (i["status"] == "REPLACED")]
+        
+        return render_template("replaced_items_table.html", inventory=inventory)
 
 
 @app.route("/missing", methods=["GET", "POST"])
@@ -2257,27 +2488,19 @@ def missing():
                              ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
-    replaced_qr = request.form.get("hidden-replaced-item")
-    filters = request.args.getlist("filter")
-    filterdate = request.args.getlist("filterdate")
-    filter_start_doa = ""
-    filter_end_doa = ""
-    filter_start_da = ""
-    filter_end_da = ""
-    filter_start_rd = ""
-    filter_end_rd = ""
-    no_date_match = 0
-    date_format = "%Y-%m-%d"
     
     if request.method == "POST" and qr:
 
         equipment_info = {"qr_code": equipment_info[0]["qr_code"]}
 
         return equipment_info
+    
+    if request.method == "POST" and (request.form.get("invbutton") == "replaced" or request.form.get("invbutton") == "replaced-single-item"):
 
-    if request.method == "POST" and request.form.get("invbutton") == "replaced":
-
-        replacedinv = request.form.getlist("replacedinv")
+        if request.form.get("invbutton") == "replaced":
+            replacedinv = request.form.getlist("replaceinv")
+        elif request.form.get("invbutton") == "replaced-single-item":
+            replacedinv = request.form.getlist("hidden-replace-item")
 
         # Send items to replaced items page
         if replacedinv:
@@ -2318,93 +2541,126 @@ def missing():
             
             return redirect("/replaced_items")
     
-    elif request.method == "POST" and replaced_qr:
+    else:
     
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == replaced_qr:
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = "REPLACED"
-                cdept = inventory[i]["current_department"]
-                croom = inventory[i]["current_room"]
-                employee_id = session["user_id"]
-                sfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sfn = sfn[0]["first_name"]
-                sln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                sln = sln[0]["last_name"]
-                rfn = db.execute("SELECT first_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rfn = rfn[0]["first_name"]
-                rln = db.execute("SELECT last_name FROM \"user\" WHERE id = ?", session["user_id"])
-                rln = rln[0]["last_name"]
-                action = inventory[i]["action"]
-                doa = datetime.today().strftime("%m/%d/%Y %I:%M:%S %p")
-                osl = inventory[i]["off_site_location"]
-                poc = inventory[i]["point_of_contact"]
-                pn = inventory[i]["phone_number"]
-                pfn = inventory[i]["patient_first_name"]
-                pln = inventory[i]["patient_last_name"]
+        inventory = [i for i in inventory if (i["status"] == "MISSING")]
 
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/missing")
-    
-    elif request.method == "GET" and filters:
+        return render_template("missing.html", inventory=inventory)
         
-        if filters[0] != "Equipment":
+
+@app.route("/missing_table", methods=["GET", "POST"])
+@login_required(role="ANY")
+def missing_table():
+
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name, \
+                                           (patient_first_name || ' ' || patient_last_name) AS patient_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
+    filters = request.form.getlist("filter")
+    filterdate = request.form.getlist("filterdate")
+    filter_start_doa = ""
+    filter_end_doa = ""
+    filter_start_da = ""
+    filter_end_da = ""
+    filter_start_rd = ""
+    filter_end_rd = ""
+    search_inventory = request.form.get("search")
+    if search_inventory:
+        search_inventory = search_inventory.upper()
+        search_inventory = search_inventory.strip()
+        search_name = string.capwords(search_inventory)
+    search_results = None
+    no_date_match = 0
+    no_results = 0
+    date_format = "%Y-%m-%d"
+
+    if request.method == "POST" and (filters or search_inventory):
+        
+        if filters[0] != "No Filter":
             inventory = [i for i in inventory if (i["equipment"] == filters[0])]
 
-        if filters[1] != "Model":
+        if filters[1] != "No Filter":
             inventory = [i for i in inventory if (i["model"] == filters[1])]
 
-        if filters[2] != "Serial":
+        if filters[2] != "No Filter":
             inventory = [i for i in inventory if (i["serial"] == filters[2])]
 
-        if filters[3] != "EE":
+        if filters[3] != "No Filter":
             inventory = [i for i in inventory if (i["ee"] == filters[3])]
 
         if filters[4] == "Location":
-            if filters[5] != "Location":
+            if filters[5] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
 
         if filters[4] == "Department":
-            if filters[6] != "Department":
+            if filters[6] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
 
         if filters[4] == "Room":
-            if filters[7] != "Room":
+            if filters[7] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
 
         if filters[8] == "Location":
-            if filters[9] != "Location":
+            if filters[9] != "No Filter":
                 inventory = [i for i in inventory if (i["current_location"] == filters[9])]
 
         if filters[8] == "Department":
-            if filters[10] != "Department":
+            if filters[10] != "No Filter":
                 inventory = [i for i in inventory if (i["current_department"] == filters[10])]
 
         if filters[8] == "Room":
-            if filters[11] != "Room":
+            if filters[11] != "No Filter":
                 inventory = [i for i in inventory if (i["current_room"] == filters[11])]
 
         if filters[8] == "Off-site Location":
-            if filters[12] != "Off-site Location":
+            if filters[12] != "No Filter":
                 inventory = [i for i in inventory if (i["off_site_location"] == filters[12])]
 
-        if filters[13] != "Scanned By":
+        if filters[13] != "No Filter":
             if filters[13] == "NA":
                 inventory = [i for i in inventory if (i["scanned_first_name"] == filters[13])]
             else:   
                 inventory = [i for i in inventory if (i["scanned_name"] == filters[13])]
 
-        if filters[14] != "Received By":
+        if filters[14] != "No Filter":
             if filters[14] == "NA":
                 inventory = [i for i in inventory if (i["received_first_name"] == filters[14])]
             else:   
                 inventory = [i for i in inventory if (i["received_name"] == filters[14])]
 
-        if filters[15] != "Action":
+        if filters[15] != "No Filter":
             inventory = [i for i in inventory if (i["action"] == filters[15])]
 
         if filterdate[0] != "" and filterdate[1] != "":
@@ -2421,13 +2677,13 @@ def missing():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
         
-        if filters[16] != "Point of Contact":
+        if filters[16] != "No Filter":
             inventory = [i for i in inventory if (i["point_of_contact"] == filters[16])]
 
-        if filters[17] != "Phone Number":
+        if filters[17] != "No Filter":
             inventory = [i for i in inventory if (i["phone_number"] == filters[17])]
 
-        if filters[18] != "Patient Name":
+        if filters[18] != "No Filter":
             if filters[18] == "NA":
                 inventory = [i for i in inventory if (i["patient_first_name"] == filters[18])]
             else:   
@@ -2447,7 +2703,7 @@ def missing():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
-        if filters[19] != "Added By":
+        if filters[19] != "No Filter":
             inventory = [i for i in inventory if (i["added_name"] == filters[19])]
 
         if filterdate[4] != "" and filterdate[5] != "":
@@ -2464,9 +2720,28 @@ def missing():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
+        if search_inventory:
+            if search_inventory == "NA" or "NA-NA" or "NA NA":
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"]) 
+                                                    or (search_name in i["added_name"]) or (search_inventory in i["current_location"]) or (search_inventory in i["scanned_name"]) 
+                                                    or (search_inventory in i["received_name"]) or (search_inventory in i["off_site_location"]) or (search_inventory in i["phone_number"]) 
+                                                    or (search_inventory in i["point_of_contact"]) or (search_inventory in i["patient_name"]))] 
+            else:
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) or (search_inventory in i["repl_date"]) 
+                                                    or (search_inventory in i["status"]) or (search_inventory in i["current_location"]) or (search_name in i["scanned_name"]) or (search_name in i["received_name"]) 
+                                                    or (search_inventory in i["action"]) or (search_inventory in i["doa"]) or (search_inventory in i["off_site_location"]) 
+                                                    or (search_inventory in i["point_of_contact"]) or (search_inventory in i["phone_number"]) or (search_inventory in i["patient_name"]))] 
+                
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
+
         inventory = [i for i in inventory if (i["status"] == "MISSING")]
 
-        return render_template("missing.html", 
+        return render_template("missing_table.html", 
                                inventory=inventory, 
                                filterequipment=filters[0], 
                                filtermodel=filters[1], 
@@ -2494,158 +2769,14 @@ def missing():
                                filteraddedby=filters[19], 
                                filter_start_rd=filter_start_rd, 
                                filter_end_rd=filter_end_rd,
-                               no_date_match=no_date_match)
+                               no_date_match=no_date_match,
+                               no_results=no_results)
     
-    else:
-    
+    else: 
+
         inventory = [i for i in inventory if (i["status"] == "MISSING")]
 
-        return render_template("missing.html", inventory=inventory)
-        
-
-@app.route("/search", methods=["GET", "POST"])
-@login_required(role="ANY")
-def search():
-
-    depts = db.execute("SELECT * FROM department ORDER BY building ASC")
-    rooms = db.execute("SELECT * FROM room ORDER BY rooms ASC")
-    osl = db.execute("SELECT * FROM off_site_location ORDER BY location ASC")
-    statuses = ["In Use", "Storage", "Loaned", "Off-site", "Out for Repair", "Replace", "Replaced", "Missing", "Archived"]
-    action = ["Checked In", "Checked Out", "New Item"]
-    selection = ["Equipment", "Model", "Serial", "EE", "Status", "Assigned Location", "Current Location", "Off-site Location", "Scanned By", "Received By", "Action", "Date of Action"]
-    fieldname = request.args.get("search_by")
-    showtable = 0
-
-    if fieldname or request.args.get("s"):
-    
-        fields = db.execute("SELECT * \
-                              FROM (SELECT DISTINCT ON (inventory.id) \
-                                           inventory.id AS equipment_id, \
-                                           recent_activity.id, \
-                                           equipment, \
-                                           model, \
-                                           serial, \
-                                           ee, \
-                                           assigned_department, \
-                                           assigned_room, \
-                                           qr_code, \
-                                           date_added, \
-                                           (added_first_name || ' ' || added_last_name) AS added_name, \
-                                           repl_date, \
-                                           status, \
-                                           current_department, \
-                                           current_room, \
-                                           scanned_first_name, \
-					                       scanned_last_name, \
-                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
-                                           received_first_name, \
-                                           received_last_name, \
-                                           (received_first_name || ' ' || received_last_name) AS received_name, \
-                                           action, \
-                                           date_of_action, \
-                                           SUBSTR(date_of_action, 1, 10) AS doa,\
-                                           off_site_location \
-                                      FROM inventory \
-                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
-                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
-                             ORDER BY equipment")
-
-        # Search for equipment, model, serial, ee
-        if  fieldname == selection[0] or fieldname == selection[1] or fieldname == selection[2] or fieldname == selection[3]:
-
-            fieldname = fieldname.lower()
-            search = request.args.get("s")
-
-            search = search.strip()
-            search = search.upper()
-
-            fields = [i for i in fields if (i[fieldname] == search)]
-
-        elif fieldname == selection[4]:
-
-            status = request.args.get("s")
-            status = status.upper()
-
-            fields = [i for i in fields if (i["status"] == status)]
-
-        # Search for equipment, model, serial, ee
-        elif fieldname == selection[5]:
-
-            location = request.args.getlist("s")
-
-            fields = [i for i in fields if (i["assigned_department"] == location[0] and i["assigned_room"] == location[1])]
-
-        elif fieldname == selection[6]:
-
-            location = request.args.getlist("s")
-
-            fields = [i for i in fields if (i["current_department"] == location[0] and i["current_room"] == location[1])]
-
-        elif fieldname == selection[7]:
-
-            off_site_location = request.args.get("s")
-
-            fields = [i for i in fields if (i["off_site_location"] == off_site_location)]
-
-        elif fieldname == selection[8]:
-
-            name = request.args.getlist("s")
-            
-            sfn = name[0].capitalize()
-            sln = name[1].capitalize()
-            sfn = sfn.strip()
-            sln = sln.strip()
-
-            user = db.execute("SELECT id FROM \"user\" where first_name = ? AND last_name = ?", sfn, sln)
-
-            fields = [i for i in fields if (i["employee_id"] == user[0]["id"])]
-
-        elif fieldname == selection[9]:
-
-            name = request.args.getlist("s")
-            
-            rfn = name[0].capitalize()
-            rln = name[1].capitalize()
-            rfn = rfn.strip()
-            rln = rln.strip()
-
-            fields = [i for i in fields if (i["received_first_name"] == rfn and i["received_last_name"] == rln)]
-
-
-        elif fieldname == selection[10]:
-
-            checkaction = request.args.get("s")
-            checkaction = checkaction.upper()
-            
-            fields = [i for i in fields if (i["action"] == checkaction)]
-
-        elif fieldname == selection[11]:
-            if request.args.get("s"):
-                date_of_action = request.args.get("s")
-                date_format = "%Y-%m-%d"
-                date_of_action = datetime.strptime(date_of_action, date_format)
-                date_of_action = date_of_action.strftime("%m/%d/%Y")
-
-            fields = [i for i in fields if (i["doa"] == date_of_action)]
-
-        else:
-            showtable = 3
-            return render_template("search.html", showtable=showtable, depts=depts, rooms=rooms,  osl=osl, statuses=statuses, action=action) 
-
-        if not fields:
-            showtable = 2
-        else:
-            showtable = 1
-        
-        return render_template("search.html", fields=fields, showtable=showtable, depts=depts, rooms=rooms, osl=osl, statuses=statuses, action=action)
-    
-    elif request.args.get("s") == "": 
-        showtable = 3
-        return render_template("search.html", showtable=showtable, depts=depts, rooms=rooms, osl=osl, statuses=statuses, action=action) 
-    
-    else:
-
-        return render_template("search.html", depts=depts, rooms=rooms, osl=osl, statuses=statuses, action=action, showtable=showtable)
+        return render_template("missing_table.html", inventory=inventory)
 
 
 @app.route("/archive", methods=["GET", "POST"])
@@ -2690,15 +2821,6 @@ def archive():
                              ORDER BY equipment")
     qr = request.form.get("showinfo")
     equipment_info = db.execute("SELECT qr_code FROM inventory WHERE qr_code = ?", qr)
-    unarchive_qr = request.form.get("hidden-unarchive")
-    filters = request.args.getlist("filter")
-    filterdate = request.args.getlist("filterdate")
-    filter_start_da = ""
-    filter_end_da = ""
-    filter_start_rd = ""
-    filter_end_rd = ""
-    date_format = "%Y-%m-%d"
-    no_date_match = 0
 
     if request.method == "POST" and qr:
 
@@ -2706,7 +2828,7 @@ def archive():
 
         return equipment_info
     
-    elif request.method == "POST" and request.form.get("invbutton") == "unarchive":
+    elif request.method == "POST" and (request.form.get("invbutton") == "unarchive" or request.form.get("invbutton") == "unarchive-single-item"):
 
         unarchive_items = request.form.getlist("unarchiveinv")
 
@@ -2750,63 +2872,93 @@ def archive():
             
             return redirect("/archive")
         
-    elif request.method == "POST" and unarchive_qr:
-        
-        for i in range(len(inventory)):
-            if inventory[i]["qr_code"] == unarchive_qr:
-                previous_activity = db.execute("SELECT DISTINCT ON (inventory_id) * \
-                                                  FROM recent_activity WHERE inventory_id = ? AND status != 'ARCHIVED' \
-                                                 ORDER BY inventory_id, id DESC", inventory[i]["equipment_id"])
-                
-                # Variables correspond to recent_activity table
-                inventory_id = inventory[i]["equipment_id"]
-                status = previous_activity[0]["status"]
-                cdept = previous_activity[0]["current_department"]
-                croom = previous_activity[0]["current_room"]
-                employee_id = previous_activity[0]["employee_id"]
-                sfn = previous_activity[0]["scanned_first_name"]
-                sln = previous_activity[0]["scanned_last_name"]
-                rfn = previous_activity[0]["received_first_name"]
-                rln = previous_activity[0]["received_last_name"]
-                action = previous_activity[0]["action"]
-                doa = previous_activity[0]["date_of_action"]
-                osl = previous_activity[0]["off_site_location"]
-                poc = previous_activity[0]["point_of_contact"]
-                pn = previous_activity[0]["phone_number"]
-                pfn = previous_activity[0]["patient_first_name"]
-                pln = previous_activity[0]["patient_last_name"]
+    else: 
 
-                db.execute("INSERT INTO recent_activity (inventory_id, status, current_department, current_room, employee_id, scanned_first_name, scanned_last_name, received_first_name, received_last_name, action, \
-                        date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id, status,
-                        cdept, croom, employee_id, sfn, sln, rfn, rln, action, doa, osl, poc, pn, pfn, pln)
-            
-                return redirect("/archive")
+        inventory = [i for i in inventory if (i["status"] == "ARCHIVED")]
+
+        return render_template("archive.html", inventory=inventory)
+
+
+@app.route("/archive_table", methods=["GET", "POST"])
+@login_required(role="ANY")
+def archive_table():
+
+    inventory = db.execute("SELECT * \
+                              FROM (SELECT DISTINCT ON (inventory.id) \
+                                           inventory.id AS equipment_id, \
+                                           recent_activity.id, \
+                                           equipment, \
+                                           model, \
+                                           serial, \
+                                           ee, \
+                                           assigned_department, \
+                                           assigned_room, \
+                                           (assigned_room || '-' || assigned_department) AS assigned_location, \
+                                           qr_code, \
+                                           date_added, \
+                                           (added_first_name || ' ' || added_last_name) AS added_name, \
+                                           repl_date, \
+                                           status, \
+                                           current_department, \
+                                           current_room, \
+                                           (current_room || '-' || current_department) AS current_location, \
+                                           scanned_first_name, \
+                                           (scanned_first_name || ' ' || scanned_last_name) AS scanned_name, \
+                                           received_first_name, \
+                                           (received_first_name || ' ' || received_last_name) AS received_name, \
+                                           action, \
+                                           date_of_action, \
+                                           SUBSTR(date_of_action, 1, 10) AS doa,\
+                                           off_site_location, \
+                                           point_of_contact, \
+                                           phone_number, \
+                                           patient_first_name, \
+                                           patient_last_name, \
+                                           (patient_first_name || ' ' || patient_last_name) AS patient_name \
+                                      FROM inventory \
+                                           JOIN recent_activity ON recent_activity.inventory_id = inventory.id \
+                                     ORDER BY inventory.id, recent_activity.id DESC) ordered_inventory \
+                             ORDER BY equipment")
+    filters = request.form.getlist("filter")
+    filterdate = request.form.getlist("filterdate")
+    filter_start_da = ""
+    filter_end_da = ""
+    filter_start_rd = ""
+    filter_end_rd = ""
+    search_inventory = request.form.get("search")
+    if search_inventory:
+        search_inventory = search_inventory.upper()
+        search_inventory = search_inventory.strip()
+        search_name = string.capwords(search_inventory)
+    search_results = None
+    no_date_match = 0
+    no_results = 0
+    date_format = "%Y-%m-%d"
+
+    if request.method == "POST" and (filters or search_inventory):
         
-    # Return info based on filter selection
-    elif request.method == "GET" and filters:
-        
-        if filters[0] != "Equipment":
+        if filters[0] != "No Filter":
             inventory = [i for i in inventory if (i["equipment"] == filters[0])]
 
-        if filters[1] != "Model":
+        if filters[1] != "No Filter":
             inventory = [i for i in inventory if (i["model"] == filters[1])]
 
-        if filters[2] != "Serial":
+        if filters[2] != "No Filter":
             inventory = [i for i in inventory if (i["serial"] == filters[2])]
 
-        if filters[3] != "EE":
+        if filters[3] != "No Filter":
             inventory = [i for i in inventory if (i["ee"] == filters[3])]
 
         if filters[4] == "Location":
-            if filters[5] != "Location":
+            if filters[5] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_location"] == filters[5])]
 
         if filters[4] == "Department":
-            if filters[6] != "Department":
+            if filters[6] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_department"] == filters[6])]
 
         if filters[4] == "Room":
-            if filters[7] != "Room":
+            if filters[7] != "No Filter":
                 inventory = [i for i in inventory if (i["assigned_room"] == filters[7])]
 
         if filterdate[0] != "" and filterdate[1] != "":
@@ -2823,7 +2975,7 @@ def archive():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
-        if filters[8] != "Added By":
+        if filters[8] != "No Filter":
             inventory = [i for i in inventory if (i["added_name"] == filters[8])]
 
         if filterdate[2] != "" and filterdate[3] != "":
@@ -2840,9 +2992,32 @@ def archive():
                 elif i == len(inventory) - 1:
                     no_date_match = 1
 
+        if search_inventory:
+            search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                  or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) 
+                                                  or (search_inventory in i["repl_date"]))] 
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
+        if search_inventory:
+            if search_inventory == "NA" or "NA-NA" or "NA NA":
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                           or (search_name in i["added_name"]))] 
+            else:
+                search_results = [i for i in inventory if ((search_inventory in i["equipment"]) or (search_inventory in i["model"]) or (search_inventory in i["serial"]) or (search_inventory in i["ee"])
+                                                    or (search_inventory in i["assigned_location"]) or (search_inventory in i["date_added"]) or (search_name in i["added_name"]) 
+                                                    or (search_inventory in i["repl_date"]))] 
+            
+            if search_results:
+                inventory = search_results
+            else:
+                no_results = 1
+
         inventory = [i for i in inventory if (i["status"] == "ARCHIVED")]
 
-        return render_template("archive.html", 
+        return render_template("archive_table.html", 
                                inventory=inventory, 
                                filterequipment=filters[0], 
                                filtermodel=filters[1], 
@@ -2857,13 +3032,15 @@ def archive():
                                filteraddedby=filters[8], 
                                filter_start_rd=filter_start_rd, 
                                filter_end_rd=filter_end_rd,
-                               no_date_match=no_date_match)
-
+                               no_date_match=no_date_match,
+                               no_results=no_results)
+    
     else: 
 
         inventory = [i for i in inventory if (i["status"] == "ARCHIVED")]
 
-        return render_template("archive.html", inventory=inventory)
+        return render_template("archive_table.html", inventory=inventory)
+
 
 @app.post("/activity_history")
 def activity_history():
@@ -2899,6 +3076,13 @@ def activity_history():
 @login_required(role="ANY ADMIN")
 def upload_inventory():
 
+    return render_template("upload_inventory.html")
+
+
+@app.route("/upload_inventory_table", methods=["GET", "POST"])
+@login_required(role="ANY ADMIN")
+def upload_inventory_table():
+
     adept_id = 0
     data = []
     created_name = []
@@ -2912,20 +3096,20 @@ def upload_inventory():
 
         # check if the post request has the file part
         if 'file' not in request.files:
-            return apology("No file found.", 400, "/users")
+            return upload_apology("No file found.", 400, "/upload_inventory")
         
         inventory_file = request.files["file"]
         
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
         if inventory_file.filename == '':
-            return apology("No file found.", 400, "/users")
+            return upload_apology("No file found.", 400, "/upload_inventory")
         
         if inventory_file and allowed_file(inventory_file.filename):
             filename = secure_filename(inventory_file.filename)
             inventory_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         else:
-            return apology("Invalid file type.", 400, "/users")
+            return upload_apology("Invalid file type.", 400, "/upload_inventory")
         
         with open(f'static/uploads/{filename}', encoding='utf-8') as file:
                 csv_file = csv.DictReader(file)
@@ -3074,11 +3258,11 @@ def upload_inventory():
             background.paste(img, (0,1))
             background.save(f"static/qrcodes/{qr_code}.png")
         
-        return render_template("upload_inventory.html", inventory=upload_inventory, duplicate_found=duplicate_found, created_name=created_name, created_date=created_date, replacement_date=replacement_date)
+        return render_template("upload_inventory_table.html", inventory=upload_inventory, duplicate_found=duplicate_found, created_name=created_name, created_date=created_date, replacement_date=replacement_date)
+    
+    else: 
 
-    else:
-
-        return render_template("upload_inventory.html")
+        return render_template("upload_inventory_table.html")
 
 
 @app.route("/users", methods=["GET", "POST"])
@@ -3118,21 +3302,21 @@ def users():
                 for i in range(len(deluser)):
                     for j in range(len(users)):
                         if deluser[i] == users[j]["email"]:
-                            if users["role_id"] == 1:
+                            if users[j]["role_id"] == 1:
                                 return apology("Cannot delete user.", 400, "/users")
 
             elif session["user_role"] == "Dept Administrator":
                 for i in range(len(deluser)):
                     for j in range(len(users)):
                         if deluser[i] == users[j]["email"]:
-                            if users["role_id"] == 1 or users["role_id"] == 2:
+                            if users[j]["role_id"] == 1 or users[j]["role_id"] == 2:
                                 return apology("Cannot delete user.", 400, "/users")
 
             elif session["user_role"] == "Administrator":
                 for i in range(len(deluser)):
                     for j in range(len(users)):
                         if deluser[i] == users[j]["email"]:
-                            if users["role_id"] == 1 or users["role_id"] == 2 or users["role_id"] == 3:
+                            if users[j]["role_id"] == 1 or users[j]["role_id"] == 2 or users[j]["role_id"] == 3:
                                 return apology("Cannot delete user.", 400, "/users")
         
             for i in range(len(deluser)):
@@ -3199,6 +3383,7 @@ def users():
             hashedpassword = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
 
             db.execute("INSERT INTO \"user\" (role_id, first_name, last_name, email, password) VALUES (?,?,?,?,?)", user_role, first_name, last_name, email, hashedpassword)
+            
             return redirect("/users")
 
     else:
@@ -3365,7 +3550,7 @@ def scan():
                     date_of_action, off_site_location, point_of_contact, phone_number, patient_first_name, patient_last_name) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", inventory_id[i], status, cdept, croom, 
                     session["user_id"], scanned_name[0]["first_name"], scanned_name[0]["last_name"], rfn, rln, action, datetime.today().strftime("%m/%d/%Y %I:%M:%S %p"), osl, poc, pn, pfn, pln)
         
-        return render_template("scan.html", depts=depts, rooms=rooms, osls=osls, statuses=statuses)
+        return redirect("/scan")
         
     else:
 
@@ -3491,7 +3676,7 @@ def logout():
 def inject_menu():
 
     # Fill in with your actual menu dictionary:
-    menu = {"dashboard": "Dashboard", "action": "Scan Item", "search": "Search & History", "inventory": "Inventory", "inventory_Management": "Inventory Management", 
+    menu = {"dashboard": "Dashboard", "action": "Scan Item", "inventory": "Inventory", "inventory_Management": "Inventory Management", 
             "manage_Users": "Manage Users"}
     
     return dict(menu=menu)

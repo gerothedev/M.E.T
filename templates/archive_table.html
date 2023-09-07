@@ -1,0 +1,240 @@
+{% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+    {% if not inventory %}
+    {% else %}
+        <div class="action-menu-wrapper">
+            <button type="button" class="btn btn-primary action-menu-button">
+                Action
+            </button>
+            <button type="button" class="btn btn-primary confirm-button" id='confirmunarchive' data-bs-toggle='modal' data-bs-target='#unarchive-items-modal'>
+                Unarchive
+            </button>
+            <ul class="action-menu" style="display: none;">                
+                <li class="action-option"><button type="button" class="action-option-button unarchivebutton">Unarchive Item</button></li>
+            </ul>
+        </div>
+        {% endif %}
+{% endif %}
+
+{% if no_results == 1 %}
+    <h3 class="no-search-match">No data matches search.</h3>    
+{% endif %}
+
+<div id="inventory-table">
+    {% if no_date_match %}
+        {% if no_date_match == 1 %}
+        <h3 class="nodate">No date matches filter selection.</h3>
+        {% endif %}
+    {% endif %}
+    <!-- Table -->
+    <div class="tboundary">
+        <table class="table table-striped">
+            <form action="/archive" method="get" id="filterform">
+                <thead>
+                    <tr>
+                        
+                        <!-- Equipment filter -->
+                        <th class="text-center">
+                            Equipment
+                            <select id="filterequipment" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterequipment %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterequipment }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["equipment"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Model filter -->
+                        <th class="text-center">
+                            Model
+                            <select id="filtermodel" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filtermodel %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filtermodel }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["model"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Serial filter -->
+                        <th class="text-center">
+                            Serial
+                            <select id="filterserial" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterserial %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterserial }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["serial"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- EE filter -->
+                        <th class="text-center">
+                            EE
+                            <select id="filteree" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filteree %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filteree }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["ee"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Assigned location filter -->
+                        <th class="text-center">
+                            Assigned Location
+                            <!-- Filter search by -->
+                            <select id="filtersbal" class="form-select" name="filter" style="display: none;">
+                                <option>Location</option>
+                                <option>Department</option>
+                                <option>Room</option>
+                            </select>
+                            <!-- Filter location -->
+                            <select id="filteral" class="form-select" name="filter" style="display: none;">
+                                {% if filteral %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filteral }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["assigned_location"] }}</option> 
+                                {% endfor %}
+                            </select>
+                            <!-- Filter department -->
+                            <select id="filterad" class="form-select" name="filter" style="display: none;">
+                                {% if filterad %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterad }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["assigned_department"] }}</option> 
+                                {% endfor %}
+                            </select>
+                            <!-- Filter room -->
+                            <select id="filterar" class="form-select" name="filter" style="display: none;">
+                                {% if filterar %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterar }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["assigned_room"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Date added filter -->
+                        <th class="text-center">
+                            Date Added
+                            <div class="start-date-wrapper">
+                                {% if filter_start_da %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate" value="{{ filter_start_da }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate" style="display: none;">
+                                {% endif %}
+                            </div>
+                            <div class="end-date-wrapper">
+                                {% if filter_end_da %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate" value="{{ filter_end_da }}"  style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate" style="display: none;">
+                                {% endif %}
+                            </div>
+                        </th>
+
+                        <!-- Added by filter -->
+                        <th class="text-center">
+                            Added By
+                            <select id="filteraddedby" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filteraddedby %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filteraddedby }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["added_name"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Replace date filter -->
+                        <th class="text-center">
+                            Replace Date
+                            <div class="start-date-wrapper">
+                                {% if filter_start_rd %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" value="{{ filter_start_rd }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" style="display: none;"> 
+                                {% endif %}
+                            </div>
+                            <div class="end-date-wrapper">
+                                {% if filter_end_rd %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" value="{{ filter_end_rd }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" style="display: none;">
+                                {% endif %}
+                            </div>
+                        </th>
+
+                    </tr>
+                </thead>
+            </form>
+            <tbody id="tables" class="click_for_info">
+                {% for i in range(inventory | length) %}
+                    <tr class="showrow">
+                        {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+                            <td class="text-center cell-content0">
+                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="unarchiveinventory inventory-checkbox" name="unarchiveinv" form="checkbox-form">
+                                <div class="show-button-wrapper">
+                                    <button type="button" class="show-info-or-history">{{ inventory[i]["equipment"] }}</button>
+                                    <ul class="item-option-select" style="display: none;">
+                                        <li class="item-option"><button type="button" class="item-option-button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">More Info</button></li>
+                                        <li class="item-option"><button type="button" class="item-option-button" name="showhistory" value="{{ inventory[i]['qr_code'] }}">Item History</button></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        {% else %}
+                            <td class="text-center cell-content0">{{ inventory[i]["equipment"] }}</td>
+                        {% endif %}
+                        <td class="text-center cell-content1">{{ inventory[i]["model"] }}</td>
+                        <td class="text-center cell-content2">{{ inventory[i]["serial"] }}</td>
+                        <td class="text-center cell-content3">{{ inventory[i]["ee"] }}</td>
+                        <td class="text-center cell-content4">{{ inventory[i]["assigned_room"] }}-{{ inventory[i]["assigned_department"] }}</td>                              
+                        <td class="text-center cell-content11">{{ inventory[i]["date_added"] }}</td>
+                        <td class="text-center cell-content12">{{ inventory[i]["added_name"] }}</td>
+                        <td class="text-center cell-content13">{{ inventory[i]["repl_date"] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

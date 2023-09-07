@@ -6,8 +6,12 @@
 
 {% block main %}
 
+    {% if session.user_role != "User" %}
     <div class="missingitem">
-        <button type="button" id="open-inv-select"><h3>Missing</h3></button>
+    {% elif session.user_role == "User" %}
+    <div class="missingitem user-view">
+    {% endif %}
+        <button type="button" id="open-inv-select"><h3 id="page-title">Missing</h3><span id="arrowdown"></span></button>
         <ul id="invcatselect" style="display: none;">
             <li class="invcat"><a href="/archive">Archive</a></li>
             {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
@@ -18,590 +22,135 @@
             <li class="invcat"><a href="/off-site">Off-site</a></li>
             <li class="invcat"><a href="/replace">Replace</a></li>
         </ul>
-        {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
-            {% if not inventory %}
-            {% else %}
-                <div class="action-menu-wrapper">
-                    <button type="button" class="btn btn-primary action-menu-button">
-                        Action
-                    </button>
-                        <button type="button" class="btn btn-primary" id='confirmreplaced' data-bs-toggle='modal' data-bs-target='#staticBackdropdel'>
-                            Done
-                        </button>
-                    <ul class="action-menu" style="display: none;">
-                        <li class="action-option"><button type='button' class='action-option-button' id="clear-filters">Clear Filters</button></li>
-                        <li class="action-option"><button type="button" class="action-option-button replacedbutton">Mark as Replaced</button></li>
-                    </ul>
-                </div>
-            {% endif %}
-        {% elif session.user_role == "User"%}
-            <button type='button' class='btn btn-primary' id="clear-filters">
-                Clear Filters
-            </button>
+        {% if session.user_role != "User" %}
+        <div id="insert-action-menu">
+        </div>
+        {% elif session.user_role == "User" %}
         {% endif %}
     </div>
+
+    {% if inventory %}
+        <div id="inventory-tools-wrapper">
+            <input autocomplete="off" autofocus="" class="form-control" id="search" name="s" placeholder="Search Inventory" type="search">
+            <div id="tools-wrapper">
+                <button type="button" class="inventory-tools not-admin-tool" id="show-filter">
+                    <div class="tools-tooltip" id="show-tooltip">Show Filter</div>
+                    <div class="tooltip-arrow" id="show-tooltip-arrow"></div>
+                    <svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1088.54 1080" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <defs/>
+                        <clipPath id="ArtboardFrame2">
+                        <rect height="1080" width="1088.54" x="0" y="0"/>
+                        </clipPath>
+                        <g clip-path="url(#ArtboardFrame)" id="Layer-2" vectornator:layerName="Layer 1">
+                        <path d="M36.4062 0C-2.53207 5.08626e-06-11.673 24.8187 15.9688 55.4375L467.562 555.656L467.562 1080L621 968.719L621 555.625L1072.56 55.4375C1100.2 24.8187 1091.06 1.84934e-07 1052.12 0L36.4062 0Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Curve 1"/>
+                        </g>
+                    </svg>
+                    <span>Filter</span>
+                </button>
+                <button type="button" class="inventory-tools not-admin-tool" id="hide-filter">
+                    <div class="tools-tooltip" id="hide-tooltip">Hide Filter</div>
+                    <div class="tooltip-arrow" id="hide-tooltip-arrow"></div>
+                    <svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1088.54 1080" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <defs/>
+                        <clipPath id="ArtboardFrame3">
+                        <rect height="1080" width="1088.54" x="0" y="0"/>
+                        </clipPath>
+                        <g clip-path="url(#ArtboardFrame)" id="Layer-3" vectornator:layerName="Layer 1">
+                        <g opacity="1" vectornator:layerName="Group 1">
+                        <path d="M854.418 407.57C870.432 387.019 896.397 387.019 912.411 407.57L913.203 408.586C929.217 429.137 929.217 462.458 913.203 483.009L460.013 1064.59C443.999 1085.14 418.034 1085.14 402.019 1064.59L401.228 1063.57C385.214 1043.02 385.214 1009.7 401.228 989.148L854.418 407.57Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Rectangle 1"/>
+                        <path d="M460.013 407.57C443.999 387.019 418.034 387.019 402.019 407.57L401.228 408.586C385.214 429.137 385.214 462.458 401.228 483.009L854.418 1064.59C870.432 1085.14 896.397 1085.14 912.411 1064.59L913.203 1063.57C929.217 1043.02 929.217 1009.7 913.203 989.148L460.013 407.57Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Rectangle 2"/>
+                        <path d="M657.223 491.093C618.163 491.093 580.374 497.749 544.392 508.764L571.733 543.914C599.138 536.261 627.761 531.646 657.223 531.646C686.671 531.646 715.269 536.268 742.664 543.914L770.054 508.764C734.074 497.75 696.281 491.093 657.223 491.093Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 6"/>
+                        <path d="M447.905 550.016C410.505 570.496 377.023 594.158 347.506 617.711L347.506 682.163C378.606 652.132 422.56 614.922 475.147 584.976L447.905 550.016Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 7"/>
+                        <path d="M866.541 550.016L839.249 584.976C945.615 645.542 1017.07 736.065 1017.07 736.065C1017.07 736.065 945.614 826.588 839.249 887.154L866.541 922.177C998.929 849.684 1088.54 736.065 1088.54 736.065C1088.54 736.065 998.929 622.51 866.541 550.016Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 8"/>
+                        <path d="M347.506 789.966L347.506 854.419C377.023 877.972 410.505 901.698 447.905 922.177L475.147 887.154C422.56 857.208 378.606 819.998 347.506 789.966Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 9"/>
+                        <path d="M571.782 928.216L544.392 963.43C580.372 974.443 618.165 981.1 657.223 981.1C696.283 981.1 734.072 974.381 770.054 963.366L742.664 928.216C715.262 935.866 686.679 940.484 657.223 940.483C627.769 940.483 599.181 935.865 571.782 928.216Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 10"/>
+                        <path d="M347.506 617.711C272.538 677.529 225.908 736.065 225.908 736.065C225.908 736.065 272.538 794.601 347.506 854.419L347.506 789.966C315.706 759.258 297.381 736.065 297.381 736.065C297.381 736.065 315.706 712.872 347.506 682.163L347.506 617.711Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 11"/>
+                        <path d="M657.215 530.042C629.421 530.042 603.267 539.113 580.469 555.063L657.215 653.552L733.962 555.063C711.164 539.113 685.01 530.042 657.215 530.042ZM516.16 637.589C503.732 666.847 496.663 700.41 496.663 736.078C496.663 771.747 503.732 805.31 516.16 834.567L592.907 736.078L516.16 637.589ZM798.27 637.589L721.524 736.078L798.27 834.567C810.699 805.31 817.767 771.747 817.767 736.078C817.767 700.41 810.699 666.846 798.27 637.589ZM657.215 818.605L580.469 917.094C603.267 933.043 629.421 942.114 657.215 942.114C685.01 942.114 711.164 933.044 733.962 917.094L657.215 818.605Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Curve 3"/>
+                        </g>
+                        <path d="M-14.6209-49.9538C-39.4853-49.9538-45.3223-34.1056-27.6715-14.5538L260.697 304.865L260.697 639.688L358.676 568.629L358.676 304.845L647.024-14.5538C664.675-34.1057 658.838-49.9538 633.974-49.9538L-14.6209-49.9538Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Curve 4"/>
+                        </g>
+                    </svg>
+                    <span>Hide Filter</span>
+                </button>
+                <button type="button" class="inventory-tools not-admin-tool" id="clear-filter">
+                    <div class="tools-tooltip" id="clear-tooltip">Clear Filter</div>
+                    <div class="tooltip-arrow" id="clear-tooltip-arrow"></div>
+                    <svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1088.54 1080" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <defs/>
+                        <g id="Layer-4" vectornator:layerName="Layer 1">
+                        <g opacity="1" vectornator:layerName="Group 1">
+                        <path d="M1073.41 431.766C1097.61 455.472 1092.2 499.21 1061.31 529.459L526.429 1053.33C495.544 1083.58 450.886 1088.89 426.683 1065.18L425.832 1064.35C401.628 1040.64 407.045 996.905 437.929 966.656L972.812 442.782C1003.7 412.532 1048.35 407.228 1072.56 430.933L1073.41 431.766Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Rectangle 2"/>
+                        <path d="M426.683 430.933C450.886 407.228 495.544 412.532 526.429 442.782L1061.31 966.656C1092.2 996.905 1097.61 1040.64 1073.41 1064.35L1072.56 1065.18C1048.35 1088.89 1003.7 1083.58 972.812 1053.33L437.929 529.459C407.045 499.21 401.628 455.472 425.832 431.766L426.683 430.933Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Rectangle 1"/>
+                        </g>
+                        <path d="M23.2491 0C-1.61526 3.24787e-06-7.45227 15.8482 10.1986 35.4L298.567 354.819L298.567 689.642L396.546 618.583L396.546 354.799L684.895 35.4C702.545 15.8482 696.708 1.18091e-07 671.844 0L23.2491 0Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Curve 3"/>
+                        </g>
+                    </svg>
+                    <span>Clear Filter</span>
+                </button>
+                <button type="button" class="inventory-tools not-admin-tool" id="refresh-page">
+                    <div class="tools-tooltip" id="refresh-tooltip">Refresh Page</div>
+                    <div class="tooltip-arrow" id="refresh-tooltip-arrow"></div>
+                    <svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1088.54 1080" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <defs/>
+                        <clipPath id="ArtboardFrame5">
+                        <rect height="1080" width="1088.54" x="0" y="0"/>
+                        </clipPath>
+                        <g clip-path="url(#ArtboardFrame)" id="Layer-5" vectornator:layerName="Layer 1">
+                        <path d="M549.288 2.54729C449.894 3.37715 348.324 32.3939 260.6 88.141C161.678 151.004 84.2034 244.886 36.8188 366.454C25.8967 394.475 39.7351 426.063 67.7563 436.985C95.7776 447.907 127.365 434.037 138.288 406.016C177.232 306.104 239.588 230.517 319.006 180.047C389.231 135.42 470.88 112.116 550.225 111.454C613.249 110.927 669.497 121.807 719.881 142.672C763.68 160.811 802.558 186.307 837.069 218.016C853.762 233.354 868.994 249.994 883.194 267.516L856.1 276.922C843.62 281.259 833.477 288.761 826.788 297.61C826.295 298.143 825.777 298.658 825.319 299.235L825.131 299.454C821.674 303.81 819.62 309.036 818.788 314.641C817.557 320.469 817.729 326.362 819.694 332.016L819.788 332.329C819.968 332.849 820.238 333.323 820.444 333.829C823.607 344.482 830.308 355.151 840.163 363.735L970.413 477.172C979.119 484.756 988.925 489.502 998.381 491.422C999.186 491.662 999.988 491.934 1000.82 492.11L1001.1 492.172C1007.2 493.459 1013.36 492.771 1019.19 490.61C1019.82 490.408 1020.46 490.254 1021.07 490.016C1024.08 488.836 1026.82 487.167 1029.29 485.11C1039.64 477.461 1047.88 464.674 1051.16 449.11L1087.32 277.86C1090.05 264.92 1088.83 252.35 1084.69 242.047C1084.54 241.508 1084.44 240.957 1084.26 240.422L1084.16 240.141C1081.89 233.603 1077.56 228.215 1071.88 224.172C1071.31 223.766 1070.7 223.394 1070.1 223.016C1070.07 222.995 1070.04 222.974 1070.01 222.954C1069.44 222.6 1068.9 222.22 1068.32 221.891C1068.02 221.72 1067.69 221.586 1067.38 221.422C1067.35 221.407 1067.32 221.406 1067.29 221.391C1066.67 221.057 1066.05 220.746 1065.41 220.454C1065.09 220.304 1064.77 220.128 1064.44 219.985C1064.08 219.824 1063.69 219.699 1063.32 219.547C1063.08 219.46 1062.84 219.379 1062.6 219.297C1056.73 217.019 1050.1 215.782 1043.1 215.766C1036.1 215.75 1028.76 216.943 1021.44 219.485L991.475 229.891C967.955 196.777 941.281 165.843 910.756 137.797C867.16 97.7416 817.598 65.2506 761.569 42.0473C697.657 15.5799 626.882 1.89946 549.288 2.54729Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Curve 8"/>
+                        <path d="M83.4126 589.11C78.8338 588.855 74.2906 589.651 69.9126 591.266C69.2881 591.467 68.6442 591.592 68.0376 591.829C65.0231 593.005 62.2925 594.681 59.8188 596.735C49.4592 604.369 41.1872 617.144 37.8813 632.704L1.47508 803.891C-1.27329 816.827-0.0525638 829.426 4.06883 839.735C4.2233 840.274 4.32098 840.825 4.50633 841.36L4.60008 841.641C6.86288 848.182 11.1766 853.559 16.8501 857.61C17.4198 858.017 18.0342 858.387 18.6313 858.766C18.6623 858.787 18.6939 858.808 18.7251 858.829C19.2866 859.183 19.8279 859.561 20.4126 859.891C20.7156 860.062 21.0408 860.195 21.3501 860.36C21.3782 860.375 21.4153 860.376 21.4438 860.391C22.0619 860.726 22.6795 861.035 23.3188 861.329C23.6395 861.479 23.9614 861.654 24.2876 861.797C24.6547 861.959 25.0392 862.113 25.4126 862.266C25.6481 862.354 25.8932 862.433 26.1313 862.516C32.0031 864.803 38.6343 866.022 45.6313 866.047C52.6282 866.073 59.968 864.892 67.2876 862.36L97.2251 852.016C120.704 885.169 147.354 916.105 177.85 944.204C221.39 984.32 270.916 1016.89 326.913 1040.17C390.787 1066.73 461.537 1080.52 539.131 1079.98C638.526 1079.29 740.142 1050.42 827.944 994.797C926.953 932.073 1004.58 838.267 1052.13 716.766C1063.09 688.76 1049.26 657.165 1021.26 646.204C1014.25 643.463 1007.05 642.293 999.975 642.485C978.762 643.059 958.915 656.074 950.694 677.079C911.61 776.936 849.151 852.439 769.663 902.797C699.375 947.326 617.695 970.527 538.35 971.079C475.325 971.516 419.08 960.545 368.725 939.61C324.952 921.41 286.098 895.867 251.631 864.11C234.956 848.746 219.738 832.089 205.569 814.547L232.694 805.172C245.18 800.853 255.336 793.356 262.038 784.516C262.531 783.983 263.047 783.467 263.506 782.891L263.694 782.672C267.158 778.321 269.229 773.088 270.069 767.485C271.307 761.658 271.151 755.766 269.194 750.11L269.1 749.797C268.92 749.277 268.649 748.803 268.444 748.297C265.295 737.64 258.599 726.988 248.756 718.391L118.663 604.766C109.966 597.17 100.18 592.387 90.7251 590.454C89.9207 590.213 89.1188 589.943 88.2876 589.766L88.0063 589.704C86.482 589.38 84.9388 589.195 83.4126 589.11Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Curve 9"/>
+                        </g>
+                    </svg>
+                    <span>Refresh Page</span>
+                </button>
+            </div>
+        </div>
+    {% endif %}
 
     {% if not inventory %}
         <h3 class="nodata">No data available.</h3>
     {% else %}
-        {% if no_date_match %}
-            {% if no_date_match == 1 %}
-            <h3 class="nodate">No date matches filter selection.</h3>
-            {% endif %}
-        {% endif %}
-        <!-- Table -->
-        <div class="tboundary">
-            <table class="table table-striped">
-                <form action="/missing" method="get" id="filterform">
-                    <thead>
-                        <tr>
-
-                            <!-- Equipment filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Equipment
-                                </button>
-                                <select id="filterequipment" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filterequipment %}
-                                        <option hidden selected>{{ filterequipment }}</option>
-                                        <option>Equipment</option>
-                                    {% else %}
-                                        <option selected>Equipment</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["equipment"] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Model location filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Model
-                                </button>
-                                <select id="filtermodel" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filtermodel %}
-                                        <option hidden selected>{{ filtermodel }}</option>
-                                        <option>Model</option>
-                                    {% else %}
-                                        <option selected>Model</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["model"] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Serial filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Serial
-                                </button>
-                                <select id="filterserial" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filterserial %}
-                                        <option hidden selected>{{ filterserial }}</option>
-                                        <option>Serial</option>
-                                    {% else %}
-                                        <option selected>Serial</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["serial"] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- EE filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    EE
-                                </button>
-                                <select id="filteree" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filteree %}
-                                        <option hidden selected>{{ filteree }}</option>
-                                        <option>EE</option>
-                                    {% else %}
-                                        <option selected>EE</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["ee"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Assigned location filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Assigned Location
-                                </button>
-                                <!-- Filter search by -->
-                                <select id="filtersbal" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filtersbal %}
-                                        {% if filtersbal == "Assigned Location" %}
-                                            <option hidden selected>{{ filtersbal }}</option>
-                                            <option>Location</option>
-                                            <option>Department</option>
-                                            <option>Room</option>
-                                        {% else %}
-                                            <option>Assigned Location</option>
-                                            {% if filtersbal == "Location" %}
-                                                <option selected>Location</option>
-                                                <option>Department</option>
-                                                <option>Room</option>
-                                            {% elif filtersbal == "Department" %}
-                                                <option>Location</option>
-                                                <option selected>Department</option>
-                                                <option>Room</option>
-                                            {% elif filtersbal == "Room" %}
-                                                <option>Location</option>
-                                                <option>Department</option>
-                                                <option selected>Room</option>
-                                            {% endif %}
-                                        {% endif %}
-                                    {% else %}
-                                        <option hidden selected>Assigned Location</option>
-                                        <option>Location</option>
-                                        <option>Department</option>
-                                        <option>Room</option>
-                                    {% endif %}
-                                </select>
-                                <!-- Filter location -->
-                                <select id="filteral" class="form-select" name="filter" style="display: none;">
-                                    {% if filteral %}
-                                        <option hidden selected>{{ filteral }}</option>
-                                        <option>Location</option>
-                                    {% else %}
-                                        <option selected>Location</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["assigned_location"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                                <!-- Filter department -->
-                                <select id="filterad" class="form-select" name="filter" style="display: none;">
-                                    {% if filterad %}
-                                        <option hidden selected>{{ filterad }}</option>
-                                        <option>Department</option>
-                                    {% else %}
-                                        <option selected>Department</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["assigned_department"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                                <!-- Filter room -->
-                                <select id="filterar" class="form-select" name="filter" style="display: none;">
-                                    {% if filterar %}
-                                        <option hidden selected>{{ filterar }}</option>
-                                        <option>Room</option>
-                                    {% else %}
-                                        <option selected>Room</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["assigned_room"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Current location filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Current Location
-                                </button>
-                                <!-- Filter search by -->
-                                <select id="filtersbcl" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filtersbcl %}
-                                        {% if filtersbcl == "Current Location" %}
-                                            <option hidden selected>{{ filtersbcl }}</option>
-                                            <option>Location</option>
-                                            <option>Department</option>
-                                            <option>Room</option>
-                                            <option>Off-site Location</option>
-                                        {% else %}
-                                            <option>Current Location</option>
-                                            {% if filtersbcl == "Location" %}
-                                                <option selected>Location</option>
-                                                <option>Department</option>
-                                                <option>Room</option>
-                                                <option>Off-site Location</option>
-                                            {% elif filtersbcl == "Department" %}
-                                                <option>Location</option>
-                                                <option selected>Department</option>
-                                                <option>Room</option>
-                                                <option>Off-site Location</option>
-                                            {% elif filtersbcl == "Room" %}
-                                                <option>Location</option>
-                                                <option>Department</option>
-                                                <option selected>Room</option>
-                                                <option>Off-site Location</option>
-                                            {% elif filtersbcl == "Off-site Location" %}
-                                                <option>Location</option>
-                                                <option>Department</option>
-                                                <option>Room</option>
-                                                <option selected>Off-site Location</option>
-                                            {% endif %}
-                                        {% endif %}
-                                    {% else %}
-                                        <option hidden selected>Current Location</option>
-                                        <option>Location</option>
-                                        <option>Department</option>
-                                        <option>Room</option>
-                                        <option>Off-site Location</option>
-                                    {% endif %}
-                                </select>
-                                <!-- Filter location -->
-                                <select id="filtercl" class="form-select" name="filter" style="display: none;">
-                                    {% if filtercl %}
-                                        <option hidden selected>{{ filtercl }}</option>
-                                        <option>Location</option>
-                                    {% else %}
-                                        <option selected>Location</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                            <option>{{ item["current_location"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                                <!-- Filter department -->
-                                <select id="filtercd" class="form-select" name="filter" style="display: none;">
-                                    {% if filtercd %}
-                                        <option hidden selected>{{ filtercd }}</option>
-                                        <option>Department</option>
-                                    {% else %}
-                                        <option selected>Department</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                            <option>{{ item["current_department"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                                <!-- Filter room -->
-                                <select id="filtercr" class="form-select" name="filter" style="display: none;">
-                                    {% if filtercr %}
-                                        <option hidden selected>{{ filtercr }}</option>
-                                        <option>Room</option>
-                                    {% else %}
-                                        <option selected>Room</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                            <option>{{ item["current_room"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                                 <!-- Filter off-site location -->
-                                <select id="filterosl" class="form-select" name="filter" style="display: none;">
-                                    {% if filterosl %}
-                                        <option hidden selected>{{ filterosl }}</option>
-                                        <option>Off-site Location</option>
-                                    {% else %}
-                                        <option selected>Off-site Location</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                            <option>{{ item["off_site_location"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Status (no filter) -->
-                            <th class="text-center">Status</th>
-                            
-                            <!-- Scanned Name filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Scanned By
-                                </button>
-                                <select id="filtersb" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filtersb %}
-                                        <option hidden selected>{{ filtersb }}</option>
-                                        <option>Scanned By</option>
-                                    {% else %}
-                                        <option selected>Scanned By</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        {% if item["scanned_first_name"] == "NA" %}
-                                            <option>{{ item["scanned_first_name"] }}</option> 
-                                        {% else %}
-                                            <option>{{ item["scanned_name"] }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Received Name filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Received By
-                                </button>
-                                <select id="filterrb" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filterrb %}
-                                        <option hidden selected>{{ filterrb }}</option>
-                                        <option>Received By</option>
-                                    {% else %}
-                                        <option selected>Received By</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        {% if item["received_first_name"] == "NA" %}
-                                            <option>{{ item["received_first_name"] }}</option> 
-                                        {% else %}
-                                            <option>{{ item["received_name"] }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Action filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Action
-                                </button>
-                                <select id="filteraction" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filteraction %}
-                                        <option hidden selected>{{ filteraction }}</option>
-                                        <option>Action</option>
-                                    {% else %}
-                                        <option selected>Action</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["action"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Date of action filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterButtonDate">
-                                    Date of Action
-                                </button>
-                                <div class="start-date-wrapper">
-                                    {% if filter_start_doa %}
-                                        <p class="date-label" style="display: none;">Start Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-doa" name="filterdate" value="{{ filter_start_doa }}" style="display: none;">
-                                    {% else %}
-                                        <p class="date-label" style="display: none;">Start Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-doa" name="filterdate" style="display: none;">
-                                    {% endif %}
-                                </div>
-                                <div class="end-date-wrapper">
-                                    {% if filter_end_doa %}
-                                        <p class="date-label" style="display: none;">End Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-doa" name="filterdate" value="{{ filter_end_doa }}" style="display: none;">
-                                    {% else %}
-                                        <p class="date-label" style="display: none;">End Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-doa" name="filterdate" style="display: none;">
-                                    {% endif %}
-                                </div>
-                            </th>
-                            
-                            <!-- Point of contat filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Point of Contact
-                                </button>
-                                <select id="filterpoc" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filterpoc %}
-                                        <option hidden selected>{{ filterpoc }}</option>
-                                        <option>Point of Contact</option>
-                                    {% else %}
-                                        <option selected>Point of Contact</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["point_of_contact"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Phone Number filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Phone Number
-                                </button>
-                                <select id="filterpn" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filterpn %}
-                                        <option hidden selected>{{ filterpn }}</option>
-                                        <option>Phone Number</option>
-                                    {% else %}
-                                        <option selected>Phone Number</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["phone_number"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Patient Name filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Patient Name
-                                </button>
-                                <select id="filterpatient" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filterpatient %}
-                                        <option hidden selected>{{ filterpatient }}</option>
-                                        <option>Patient Name</option>
-                                    {% else %}
-                                        <option selected>Patient Name</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        {% if item["patient_first_name"] == "NA" %}
-                                            <option>{{ item["patient_first_name"] }}</option> 
-                                        {% else %}
-                                            <option>{{ item["patient_name"] }}</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Date added filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterButtonDate">
-                                    Date Added
-                                </button>
-                                <div class="start-date-wrapper">
-                                    {% if filter_start_da %}
-                                        <p class="date-label" style="display: none;">Start Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate" value="{{ filter_start_da }}" style="display: none;">
-                                    {% else %}
-                                        <p class="date-label" style="display: none;">Start Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate"  style="display: none;">
-                                    {% endif %}
-                                </div>
-                                <div class="end-date-wrapper">
-                                    {% if filter_end_da %}
-                                        <p class="date-label" style="display: none;">End Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate" value="{{ filter_end_da }}"  style="display: none;">
-                                    {% else %}
-                                        <p class="date-label" style="display: none;">End Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate"  style="display: none;">
-                                    {% endif %}
-                                </div>
-                            </th>
-
-                            <!-- Added by filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterbutton">
-                                    Added By
-                                </button>
-                                <select id="filteraddedby" class="form-select w-auto" name="filter" style="display: none;">
-                                    {% if filteraddedby %}
-                                        <option hidden selected>{{ filteraddedby }}</option>
-                                        <option>Added By</option>
-                                    {% else %}
-                                        <option selected>Added By</option>
-                                    {% endif %}
-                                    {% for item in inventory %} 
-                                        <option>{{ item["added_name"] }}</option> 
-                                    {% endfor %}
-                                </select>
-                            </th>
-
-                            <!-- Replace date filter -->
-                            <th class="text-center">
-                                <button type="button" class="filterButtonDate">
-                                    Replace Date
-                                </button>
-                                <div class="start-date-wrapper">
-                                    {% if filter_start_rd %}
-                                        <p class="date-label" style="display: none;">Start Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" value="{{ filter_start_rd }}" style="display: none;">
-                                    {% else %}
-                                        <p class="date-label" style="display: none;">Start Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" style="display: none;"> 
-                                    {% endif %}
-                                </div>
-                                <div class="end-date-wrapper">
-                                    {% if filter_end_rd %}
-                                        <p class="date-label" style="display: none;">End Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" value="{{ filter_end_rd }}" style="display: none;">
-                                    {% else %}
-                                        <p class="date-label" style="display: none;">End Date:</p>
-                                        <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" style="display: none;">
-                                    {% endif %}
-                                </div>
-                            </th>
-
-                        </tr>
-                    </thead>
-                </form>
-                <form action="/missing" method="post">
-                    <tbody id="tables" class="click_for_info">
-                        {% for i in range(inventory | length) %}
-                            <tr class="showrow">
-                                {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
-                                    <td class="text-center cell-content0">
-                                        <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="replacedinventory inventory-checkbox" name="replacedinv">
-                                        <button type="button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">{{ inventory[i]["equipment"] }}</button>
-                                    </td>
-                                {% elif session.user_role == "User" %}
-                                    <td class="text-center cell-content0">{{ inventory[i]["equipment"] }}</td>
-                                {% endif %}
-                                <td class="text-center cell-content1">{{ inventory[i]["model"] }}</td>
-                                <td class="text-center cell-content2">{{ inventory[i]["serial"] }}</td>
-                                <td class="text-center cell-content3">{{ inventory[i]["ee"] }}</td>
-                                <td class="text-center cell-content4">{{ inventory[i]["assigned_room"] }}-{{ inventory[i]["assigned_department"] }}</td>
-                                {% if inventory[i]["off_site_location"] == "NA" %} 
-                                    <td class="text-center cell-content5">{{ inventory[i]["current_room"] }}-{{ inventory[i]["current_department"] }}</td>
-                                {% else %}
-                                    <td class="text-center cell-content5">{{ inventory[i]["off_site_location"] }}</td>
-                                {% endif %}
-                                <td class="text-center cell-content6">{{ inventory[i]["status"] }}</td>
-                                {% if inventory[i]["scanned_first_name"] == "NA" %} 
-                                    <td class="text-center">{{ inventory[i]["scanned_first_name"] }}</td>
-                                {% else %}
-                                    <td class="text-center">{{ inventory[i]["scanned_name"] }}</td>
-                                {% endif %}
-                                {% if inventory[i]["received_first_name"] == "NA" %} 
-                                    <td class="text-center">{{ inventory[i]["received_first_name"] }}</td>
-                                {% else %}
-                                    <td class="text-center">{{ inventory[i]["received_name"] }}</td>
-                                {% endif %}
-                                <td class="text-center cell-content8">{{ inventory[i]["action"] }}</td>
-                                <td class="text-center">{{ inventory[i]["date_of_action"] }}</td>
-                                <td class="text-center cell-content9">{{ inventory[i]["point_of_contact"] }}</td>
-                                <td class="text-center cell-content10">{{ inventory[i]["phone_number"] }}</td>
-                                {% if inventory[i]["patient_first_name"] == "NA" %} 
-                                    <td class="text-center cell-content11">{{ inventory[i]["patient_first_name"] }}</td>
-                                {% else %}
-                                    <td class="text-center cell-content11">{{ inventory[i]["patient_name"] }}</td>
-                                {% endif %}
-                                <td class="text-center">{{ inventory[i]["date_added"] }}</td>
-                                <td class="text-center cell-content12">{{ inventory[i]["added_name"] }}</td>
-                                <td class="text-center">{{ inventory[i]["repl_date"] }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
-                        <!-- Modal for sending item to replaced items page -->
-                        <div class="modal fade" id="staticBackdropdel" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="staticBackdropdelLabel">Delete Item</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label class="form-label">Have these items been replaced?</label><br>
-                                            <div class="mod-flexbox">
-                                                <button id="closereplaced" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                                <button id="completereplaced" type="button" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="replaced">
-                                                    <span class="confirm-default-text">Confirm</span>
-                                                    <div class="loading-alert">
-                                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                                                        <span role="status">Loading...</span>
-                                                    </div>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <p class="emptyselection" style="display: none;">Please make a selection.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                </form>
-            </table>
+        <div id="insert-inventory-table">
+            <nav class="pages" aria-label="Page navigation"></nav>
+            <div id="loading-table">
+                <span class="spinner-border spinner-border-sm" id="loading-table-spinner" aria-hidden="true"></span>
+                <span role="status" id="loading-table-text">Loading...</span>
+            </div>
         </div>
     {% endif %}
 
-    <nav class="pages" aria-label="Page navigation">
-    </nav>
-
     {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%} 
+
+        <form action="/missing" method="post" id="checkbox-form">
+            <!-- Modal for sending item to replaced items page -->
+            <div class="modal fade" id="replaced-items-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="staticBackdropdelLabel">Replaced Item</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Have these items been replaced?</label><br>
+                                <div class="mod-flexbox">
+                                    <button id="closereplaced" type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
+                                    <input type='hidden' id='hidden-replaced-item' name='hidden-replaced-item'>
+                                    <button id="completereplaced" type="button" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="replaced">
+                                        <span class="confirm-default-text">Confirm</span>
+                                        <div class="loading-alert">
+                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                            <span role="status">Loading...</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="emptyselection" style="display: none;">Please make a selection.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
         <!-- Modal for additional equipment information -->
         <div class="modal fade" id="moreinfo" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -619,7 +168,7 @@
                             <a id="downloadqrcode" href="" download><button type="button" class="btn btn-primary downloadqr">Download QR Code</button></a>
                         </div>
                         <div class="mb-3">
-                            <button type="button" class="btn btn-primary additional-info-buttons"  data-bs-toggle='modal' data-bs-target='#replaced-single-item-modal'>Mark as Replaced</button>
+                            <button type="button" class="btn btn-primary additional-info-buttons" id="single-item-replaced" data-bs-toggle='modal' data-bs-target='#replaced-items-modal'>Mark as Replaced</button>
                         </div>
                         <div class="modal-footer" id="remove-padding">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -629,35 +178,26 @@
             </div>
         </div>
 
-        <!-- Modal for sending single item to replaced items page -->
-        <form action="/missing" method="post">
-            <div class="modal fade" id="replaced-single-item-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropdelLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="singleReplacedItemModalLabel">Replaced Item</h1>
+        <!-- Modal for equipment history -->
+        <div class="modal fade" id="show-history-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="showHistoryModalLabel">Activity History</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="activity_history">
+                            {% include "activity_history.html" %}
                         </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Has this item been replaced?</label><br>
-                                <div class="mod-flexbox">
-                                    <input type='hidden' id='hidden-replaced-item' name='hidden-replaced-item'>
-                                    <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton">
-                                        <span class="confirm-default-text">Confirm</span>
-                                        <div class="loading-alert">
-                                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                                            <span role="status">Loading...</span>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
+                        <div class="modal-footer" id="remove-padding">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
+
     {% endif %}
     
 {% endblock %}
@@ -665,45 +205,5 @@
 {% block script %}
 
     <script src="/static/app.js"></script>
-    {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
-        <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-        <script>
-
-            var showinfo = document.getElementsByName("showinfo");
-            var img = document.querySelector("#additional-info-qr");
-            var showmodal = document.querySelector("#showmodal");
-            var myModal = new bootstrap.Modal(document.getElementById("moreinfo"));
-            var pagebutton = document.querySelector(".pages");
-            var nodate = document.querySelector(".nodate");
-            
-            for (let i = 0; i < showinfo.length; i++)
-            {
-                showinfo[i].addEventListener("click", function() {
-                    
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for('missing') }}",
-                        data: {"showinfo" : showinfo[i].value},
-                        success: function(result){ 
-                            img.src = "/static/qrcodes/"+ result['qr_code'] +".png";
-                            document.getElementById("hidden-replaced-item").value = result['qr_code'];
-                            document.getElementById("downloadqrcode").href = "static/qrcodes/"+result['qr_code']+".png";
-                        }
-                    });
-
-                    myModal.show();
-
-                });
-            }
-
-            if (nodate)
-            {
-                nodate.addEventListener("animationend", function() {
-                    nodate.style.display = "none";
-                });
-            }
-
-        </script>
-    {% endif %}
 
 {% endblock %}

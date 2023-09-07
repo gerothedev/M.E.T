@@ -15,12 +15,12 @@ main div.tboundary, .mtboundary {
   margin-bottom: 10px;
 }
 
-main div.additem, main div.adduser, main div.replaceitem, main div.replaceditem, main div.missingitem, main div.offsiteitem, main div.userview, main div.inventory-archive, main div.uploaditem,.cell-content0 {
+main div.additem, main div.adduser, main div.replaceitem, main div.replaceditem, main div.missingitem, main div.offsiteitem, main div.user-inventory, main div.inventory-archive, main div.uploaditem,.cell-content0 {
   position: relative;
   margin-bottom: 15px;
 }
 
-main div.additem h3, main div.adduser h3, main div.replaceitem h3, main div.replaceditem h3, main div.missingitem h3, main div.offsiteitem h3, main div.userview h3, main div.inventory-archive h3, 
+main div.additem h3, main div.adduser h3, main div.replaceitem h3, main div.replaceditem h3, main div.missingitem h3, main div.offsiteitem h3, main div.user-inventory h3, main div.inventory-archive h3, 
 main div.uploaditem h3 {
   float: left;
 }
@@ -30,12 +30,12 @@ main div.uploaditem h3 {
 }
 
 @media screen and (max-width: 768px) {
-  main div.additem, main div.adduser, main div.replaceitem, main div.missingitem, main div.offsiteitem, main div.userview, main div.inventory-archive, main div.uploaditem {
+  main div.additem, main div.adduser, main div.replaceitem, main div.missingitem, main div.offsiteitem, main div.user-inventory, main div.inventory-archive, main div.uploaditem {
     position: relative;
     margin-bottom: 15px;
   }
   
-  main div.additem h3, main div.adduser h3, main div.replaceitem h3, main div.replaceditem h3, main div.missingitem h3, main div.offsiteitem h3, main div.userview h3, main div.inventory-archive h3,
+  main div.additem h3, main div.adduser h3, main div.replaceitem h3, main div.replaceditem h3, main div.missingitem h3, main div.offsiteitem h3, main div.user-inventory h3, main div.inventory-archive h3,
   main div.uploaditem h3 {
     float: none;
   }
@@ -138,29 +138,9 @@ ul.navpages li button.next:disabled {
   background-color: #e9ecef;
 }
 
-div#searchbar label {
-  display: block;
-}
-
-div#searchbar select {
+#search {
   display: inline-block;
-  width: 150px;
-}
-
-div#searchbar select#dselect,  div#searchbar select#rselect, div#searchbar input#firstname, div#searchbar input#lastname, 
-div#searchbar input,  div#searchbar select#statuses, div#searchbar select#action, div#searchbar select#off-site {
-  display: inline-block;
-  width: 100%;
-}
-
-div#searchbar button {
-  float: right;
-}
-
-div#searchbar div#search-flex {
-  display: flex;
-  flex-direction: row;
-  column-gap: 10px;
+  width: 207px;
 }
 
 @media screen and (max-width: 768px) {
@@ -433,9 +413,9 @@ ul#invcatselect {
   border-width: 1px;
   border-style: solid;
   width: fit-content;
-  font-size: calc(1.3rem + .6vw);
+  font-size: 24px;
   position: absolute;
-  top: calc(1.9rem + .6vw);
+  top: 42px;
   z-index: 3;
   border-radius: 0.375rem;
   overflow: hidden;
@@ -466,18 +446,14 @@ ul.item-option-select {
   margin-bottom: 0px;
 }
 
-#open-inv-select, .filterbutton, .filterButtonDate {
-  border: none;
+#open-inv-select {
   background-color: #fff;
-  padding: 0px;
-}
-
-.filterbutton, .filterButtonDate {
-  font-weight: bold;
-}
-
-#open-inv-select h3:hover, .filterbutton:hover, .filterButtonDate:hover {
-  text-decoration: underline;
+  border-color: rgb(71, 71, 71);
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 0.375rem;
+  height: 38px;
+  overflow: hidden;
 }
 
 li.invcat a {
@@ -613,7 +589,7 @@ li.invcat a:hover, li.item-option:hover {
   font-weight: normal;
 }
 
-.nodate, .duplicate-found {
+.nodate, .duplicate-found, .no-search-match {
   margin: 0;
   animation: fadeout 7s;
   clear: both;
@@ -774,4 +750,238 @@ thead {
   position: relative;
   width: fit-content;
   margin: auto;
+  display: inline-block;
 } 
+
+#inventory-tools-wrapper {
+  margin-bottom: 10px;
+}
+
+#arrowdown {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  padding: 3px;
+  width: 15px;
+  height: 15px;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  display: inline-block;
+  vertical-align: bottom;
+  position: relative;
+  bottom: 3px;
+  margin-left: 14px;
+  margin-right: 10px;
+}
+
+@media screen and (max-width: 768px) {
+  #arrowdown {
+    vertical-align: unset;
+    position: relative;
+    bottom: 3px;
+  }
+}
+
+#page-title {
+  font-size: 24px;
+  display: inline-block;
+}
+
+.inventory-tools {
+  display: block;
+  float: right;
+  border: 1px solid transparent;
+  box-shadow: none;
+  background-color: #f4f4f4;
+  border-color: #ddd;
+  color: #444;
+  margin-bottom: 0;
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+  cursor: pointer;
+  background-image: none;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  height: 38px;
+}
+
+.inventory-tools:hover {
+  background-color: #e7e7e7;
+  border-color: gray;
+}
+
+.inventory-tools:disabled {
+  background-color: #e9ecef;
+  border-color: #e9ecef;
+  pointer-events: none;
+  
+}
+
+#clear-filter, #hide-filter {
+  display: none;
+}
+
+.not-admin-tool {
+  border-radius: 0 4px 4px 0;
+}
+
+#download-all-qr {
+  border-radius: 0 4px 4px 0;
+}
+
+#refresh-page {
+  border-radius: 4px 0 0 4px;
+}
+
+#loading-table {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  column-gap: 8px;
+  background-color: rgb(0, 0, 0, 20%);
+  width: 100%;
+  height: 100%;
+  color: white;
+  z-index: 1;
+}
+
+#loading-table-text {
+  font-size: 1.4rem;
+}
+
+#loading-table-spinner {
+  --bs-spinner-width: 2rem;
+  --bs-spinner-height: 2rem;
+  --bs-spinner-border-width: 0.4em;
+}
+
+#insert-inventory-table {
+  position: relative;
+}
+
+#check-in {
+  display: block;
+}
+
+#check-out {
+  display: none;
+}
+
+#upload-file-button {
+  padding: 0;
+}
+
+#upload-file-label {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+#tools-wrapper {
+  display: inline;
+}
+
+@media screen and (max-width: 392px) {
+  #inventory-tools-wrapper {
+    display: flex;
+    flex-direction: row;
+  }
+
+  #search {
+    width: 100%;
+    margin-right: 5px;
+  }
+
+  #tools-wrapper {
+    display: flex;
+    flex-direction: row-reverse;
+  }
+}
+
+.tools-tooltip {
+  height: 22px;
+  position: absolute;
+  z-index: 2;
+  color: white;
+  border-radius: 0.375rem;
+  border-width: 1px;
+  background-color: darkgray;
+  display: none;
+}
+
+#download-tooltip {
+  width: 140px;
+  bottom: 40px;
+  right: 0px;
+}
+
+#show-tooltip {
+  width: 80px;
+  bottom: 40px;
+  right: -15px;
+}
+
+#hide-tooltip {
+  width: 78px;
+  bottom: 40px;
+  right: -16px;
+}
+
+#clear-tooltip {
+  width: 80px;
+  bottom: 40px;
+  right: -16px;
+}
+
+#refresh-tooltip {
+  width: 95px;
+  bottom: 40px;
+  right: -44px;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: darkgray transparent transparent transparent;
+  z-index: 2;
+  display: none;
+}
+
+#download-tooltip-arrow {
+  bottom: 84%;
+  left: 50%;
+}
+
+#show-tooltip-arrow {
+  bottom: 84%;
+  left: 50%;
+}
+
+#hide-tooltip-arrow {
+  bottom: 84%;
+  left: 50%;
+}
+
+#clear-tooltip-arrow {
+  bottom: 84%;
+  left: 50%;
+}
+
+#refresh-tooltip-arrow {
+  bottom: 84%;
+  left: 50%;
+}

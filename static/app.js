@@ -72,106 +72,522 @@ document.addEventListener('click', function(e){
 
 });
 
+// Code for display inventory tools text
+
+if (document.querySelector("#inventory-tools-wrapper"))
+{
+  var textWidthLimit = 876;
+  var toolsTooltip = document.querySelectorAll(".tools-tooltip")
+  var tooltipArrow = document.querySelectorAll(".tooltip-arrow")
+  var inventoryTools = document.querySelectorAll(".inventory-tools")
+
+  for (let i = 0; i < inventoryTools.length; i++)
+  {
+    toolsTooltip[i].style.display = "none"
+    tooltipArrow[i].style.display = "none"
+  }
+
+  if (window.innerWidth > textWidthLimit)
+  {
+    if (document.querySelector(".additem"))
+    {
+      document.getElementById("download-all-qr").querySelector("span").textContent = "Download QR Codes";
+    }
+  
+    document.getElementById("show-filter").querySelector("span").textContent = "Filter";
+    document.getElementById("hide-filter").querySelector("span").textContent = "Hide Filter";
+    document.getElementById("clear-filter").querySelector("span").textContent = "Clear Filter";
+    document.getElementById("refresh-page").querySelector("span").textContent = "Refresh Page";
+  }
+  else
+  {
+    if (document.querySelector(".additem"))
+    {
+      document.getElementById("download-all-qr").querySelector("span").textContent = "";
+    }
+  
+    document.getElementById("show-filter").querySelector("span").textContent = "";
+    document.getElementById("hide-filter").querySelector("span").textContent = "";
+    document.getElementById("clear-filter").querySelector("span").textContent = "";
+    document.getElementById("refresh-page").querySelector("span").textContent = "";
+  }
+
+  document.querySelector("#inventory-tools-wrapper").addEventListener("mouseover", function(e) {
+
+    if (window.innerWidth <= textWidthLimit)
+    {
+      for (let i = 0; i < inventoryTools.length; i++)
+      {
+        if (inventoryTools[i].contains(e.target))
+        {
+          toolsTooltip[i].style.display = "block"
+          tooltipArrow[i].style.display = "block"
+        }
+        else if (!(inventoryTools[i].contains(e.target)))
+        {
+          toolsTooltip[i].style.display = "none"
+          tooltipArrow[i].style.display = "none"
+        }
+      }
+    }
+
+  })
+
+  document.addEventListener("mouseover", function(e) {
+
+    if (!(document.querySelector("#inventory-tools-wrapper").contains(e.target)))
+    {
+      for (let i = 0; i < inventoryTools.length; i++)
+      {
+        toolsTooltip[i].style.display = "none"
+        tooltipArrow[i].style.display = "none"
+      }
+    }
+
+  })
+
+
+  window.addEventListener('resize', function (e) {
+
+    if (window.innerWidth > textWidthLimit)
+    {
+      if (document.querySelector(".additem"))
+      {
+        document.getElementById("download-all-qr").querySelector("span").textContent = "Download QR Codes";
+      }
+    
+      document.getElementById("show-filter").querySelector("span").textContent = "Filter";
+      document.getElementById("hide-filter").querySelector("span").textContent = "Hide Filter";
+      document.getElementById("clear-filter").querySelector("span").textContent = "Clear Filter";
+      document.getElementById("refresh-page").querySelector("span").textContent = "Refresh Page";
+    }
+    else
+    {
+      if (document.querySelector(".additem"))
+      {
+        document.getElementById("download-all-qr").querySelector("span").textContent = "";
+      }
+    
+      document.getElementById("show-filter").querySelector("span").textContent = "";
+      document.getElementById("hide-filter").querySelector("span").textContent = "";
+      document.getElementById("clear-filter").querySelector("span").textContent = "";
+      document.getElementById("refresh-page").querySelector("span").textContent = "";
+    }
+  
+  });
+  
+
+}
+
+// Code for fetch requests in Admin inventory 
+
+if (document.querySelector(".additem")) 
+{
+  var showinfo = document.getElementsByName("showinfo");
+  var showhistory = document.getElementsByName("showhistory");
+  var img = document.querySelector("#additional-info-qr");
+  var showmodal = document.querySelector("#showmodal");
+  var moreInfoModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+  var showHistoryModal = new bootstrap.Modal(document.getElementById("show-history-modal"));
+  var editInfoModal = new bootstrap.Modal(document.getElementById("edit-info-modal"));
+  var addInvModal = new bootstrap.Modal(document.getElementById("addInvModal"));
+  var editItem = document.getElementById("edit-item");
+  var addbutton = document.querySelector(".addbutton");
+  var searchFilter = document.getElementById("sf");
+  var timeout
+  
+  getInventoryTable()
+  showItemOptions() 
+
+  // Code for search feature
+
+  if (document.querySelector("#insert-inventory-table"))
+  {
+    searchTool() 
+  }
+    
+  document.querySelector(".additem").addEventListener('click', function(e){
+    
+    if (document.querySelector(".addbutton").contains(e.target))
+    {
+      addInvModal.show();
+    }
+
+  });
+
+  editItem.addEventListener("click", function() {
+
+      moreInfoModal.hide();
+      editInfoModal.show();
+      
+  });
+
+}
+
+else if (document.querySelector(".user-inventory")) 
+{
+  var searchFilter = document.getElementById("sf");
+
+  getInventoryTable()
+  
+  if (document.querySelector("#insert-inventory-table"))
+  {
+    searchTool() 
+  }
+}
+
+// Code for fetch requests in off-site items 
+
+else if (document.querySelector(".offsiteitem")) 
+{
+
+  if (!(document.querySelector(".user-view")))
+  {
+    var showinfo = document.getElementsByName("showinfo");
+    var showhistory = document.getElementsByName("showhistory");
+    var showHistoryModal = new bootstrap.Modal(document.getElementById("show-history-modal"));
+    var img = document.querySelector("#additional-info-qr");
+    var showmodal = document.querySelector("#showmodal");
+    var moreInfoModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+  }
+  
+  getInventoryTable()
+  
+  if (!(document.querySelector(".user-view")))
+  {
+    showItemOptions() 
+  }
+  
+  if (document.querySelector("#insert-inventory-table"))
+  {
+    searchTool() 
+  }
+
+}
+
+else if (document.querySelector(".replaceitem")) 
+{
+  if (!(document.querySelector(".user-view")))
+  {
+    var showinfo = document.getElementsByName("showinfo");
+    var showhistory = document.getElementsByName("showhistory");
+    var showHistoryModal = new bootstrap.Modal(document.getElementById("show-history-modal"));
+    var img = document.querySelector("#additional-info-qr");
+    var showmodal = document.querySelector("#showmodal");
+    var moreInfoModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+  }
+  
+  getInventoryTable()
+
+  if (!(document.querySelector(".user-view")))
+  {
+    showItemOptions() 
+  }
+
+  if (document.querySelector("#insert-inventory-table"))
+  {
+    searchTool() 
+  }
+}
+
+else if (document.querySelector(".replaceditem")) 
+{
+  if (!(document.querySelector(".user-view")))
+  {
+    var showinfo = document.getElementsByName("showinfo");
+    var showhistory = document.getElementsByName("showhistory");
+    var showHistoryModal = new bootstrap.Modal(document.getElementById("show-history-modal"));
+    var img = document.querySelector("#additional-info-qr");
+    var showmodal = document.querySelector("#showmodal");
+    var moreInfoModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+  }
+  
+  getInventoryTable()
+
+  if (!(document.querySelector(".user-view")))
+  {
+    showItemOptions() 
+  }
+
+  if (document.querySelector("#insert-inventory-table"))
+  {
+    searchTool() 
+  }
+}
+
+else if (document.querySelector(".missingitem")) 
+{
+  if (!(document.querySelector(".user-view")))
+  {
+    var showinfo = document.getElementsByName("showinfo");
+    var showhistory = document.getElementsByName("showhistory");
+    var showHistoryModal = new bootstrap.Modal(document.getElementById("show-history-modal"));
+    var img = document.querySelector("#additional-info-qr");
+    var showmodal = document.querySelector("#showmodal");
+    var moreInfoModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+  }
+  
+  getInventoryTable()
+
+  if (!(document.querySelector(".user-view")))
+  {
+    showItemOptions() 
+  }
+
+  if (document.querySelector("#insert-inventory-table"))
+  {
+    searchTool() 
+  }
+}
+
+else if (document.querySelector(".inventory-archive")) 
+{
+
+  if (!(document.querySelector(".user-view")))
+  {
+    var showinfo = document.getElementsByName("showinfo");
+    var showhistory = document.getElementsByName("showhistory");
+    var showHistoryModal = new bootstrap.Modal(document.getElementById("show-history-modal"));
+    var img = document.querySelector("#additional-info-qr");
+    var showmodal = document.querySelector("#showmodal");
+    var moreInfoModal = new bootstrap.Modal(document.getElementById("moreinfo"));
+  }
+  
+  getInventoryTable()
+
+  if (!(document.querySelector(".user-view")))
+  {
+    showItemOptions() 
+  }
+
+  if (document.querySelector("#insert-inventory-table"))
+  {
+    searchTool() 
+  }
+}
+
+else if (document.querySelector(".uploaditem"))
+{
+  getInventoryTable()
+}
+
+else if (document.querySelector(".adduser"))
+{
+  actionButtonToggle()
+}
+
+if (document.querySelector('.uploaditem'))
+{
+
+  var uploadModal = new bootstrap.Modal(document.getElementById("upload-inventory-modal"));
+
+  document.querySelector('.uploadbutton ').addEventListener("click", function() {
+
+    uploadModal.show()
+
+  })
+
+  document.getElementById('completeupload').addEventListener("click", function() {
+
+    if (document.getElementById('completeupload').type == "submit")
+    {
+
+      document.querySelector("#close-upload-x").disabled = true;
+      document.querySelector("#upload-file-button").disabled = true;
+      document.querySelector("#close-upload").disabled = true;
+      var fileInput = document.getElementById('upload-file');
+      var data = new FormData();
+      data.append("file", fileInput.files[0]);
+      
+      fetch("upload_inventory_table", {
+        "method": "POST",
+        "body": data,
+      }).then((response) => {
+          return response.text();
+      }).then((text) => {
+        let div = document.createElement("div")
+        div.innerHTML = text
+        
+        if (!(div.querySelector(".apology")))
+        {
+
+          document.getElementById("insert-inventory-table").removeChild(document.getElementById("insert-inventory-table").querySelector("#inventory-table"))
+          
+          if (document.querySelector("#insert-inventory-table"))
+          {
+            document.getElementById("insert-inventory-table").prepend(div.querySelector("#inventory-table"))
+          }
+          
+          if (document.querySelector(".pages").firstChild)
+          {
+            document.querySelector(".pages").removeChild(document.querySelector(".pages").firstChild)
+          }
+          
+          tablePagination()
+          uploadModal.hide()
+
+          var duplicateFound = document.querySelector(".duplicate-found");
+
+          if (duplicateFound)
+          {
+              duplicateFound.addEventListener("animationend", function() {
+                  duplicateFound.style.display = "none"
+              });
+          }
+
+          document.getElementById('chosen-file').textContent = "No file chosen";
+          document.querySelector("#close-upload-x").disabled = false;
+          document.querySelector("#upload-file-button").disabled = false;
+          document.querySelector("#close-upload").disabled = false;
+          document.querySelector("#completeupload").disabled = false;
+          document.querySelector("#completeupload").type = "button";
+          document.querySelector(".loading-alert").style.display = "none";
+          document.querySelector(".confirm-default-text").style.display = "block";
+          fileInput.value = "";
+
+
+        }
+        else if (div.querySelector(".apology"))
+        {
+
+          uploadModal.dispose()
+          document.querySelector("#main-style").classList.add("main-center-style")
+          document.getElementById("main-style").replaceChildren(div.querySelector(".apology"))
+
+
+        }
+
+      });
+    }
+  });
+}
+
+if (document.querySelector("#refresh-page"))
+{
+  document.querySelector("#refresh-page").addEventListener("click", function() {
+    
+    document.querySelector("#search").disabled = true;
+    loadingTable()
+    disableActionButton()
+    submitFilter()
+
+  })
+}
+
+
 // Code for table pagination
 
-if (document.querySelector(".tboundary") && (!(document.querySelector(".statusgrid"))))
+function tablePagination()
 {
-  var tablenav = document.querySelector(".pages");
-
-  // Assign table to a variable
-  var table = document.getElementById("tables");
-
-  // Amount of rows per page
-  var rowperpage = 20;
-
-  // Total amount of rows in table
-  var rowCount = table.rows.length;
-
-  // Check table has head row returning boolean value
-  var tableHead = table.rows[0].firstElementChild.tagName === "th";
-
-  // Array to hold each row of table
-  var showrow = document.querySelectorAll(".showrow")
-
-  // Start counting rows from the second row if there is a header row
-  var i,ii,j = (tableHead) ? 1 : 0;
-
-  // Holds first row of table if first row is table head
-  var th = (tableHead ? table.rows[0].outerHTML : "");
-
-  // Determine page count
-  var pageCount = Math.ceil(table.rows.length / rowperpage);
-
-
-  if (pageCount > 1) 
+  if (document.querySelector(".tboundary") && (!(document.querySelector(".statusgrid"))))
   {
+    var tablenav = document.querySelector(".pages");
 
-    tablenav.insertAdjacentHTML("afterbegin","<ul class='navpages'></ul>");
-    sort(1);
+    // Assign table to a variable
+    var table = document.getElementById("tables");
+
+    // Amount of rows per page
+    var rowperpage = 20;
+
+    // Total amount of rows in table
+    var rowCount = table.rows.length;
+
+    // Check table has head row returning boolean value
+    var tableHead = table.rows[0].firstElementChild.tagName === "th";
+
+    // Array to hold each row of table
+    var showrow = document.querySelectorAll(".showrow")
+
+    // Start counting rows from the second row if there is a header row
+    var i,ii,j = (tableHead) ? 1 : 0;
+
+    // Holds first row of table if first row is table head
+    var th = (tableHead ? table.rows[0].outerHTML : "");
+
+    // Determine page count
+    var pageCount = Math.ceil(table.rows.length / rowperpage);
+
+    if (pageCount > 1) 
+    {
+
+      tablenav.insertAdjacentHTML("afterbegin","<ul class='navpages'></ul>");
+      sort(1);
+        
+    }
+
+    function sort(page) 
+    {
+      var rows = th, s = ((rowperpage * page) - rowperpage);
+
+      for (i = 0; i < showrow.length; i++)
+      {
       
+        showrow[i].style.display = "none";
+      
+      }
+
+      for (i = s; i < (s + rowperpage) && i < showrow.length; i++)
+      {
+        showrow[i].style.display = "table-row";
+      }
+
+      document.querySelector(".navpages").innerHTML = pageButtons(pageCount, page);
+
+      var pageNavButtons = document.getElementsByClassName("page-button")
+
+      for (let i = 0; i < pageNavButtons.length; i++)
+      {
+        pageNavButtons[i].addEventListener("click", function() {
+    
+          sort(parseInt(pageNavButtons[i].value))
+    
+        })
+      }
+    }
+
+    function pageButtons(pageCount,current) 
+    {
+
+      var prevButton = (current == 1) ? "disabled" : "";
+      var currbutton = (current == current) ? "disabled" : "";
+      var nextButton = (current == pageCount) ? "disabled" : "";
+      var buttons = "<li><button class='page-button' value="+(current - 1)+" "+ prevButton +">Previous</button></li>";
+      
+      if (current % 3 == 1 )
+      {
+        buttons += "<li><button class='page-button' value="+(current)+" "+ currbutton +">"+ current +"</button></li>";
+        
+        if (!(current + 1 > pageCount)) 
+        {
+        buttons += "<li><button class='page-button' value="+(current + 1)+">"+ (current + 1) +"</button></li>";
+        }
+        if (!(current + 2 > pageCount)) 
+        {
+        buttons += "<li><button class='page-button' value="+(current + 2)+">"+ (current + 2) +"</button></li>";
+        }
+      }
+      else if (current % 3 == 2 )
+      {
+        buttons += "<li><button class='page-button' value="+(current - 1)+">"+ (current - 1) +"</button></li>";
+        buttons += "<li><button class='page-button' value="+(current)+" "+ currbutton +">"+ current +"</button></li>";
+        
+        if (current != pageCount) 
+        {
+        buttons += "<li><button class='page-button' value="+(current + 1)+">"+ (current + 1) +"</button></li>";
+        }
+      }
+      else if (current % 3 == 0 )
+      {
+        buttons += "<li><button class='page-button' value="+(current - 2)+">"+ (current - 2) +"</button></li>";
+        buttons += "<li><button class='page-button' value="+(current - 1)+">"+ (current - 1) +"</button></li>";
+        buttons += "<li><button class='page-button' value="+(current)+" "+ currbutton +">"+ current +"</button></li>";
+      }
+
+      buttons += "<li><button class='page-button' value="+(current + 1)+" "+ nextButton +">Next</button></li>";
+      return buttons;
+      
+    } 
   }
-
-  function sort(page) 
-  {
-    var rows = th, s = ((rowperpage * page) - rowperpage);
-
-    for (i = 0; i < showrow.length; i++)
-    {
-    
-      showrow[i].style.display = "none";
-    
-    }
-
-    for (i = s; i < (s + rowperpage) && i < showrow.length; i++)
-    {
-      showrow[i].style.display = "table-row";
-    }
-
-    document.querySelector(".navpages").innerHTML = pageButtons(pageCount, page);
-  }
-
-  function pageButtons(pageCount,current) 
-  {
-
-    var prevButton = (current == 1) ? "disabled" : "";
-    var currbutton = (current == current) ? "disabled" : "";
-    var nextButton = (current == pageCount) ? "disabled" : "";
-    var buttons = "<li><button class='previous' value='Previous' onclick='sort("+(current - 1)+")' "+ prevButton +">Previous</button></li>";
-    
-    if (current % 3 == 1 )
-    {
-      buttons += "<li><button onclick='sort("+(current)+")' "+ currbutton +">"+ current +"</button></li>";
-      
-      if (!(current + 1 > pageCount)) 
-      {
-      buttons += "<li><button onclick='sort("+(current + 1)+")'>"+ (current + 1) +"</button></li>";
-      }
-      if (!(current + 2 > pageCount)) 
-      {
-      buttons += "<li><button onclick='sort("+(current + 2)+")'>"+ (current + 2) +"</button></li>";
-      }
-    }
-    else if (current % 3 == 2 )
-    {
-      buttons += "<li><button onclick='sort("+(current - 1)+")'>"+ (current - 1) +"</button></li>";
-      buttons += "<li><button onclick='sort("+(current)+")' "+ currbutton +">"+ current +"</button></li>";
-      
-      if (current != pageCount) 
-      {
-      buttons += "<li><button onclick='sort("+(current + 1)+")'>"+ (current + 1) +"</button></li>";
-      }
-    }
-    else if (current % 3 == 0 )
-    {
-      buttons += "<li><button onclick='sort("+(current - 2)+")'>"+ (current - 2) +"</button></li>";
-      buttons += "<li><button onclick='sort("+(current - 1)+")'>"+ (current - 1) +"</button></li>";
-      buttons += "<li><button onclick='sort("+(current)+")' "+ currbutton +">"+ current +"</button></li>";
-    }
-
-    buttons += "<li><button class='next' value='Next' onclick='sort("+(current + 1)+")' "+ nextButton +">Next</button></li>";
-    return buttons;
-
-  } 
 }
 
 // Code to match rooms to corresponding department
@@ -251,504 +667,343 @@ if (document.getElementById("edit-dselect"))
 
 }
 
-// Code to change input fields in search
-
-if (document.querySelector("#fieldname"))
-{
-  document.querySelector("#search").style.display = "inline-block"
-  document.querySelector("#statuses").style.display = "none"
-  document.querySelector("#dselect").style.display = "none"
-  document.querySelector("#rselect").style.display = "none"
-  document.querySelector("#off-site").style.display = "none"
-  document.querySelector("#sfn").style.display = "none"
-  document.querySelector("#sln").style.display = "none"
-  document.querySelector("#rfn").style.display = "none"
-  document.querySelector("#rln").style.display = "none"
-  document.querySelector("#action").style.display = "none"
-  document.querySelector("#date").style.display = "none"
-
-  document.querySelector("#search").disabled = false
-  document.querySelector("#statuses").disabled = true
-  document.querySelector("#dselect").disabled = true
-  document.querySelector("#rselect").disabled = true
-  document.querySelector("#rselect").disabled = true
-  document.querySelector("#sfn").disabled = true
-  document.querySelector("#sln").disabled = true
-  document.querySelector("#rfn").disabled = true
-  document.querySelector("#rln").disabled = true
-  document.querySelector("#action").disabled = true
-  document.querySelector("#date").disabled = true
-
-  document.querySelector("#fieldname").addEventListener('change', function(e) { 
-
-    var fieldname = document.querySelector("#fieldname");
- 
-    if (fieldname.value === "Equipment" || fieldname.value === "Model" || fieldname.value === "Serial" || fieldname.value === "EE")
-    {
-      document.querySelector("#search").style.display = "inline-block"
-      document.querySelector("#statuses").style.display = "none"
-      document.querySelector("#dselect").style.display = "none"
-      document.querySelector("#rselect").style.display = "none"
-      document.querySelector("#off-site").style.display = "none"
-      document.querySelector("#sfn").style.display = "none"
-      document.querySelector("#sln").style.display = "none"
-      document.querySelector("#rfn").style.display = "none"
-      document.querySelector("#rln").style.display = "none"
-      document.querySelector("#action").style.display = "none"
-      document.querySelector("#date").style.display = "none"
-
-      document.querySelector("#search").disabled = false
-      document.querySelector("#statuses").disabled = true
-      document.querySelector("#dselect").disabled = true
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = true
-      document.querySelector("#sfn").disabled = true
-      document.querySelector("#sln").disabled = true
-      document.querySelector("#rfn").disabled = true
-      document.querySelector("#rln").disabled = true
-      document.querySelector("#action").disabled = true
-      document.querySelector("#date").disabled = true
-    }
-    else if (fieldname.value === "Status")
-    {
-      document.querySelector("#search").style.display = "none"
-      document.querySelector("#statuses").style.display = "inline-block"
-      document.querySelector("#dselect").style.display = "none"
-      document.querySelector("#rselect").style.display = "none"
-      document.querySelector("#off-site").style.display = "none"
-      document.querySelector("#sfn").style.display = "none"
-      document.querySelector("#sln").style.display = "none"
-      document.querySelector("#rfn").style.display = "none"
-      document.querySelector("#rln").style.display = "none"
-      document.querySelector("#action").style.display = "none"
-      document.querySelector("#date").style.display = "none"
-
-      document.querySelector("#search").disabled = true
-      document.querySelector("#statuses").disabled = false
-      document.querySelector("#dselect").disabled = true
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = true
-      document.querySelector("#sfn").disabled = true
-      document.querySelector("#sln").disabled = true
-      document.querySelector("#rfn").disabled = true
-      document.querySelector("#rln").disabled = true
-      document.querySelector("#action").disabled = true
-      document.querySelector("#date").disabled = true
-    }
-    else if (fieldname.value === "Assigned Location" || fieldname.value === "Current Location")
-    {
-      document.querySelector("#search").style.display = "none"
-      document.querySelector("#statuses").style.display = "none"
-      document.querySelector("#dselect").style.display = "inline-block"
-      document.querySelector("#rselect").style.display = "inline-block"
-      document.querySelector("#off-site").style.display = "none"
-      document.querySelector("#sfn").style.display = "none"
-      document.querySelector("#sln").style.display = "none"
-      document.querySelector("#rfn").style.display = "none"
-      document.querySelector("#rln").style.display = "none"
-      document.querySelector("#action").style.display = "none"
-      document.querySelector("#date").style.display = "none"
-      
-      document.querySelector("#search").disabled = true
-      document.querySelector("#statuses").disabled = true
-      document.querySelector("#dselect").disabled = false
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = true
-      document.querySelector("#sfn").disabled = true
-      document.querySelector("#sln").disabled = true
-      document.querySelector("#rfn").disabled = true
-      document.querySelector("#rln").disabled = true
-      document.querySelector("#action").disabled = true
-      document.querySelector("#date").disabled = true
-
-      document.querySelector("#dselect").value = "Department"
-      document.querySelector("#rselect").value = "Room"
-    }
-    else if (fieldname.value === "Off-site Location")
-    {
-      document.querySelector("#search").style.display = "none"
-      document.querySelector("#statuses").style.display = "none"
-      document.querySelector("#dselect").style.display = "none"
-      document.querySelector("#rselect").style.display = "none"
-      document.querySelector("#off-site").style.display = "inline-block"
-      document.querySelector("#sfn").style.display = "none"
-      document.querySelector("#sln").style.display = "none"
-      document.querySelector("#rfn").style.display = "none"
-      document.querySelector("#rln").style.display = "none"
-      document.querySelector("#action").style.display = "none"
-      document.querySelector("#date").style.display = "none"
-      
-      document.querySelector("#search").disabled = true
-      document.querySelector("#statuses").disabled = true
-      document.querySelector("#dselect").disabled = true
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = false
-      document.querySelector("#sfn").disabled = true
-      document.querySelector("#sln").disabled = true
-      document.querySelector("#rfn").disabled = true
-      document.querySelector("#rln").disabled = true
-      document.querySelector("#action").disabled = true
-      document.querySelector("#date").disabled = true
-    }
-    else if (fieldname.value === "Scanned By")
-    {
-      document.querySelector("#search").style.display = "none"
-      document.querySelector("#statuses").style.display = "none"
-      document.querySelector("#dselect").style.display = "none"
-      document.querySelector("#rselect").style.display = "none"
-      document.querySelector("#off-site").style.display = "none"
-      document.querySelector("#sfn").style.display = "inline-block"
-      document.querySelector("#sln").style.display = "inline-block"
-      document.querySelector("#rfn").style.display = "none"
-      document.querySelector("#rln").style.display = "none"
-      document.querySelector("#action").style.display = "none"
-      document.querySelector("#date").style.display = "none"
-      
-      document.querySelector("#search").disabled = true
-      document.querySelector("#statuses").disabled = true
-      document.querySelector("#dselect").disabled = true
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = true
-      document.querySelector("#sfn").disabled = false
-      document.querySelector("#sln").disabled = false
-      document.querySelector("#rfn").disabled = true
-      document.querySelector("#rln").disabled = true
-      document.querySelector("#action").disabled = true
-      document.querySelector("#date").disabled = true
-    }
-    else if (fieldname.value === "Received By")
-    {
-      document.querySelector("#search").style.display = "none"
-      document.querySelector("#statuses").style.display = "none"
-      document.querySelector("#dselect").style.display = "none"
-      document.querySelector("#rselect").style.display = "none"
-      document.querySelector("#off-site").style.display = "none"
-      document.querySelector("#sfn").style.display = "none"
-      document.querySelector("#sln").style.display = "none"
-      document.querySelector("#rfn").style.display = "inline-block"
-      document.querySelector("#rln").style.display = "inline-block"
-      document.querySelector("#action").style.display = "none"
-      document.querySelector("#date").style.display = "none"
-      
-      document.querySelector("#search").disabled = true
-      document.querySelector("#statuses").disabled = true
-      document.querySelector("#dselect").disabled = true
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = true
-      document.querySelector("#sfn").disabled = true
-      document.querySelector("#sln").disabled = true
-      document.querySelector("#rfn").disabled = false
-      document.querySelector("#rln").disabled = false
-      document.querySelector("#action").disabled = true
-      document.querySelector("#date").disabled = true
-    }
-    else if (fieldname.value === "Action")
-    {
-      document.querySelector("#search").style.display = "none"
-      document.querySelector("#statuses").style.display = "none"
-      document.querySelector("#dselect").style.display = "none"
-      document.querySelector("#rselect").style.display = "none"
-      document.querySelector("#off-site").style.display = "none"
-      document.querySelector("#sfn").style.display = "none"
-      document.querySelector("#sln").style.display = "none"
-      document.querySelector("#rfn").style.display = "none"
-      document.querySelector("#rln").style.display = "none"
-      document.querySelector("#action").style.display = "inline-block"
-      document.querySelector("#date").style.display = "none"
-      
-      document.querySelector("#search").disabled = true
-      document.querySelector("#statuses").disabled = true
-      document.querySelector("#dselect").disabled = true
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = true
-      document.querySelector("#sfn").disabled = true
-      document.querySelector("#sln").disabled = true
-      document.querySelector("#rfn").disabled = true
-      document.querySelector("#rln").disabled = true
-      document.querySelector("#action").disabled = false
-      document.querySelector("#date").disabled = true
-    }
-    else if (fieldname.value === "Date of Action")
-    {
-      document.querySelector("#search").style.display = "none"
-      document.querySelector("#statuses").style.display = "none"
-      document.querySelector("#dselect").style.display = "none"
-      document.querySelector("#rselect").style.display = "none"
-      document.querySelector("#off-site").style.display = "none"
-      document.querySelector("#sfn").style.display = "none"
-      document.querySelector("#sln").style.display = "none"
-      document.querySelector("#rfn").style.display = "none"
-      document.querySelector("#rln").style.display = "none"
-      document.querySelector("#action").style.display = "none"
-      document.querySelector("#date").style.display = "inline-block"
-      
-      document.querySelector("#search").disabled = true
-      document.querySelector("#statuses").disabled = true
-      document.querySelector("#dselect").disabled = true
-      document.querySelector("#rselect").disabled = true
-      document.querySelector("#off-site").disabled = true
-      document.querySelector("#sfn").disabled = true
-      document.querySelector("#sln").disabled = true
-      document.querySelector("#rfn").disabled = true
-      document.querySelector("#rln").disabled = true
-      document.querySelector("#action").disabled = true
-      document.querySelector("#date").disabled = false
-    }
-
-  });
-}
-
 // Code to toggle visibility of checkboxes for deleting users and items from inventory
 
-if (document.querySelector(".delbutton"))
+if (document.querySelector(".additem") || document.querySelector(".adduser"))
 {
-
-  var deletebutton = document.querySelector(".delbutton");
-  var confirmdel = document.querySelector("#confirmdel");
-
-  if (document.querySelector(".adduser"))
+  if (document.querySelector("#insert-action-menu"))
   {
-    var deleteinventory = document.getElementsByClassName("deleteuser")
-  }
-  else if (document.querySelector(".additem"))
-  {
-    var deleteinventory = document.getElementsByClassName("deleteinventory")
-  }
 
-  if (document.querySelector(".navpages"))
-  {
-    var togglenav = document.querySelector(".pages").firstElementChild.children
-  }
-
-  document.querySelector(".delbutton").addEventListener('click', function(e){ 
-
-    deletebutton.style.display = "none";
-    confirmdel.style.display = "inline-block";
-    
-    for (let i = 0; i < deleteinventory.length; i++)
+    if (document.querySelector(".adduser"))
     {
-      deleteinventory[i].style.display = "inline-block";
+      var deleteinventory = document.getElementsByClassName("deleteuser")
+    }
+    else if (document.querySelector(".additem"))
+    {
+      var deleteinventory = document.getElementsByClassName("deleteinventory")
     }
 
-  });
+    document.querySelector("#insert-action-menu").addEventListener('click', function(e){ 
 
-  document.querySelector("#closedel").addEventListener('click', function(e){ 
+      if (document.querySelector(".delbutton"))
+      {
+        if (document.querySelector(".delbutton").contains(e.target))
+        {
+          document.querySelector(".delbutton").style.display = "none";
+          document.querySelector("#confirmdel").style.display = "inline-block";
+          
+          for (let i = 0; i < deleteinventory.length; i++)
+          {
+            deleteinventory[i].style.display = "inline-block";
+          }
+        }
+      }
 
-    deletebutton.style.display = "inline-block";
-    confirmdel.style.display = "none";
+    });
 
-    for (let i = 0; i < deleteinventory.length; i++)
+    if (document.querySelector("#moreinfo"))
     {
-      deleteinventory[i].style.display = "none";
-      deleteinventory[i].checked= false;
+      document.querySelector("#moreinfo").addEventListener("click", function(e) {
+        
+        if (document.querySelector("#delete-item").contains(e.target))
+        {
+          for (let i = 0; i < deleteinventory.length; i++)
+          { 
+            deleteinventory[i].style.display = "none";
+            deleteinventory[i].checked = false;
+          }
+
+          document.querySelector("#confirmdel").style.display = "none";
+          document.querySelector(".action-menu-button").style.display = "block";
+          document.querySelector("#completedel").type = "sumbit"
+          document.querySelector("#completedel").value = "delete-single-item" ;
+        }
+
+      });
     }
 
-  });
+    document.querySelector("#closedel").addEventListener('click', function(e){ 
 
+      document.querySelector(".delbutton").style.display = "inline-block";
+      document.querySelector("#confirmdel").style.display = "none";
+
+      for (let i = 0; i < deleteinventory.length; i++)
+      {
+        deleteinventory[i].style.display = "none";
+        deleteinventory[i].checked= false;
+      }
+
+    });
+
+    // Code to prevent confirming deletion without selection from inventory
+
+    if (document.querySelector(".additem"))
+    {
+      document.querySelector("#insert-action-menu").addEventListener('click', function(e) { 
+        
+        if (document.querySelector("#confirmdel"))
+        {
+          if (document.querySelector("#confirmdel").contains(e.target))
+          {
+
+            document.querySelector("#completedel").value = "delete" ;
+            var delinv = document.getElementsByName("delinv")
+
+            for (let i = 0; i < delinv.length; i++)
+            {
+              if (delinv[i].checked == false)
+              {
+                document.querySelector("#completedel").type = "button";
+              }
+              else if (delinv[i].checked == true)
+              {
+                document.querySelector("#completedel").type = "submit";
+                break;
+              }
+            }
+          }
+        }
+
+      });
+
+      if (document.querySelector("#delete-items-modal"))
+      {
+        document.querySelector("#delete-items-modal").addEventListener('click', function(e) { 
+
+          if (document.querySelector("#completedel").contains(e.target))
+          {
+            var emptyselection = document.querySelectorAll(".emptyselection");
+
+            if (document.querySelector("#completedel").type == "button")
+            {
+              for (let i = 0; i < emptyselection.length; i++)
+              {
+                emptyselection[i].style.display = "block";
+              }
+            }
+          }
+
+        });
+      }
+
+      document.addEventListener("mouseover", function(e) {
+
+        if (!(document.querySelector("#completedel").contains(e.target)))
+        {
+          for (let i = 0; i < emptyselection.length; i++)
+          {
+            emptyselection[i].style.display = "none";
+          }
+        }
+
+      });
+    }
+
+    // Code to prevent confirming deletion without selection for users
+
+    if (document.querySelector(".adduser"))
+    {
+      var deluser = document.getElementsByName("deluser")
+
+      document.querySelector("#confirmdel").addEventListener("click", function(e) {
+
+        for (let i = 0; i < deluser.length; i++)
+        {
+          if (deluser[i].checked == false)
+          {
+            document.querySelector("#completedel").type = "button";
+          }
+          else if (deluser[i].checked == true)
+          {
+            document.querySelector("#completedel").type = "submit";
+            break;
+          }
+        }
+
+        document.querySelector("#completedel").addEventListener("click", function(e) {
+
+          if (document.querySelector("#completedel").type == "button")
+          {
+            document.querySelector(".emptyselection").style.display = "block";
+          }
+            
+        });
+
+        document.addEventListener("mouseover", function(e) {
+
+          if (!(document.querySelector("#completedel").contains(e.target)))
+          {
+            document.querySelector(".emptyselection").style.display = "none";
+          }
+
+        });
+      });
+    }
+
+  }
 }
 
 // Code for sending items to replace page
 
-if (document.querySelector(".replacebutton"))
+if (document.querySelector(".additem"))
 {
-  var replacebutton = document.querySelector(".replacebutton");
-  var confirmreplace = document.querySelector("#confirmreplace");
-  var replaceinventory = document.getElementsByClassName("replaceinventory")
-
-  if (document.querySelector(".navpages"))
+  if (document.querySelector("#insert-action-menu"))
   {
-    var togglenav = document.querySelector(".pages").firstElementChild.children
-  }
+    var replaceinventory = document.getElementsByClassName("replaceinventory")
 
-  document.querySelector(".replacebutton").addEventListener('click', function(e){ 
+    if (document.querySelector(".navpages"))
+    {
+      var togglenav = document.querySelector(".pages").firstElementChild.children
+    }
 
-    replacebutton.style.display = "none";
-    confirmreplace.style.display = "inline-block";
+    document.querySelector("#insert-action-menu").addEventListener("click", function(e) {
     
-    for (let i = 0; i < replaceinventory.length; i++)
-    {
-      replaceinventory[i].style.display = "inline-block";
-    }
+      if (document.querySelector(".replacebutton"))
+      {
+        if (document.querySelector(".replacebutton").contains(e.target))
+        {
+          document.querySelector(".replacebutton").style.display = "none";
+          document.querySelector("#confirmreplace").style.display = "inline-block";
+          
+          for (let i = 0; i < replaceinventory.length; i++)
+          {
+            replaceinventory[i].style.display = "inline-block";
+          }
 
-  });
+        }
+      }
 
-  document.querySelector("#closereplace").addEventListener('click', function(e){ 
+    });
 
-    replacebutton.style.display = "inline-block";
-    confirmreplace.style.display = "none";
+    document.querySelector("#moreinfo").addEventListener("click", function(e) {
+      
+      if (document.querySelector("#single-item-replace").contains(e.target))
+      {
+        for (let i = 0; i < replaceinventory.length; i++)
+        { 
+          replaceinventory[i].style.display = "none";
+          replaceinventory[i].checked = false;
+        }
 
-    for (let i = 0; i < replaceinventory.length; i++)
-    {
-      replaceinventory[i].style.display = "none";
-      replaceinventory[i].checked= false;
-    }
+        document.querySelector("#confirmreplace").style.display = "none";
+        document.querySelector(".action-menu-button").style.display = "block";
+        document.querySelector("#completereplace").type = "sumbit"
+        document.querySelector("#completereplace").value = "replace-single-item" ;
+      }
 
-  });
-}
+    });
 
-// Code for sending to replaced items page 
+    document.querySelector("#closereplace").addEventListener('click', function(e){ 
 
-if (document.querySelector(".replacedbutton"))
-{
+      document.querySelector(".replacebutton").style.display = "inline-block";
+      document.querySelector("#confirmreplace").style.display = "none";
 
-  var replacedbutton = document.querySelector(".replacedbutton");
-  var confirmreplaced = document.querySelector("#confirmreplaced");
-  var replacedinventory = document.getElementsByClassName("replacedinventory")
+      for (let i = 0; i < replaceinventory.length; i++)
+      {
+        replaceinventory[i].style.display = "none";
+        replaceinventory[i].checked= false;
+      }
 
-  if (document.querySelector(".navpages"))
-  {
-    var togglenav = document.querySelector(".pages").firstElementChild.children
-  }
+    });
 
-  document.querySelector(".replacedbutton").addEventListener('click', function(e){ 
+    // Code to prevent sending to replace page without selection for inventory
 
-    replacedbutton.style.display = "none";
-    confirmreplaced.style.display = "inline-block";
-
-    for (let i = 0; i < replacedinventory.length; i++)
-    {
-      replacedinventory[i].style.display = "inline-block";
-    }
-
-  });
-
-  document.querySelector("#closereplaced").addEventListener('click', function(e){ 
-
-    replacedbutton.style.display = "inline-block";
-    confirmreplaced.style.display = "none";
-
-    for (let i = 0; i < replacedinventory.length; i++)
-    {
-      replacedinventory[i].style.display = "none";
-      replacedinventory[i].checked= false;
-    }
-
-  });
-
-}
-
-// Code for marking items as missing 
-
-if (document.querySelector(".missingbutton"))
-{
-
-  var missingbutton = document.querySelector(".missingbutton");
-  var confirmmissing = document.querySelector("#confirmmissing");
-  var missinginventory = document.getElementsByClassName("missinginventory")
-
-  if (document.querySelector(".navpages"))
-  {
-    var togglenav = document.querySelector(".pages").firstElementChild.children
-  }
-
-  missingbutton.addEventListener('click', function(e){ 
-
-    missingbutton.style.display = "none";
-    confirmmissing.style.display = "inline-block";
-    
-    for (let i = 0; i < missinginventory.length; i++)
-    { 
-      missinginventory[i].style.display = "inline-block";
-    }
-
-  });
-
-  document.querySelector("#closemissing").addEventListener('click', function(e){ 
-
-    missingbutton.style.display = "inline-block";
-    confirmmissing.style.display = "none";
-
-    for (let i = 0; i < missinginventory.length; i++)
-    {
-      missinginventory[i].style.display = "none";
-      missinginventory[i].checked = false;
-    }
-
-  });
-
-}
-
-// Code to prevent marking items as missing without selection for inventory
-
-if (document.querySelector("#confirmmissing"))
-{
-  var missinginv = document.getElementsByName("missinginv")
-
-  if (document.querySelector(".additem"))
-  {
-    var hiddenstatus = document.getElementsByName("hiddenstatus")
+    var replaceinv = document.getElementsByName("replaceinv")
+    var hiddenaction = document.getElementsByName("hiddenaction")
     var emptyselection = document.querySelectorAll(".emptyselection");
-  }
-  else 
-  {
-    var emptyselection = document.querySelectorAll(".emptyselection");
-  }
-
-  document.querySelector("#confirmmissing").addEventListener("click", function(e) {
 
     if (document.querySelector(".additem"))
     {
-      for (let i = 0; i < missinginv.length; i++)
+      var hiddenstatus = document.getElementsByName("hiddenstatus")
+    }
+
+    document.querySelector("#insert-action-menu").addEventListener("click", function(e) {
+
+      if (document.querySelector("#confirmreplace"))
       {
-        if (missinginv[i].checked == true)
-        { 
-          for (let j = i; j < missinginv.length; j++)
+        if (document.querySelector("#confirmreplace").contains(e.target))
+        {
+          document.querySelector("#completereplace").value = "replace" ;
+
+          if (document.querySelector(".additem"))
           {
-            if (hiddenstatus[j].value == "MISSING" && missinginv[j].checked == true)
+            for (let i = 0; i < replaceinv.length; i++)
             {
-              document.querySelector("#completemissing").type = "button";
+              if (replaceinv[i].checked == true)
+              { 
+                for (let j = i; j < replaceinv.length; j++)
+                {
+                  if ((hiddenaction[j].value == "CHECKED OUT" && replaceinv[j].checked == true) || (hiddenstatus[j].value == "REPLACE" && replaceinv[j].checked == true) || 
+                  (hiddenstatus[j].value == "REPLACED" && replaceinv[j].checked == true))
+                  {
+                    document.querySelector("#completereplace").type = "button";
+                    break;
+                  }
+                  else if (j == replaceinv.length - 1)
+                  {
+                    document.querySelector("#completereplace").type = "submit";
+                  }
+                }
+                break;
+              }
+            }
+          }
+
+          for (let i = 0; i < replaceinv.length; i++)
+          {
+            if (replaceinv[i].checked == true)
+            {
               break;
             }
-            else if (j == missinginv.length - 1)
+            else if (i == replaceinv.length - 1)
             {
-              document.querySelector("#completemissing").type = "submit";
+              document.querySelector("#completereplace").type = "button";
             }
           }
-          break;
-        }
-      }
-  
-      for (let i = 0; i < missinginv.length; i++)
-      {
-        if (missinginv[i].checked == true)
-        {
-          break;
-        }
-        else if (i == missinginv.length - 1)
-        {
-          document.querySelector("#completemissing").type = "button";
-        }
-      }
-    }
-    else 
-    {
-      for (let i = 0; i < missinginv.length; i++)
-      {
-        if (missinginv[i].checked == true)
-        { 
-          document.querySelector("#completemissing").type = "submit";
-          break;
-        }
-        else if (i == missinginv.length - 1)
-        {
-          document.querySelector("#completemissing").type = "button";
-        }
-      }
-    }
-  });
 
-  document.querySelector("#completemissing").addEventListener("click", function(e) {
+        }
+      }
+    });
 
-    if (document.querySelector(".additem"))
-    {
-      for (let i = 0; i < missinginv.length; i++)
+    document.querySelector("#replace-items-modal").addEventListener("click", function(e) {
+
+      if (document.querySelector("#completereplace").contains(e.target))
       {
-          if (missinginv[i].checked == true && document.querySelector("#completemissing").type == "button")
+        for (let i = 0; i < replaceinv.length; i++)
+        {
+
+          if (replaceinv[i].checked == true && (hiddenstatus[i].value == "REPLACE" || hiddenstatus[i].value == "REPLACED") && document.querySelector("#completereplace").type == "button")
           {
-            document.querySelector(".already-missing").style.display = "block";
+            document.querySelector(".already-replace").style.display = "block";
+
+            for (let j = 0; j < replaceinv.length; j++)
+            {
+              if (hiddenaction[j].value == "CHECKED OUT" && replaceinv[j].checked == true)
+              {
+                document.querySelector(".notcheckedin").style.display = "block";
+                break;
+              }
+            }
+
             break;
           }
-          else if (i == missinginv.length - 1 && document.querySelector("#completemissing").type == "button")
+
+          if (replaceinv[i].checked == true && document.querySelector("#completereplace").type == "button")
+          {
+            document.querySelector(".notcheckedin").style.display = "block";
+
+            for (let j = 0; j < replaceinv.length; j++)
+            {
+              if ((hiddenstatus[j].value == "REPLACE" || hiddenstatus[j].value == "REPLACED") && replaceinv[j].checked == true)
+              {
+                document.querySelector(".already-replace").style.display = "block";
+                break;
+              }
+            }
+
+            break;
+          }
+          else if (i == replaceinv.length - 1 && document.querySelector("#completereplace").type == "button")
           {
             for (let i = 0; i < emptyselection.length; i++)
             {
@@ -756,108 +1011,401 @@ if (document.querySelector("#confirmmissing"))
             }
           }
         }
+      }
+
+    });
+
+    document.addEventListener("mouseover", function(e) {
+          
+      if (!(document.querySelector("#completereplace").contains(e.target)))
+      {
+        document.querySelector(".notcheckedin").style.display = "none";
+        document.querySelector(".emptyselection").style.display = "none";
+        document.querySelector(".already-replace").style.display = "none";
+      }
+
+    });
+    
+  }
+}
+
+  // Code for sending to replaced items page 
+
+if ((document.querySelector(".replaceitem") || document.querySelector(".missingitem")) && (!(document.querySelector(".user-view"))))
+{
+  if (document.querySelector("#insert-action-menu"))
+  {
+
+    var replacedinventory = document.getElementsByClassName("replacedinventory")
+
+    document.querySelector("#insert-action-menu").addEventListener('click', function(e){ 
+
+      if (document.querySelector(".replacedbutton"))
+      {
+        if (document.querySelector(".replacedbutton").contains(e.target))
+        {
+          document.querySelector(".replacedbutton").style.display = "none";
+          document.querySelector("#confirmreplaced").style.display = "inline-block";
+
+          for (let i = 0; i < replacedinventory.length; i++)
+          {
+            replacedinventory[i].style.display = "inline-block";
+          }
+        }
+      }
+
+    });
+
+    document.querySelector("#moreinfo").addEventListener("click", function(e) {
+      
+      if (document.querySelector("#single-item-replaced").contains(e.target))
+      {
+        for (let i = 0; i < replacedinventory.length; i++)
+        { 
+          replacedinventory[i].style.display = "none";
+          replacedinventory[i].checked = false;
+        }
+
+        document.querySelector("#confirmreplaced").style.display = "none";
+        document.querySelector(".action-menu-button").style.display = "block";
+        document.querySelector("#completereplaced").type = "sumbit"
+        document.querySelector("#completereplaced").value = "replaced-single-item";
+      }
+
+    });
+
+    document.querySelector("#closereplaced").addEventListener('click', function(e){ 
+
+      document.querySelector(".action-menu-button").style.display = "block";
+      document.querySelector(".replacedbutton").style.display = "inline-block";
+      document.querySelector("#confirmreplaced").style.display = "none";
+
+      for (let i = 0; i < replacedinventory.length; i++)
+      {
+        replacedinventory[i].style.display = "none";
+        replacedinventory[i].checked= false;
+      }
+
+    });
+
+    // Code to prevent sending to replaced item page without selection
+
+    var replacedinv = document.getElementsByName("replacedinv")
+
+    document.querySelector("#insert-action-menu").addEventListener('click', function(e){ 
+
+      if (document.querySelector("#confirmreplaced"))
+      {
+        if (document.querySelector("#confirmreplaced").contains(e.target))
+        {
+          document.querySelector("#completereplaced").value = "replaced";
+
+          for (let i = 0; i < replacedinv.length; i++)
+          {
+            if (replacedinv[i].checked == false)
+            {
+              document.querySelector("#completereplaced").type = "button";
+            }
+            else if (replacedinv[i].checked == true)
+            {
+              document.querySelector("#completereplaced").type = "submit";
+              break;
+            }
+          }
+        }
+      }
+
+    });
+
+    document.querySelector("#replaced-items-modal").addEventListener("click", function(e) {
+
+      if (document.querySelector("#completereplaced").contains(e.target))
+      {
+
+        if (document.querySelector("#completereplaced").type == "button")
+        {
+          document.querySelector(".emptyselection").style.display = "block";
+        }
+        else if (document.querySelector("#completereplaced").type = "submit")
+        {
+          document.querySelector(".emptyselection").style.display = "none";
+        }
+          
+      }
+
+    });
+
+    document.addEventListener("mouseover", function(e) {
+
+      if (!(document.querySelector("#completereplaced").contains(e.target)))
+      {
+        document.querySelector(".emptyselection").style.display = "none";
+      }
+
+    });
+  }
+}
+
+// Code for marking items as missing 
+
+if ((document.querySelector(".additem") || document.querySelector(".replaceitem") || document.querySelector(".offsiteitem")) && (!(document.querySelector(".user-view"))))
+{
+  if (document.querySelector("#insert-action-menu"))
+  {
+
+    var missinginventory = document.getElementsByClassName("missinginventory")
+
+    document.querySelector("#insert-action-menu").addEventListener("click", function(e) {
+
+      if (document.querySelector(".missingbutton"))
+      {
+        if (document.querySelector(".missingbutton").contains(e.target))
+        {
+          document.querySelector(".missingbutton").style.display = "none";
+          document.querySelector("#confirmmissing").style.display = "inline-block";
+          
+          for (let i = 0; i < missinginventory.length; i++)
+          { 
+            missinginventory[i].style.display = "inline-block";
+          }
+
+        }
+      }
+    });
+
+    document.querySelector("#moreinfo").addEventListener("click", function(e) {
+      
+      if (document.querySelector("#single-item-missing").contains(e.target))
+      {
+        for (let i = 0; i < missinginventory.length; i++)
+        { 
+          missinginventory[i].style.display = "none";
+          missinginventory[i].checked = false;
+        }
+
+        document.querySelector("#confirmmissing").style.display = "none";
+        document.querySelector(".action-menu-button").style.display = "block";
+        document.querySelector("#completemissing").type = "sumbit"
+        document.querySelector("#completemissing").value = "missing-single-item" ;
+      }
+
+    });
+
+    document.querySelector("#closemissing").addEventListener('click', function(e){ 
+
+      document.querySelector(".missingbutton").style.display = "inline-block";
+      document.querySelector("#confirmmissing").style.display = "none";
+
+      for (let i = 0; i < missinginventory.length; i++)
+      {
+        missinginventory[i].style.display = "none";
+        missinginventory[i].checked = false;
+      }
+
+    });
+
+    // Code to prevent marking items as missing without selection for inventory
+
+    var missinginv = document.getElementsByName("missinginv")
+
+    if (document.querySelector(".additem"))
+    {
+      var hiddenstatus = document.getElementsByName("hiddenstatus")
+      var emptyselection = document.querySelectorAll(".emptyselection");
     }
     else 
     {
-      if (document.querySelector("#completemissing").type == "button")
-      {
-        for (let i = 0; i < emptyselection.length; i++)
-        {
-          emptyselection[i].style.display = "block";
-        }
-      }
+      var emptyselection = document.querySelectorAll(".emptyselection");
     }
 
-  });
+    document.querySelector("#insert-action-menu").addEventListener("click", function(e) {
 
-  document.addEventListener("mouseover", function(e) {
-        
-    if (!(document.querySelector("#completemissing").contains(e.target)))
-    {
-      if (document.querySelector(".additem"))
+      if (document.querySelector("#confirmmissing"))
       {
-        for (let i = 0; i < emptyselection.length; i++)
+        if (document.querySelector("#confirmmissing").contains(e.target))
         {
-          emptyselection[i].style.display = "none";
-        }
-        document.querySelector(".already-missing").style.display = "none";
-      }
-      else
-      {
 
-        for (let i = 0; i < emptyselection.length; i++)
+          document.querySelector("#completemissing").value = "missing";
+
+          if (document.querySelector(".additem"))
+          {
+            for (let i = 0; i < missinginv.length; i++)
+            {
+              if (missinginv[i].checked == true)
+              { 
+                for (let j = i; j < missinginv.length; j++)
+                {
+                  if (hiddenstatus[j].value == "MISSING" && missinginv[j].checked == true)
+                  {
+                    document.querySelector("#completemissing").type = "button";
+                    break;
+                  }
+                  else if (j == missinginv.length - 1)
+                  {
+                    document.querySelector("#completemissing").type = "submit";
+                  }
+                }
+                break;
+              }
+            }
+        
+            for (let i = 0; i < missinginv.length; i++)
+            {
+              if (missinginv[i].checked == true)
+              {
+                break;
+              }
+              else if (i == missinginv.length - 1)
+              {
+                document.querySelector("#completemissing").type = "button";
+              }
+            }
+          }
+          else 
+          {
+            for (let i = 0; i < missinginv.length; i++)
+            {
+              if (missinginv[i].checked == true)
+              { 
+                document.querySelector("#completemissing").type = "submit";
+                break;
+              }
+              else if (i == missinginv.length - 1)
+              {
+                document.querySelector("#completemissing").type = "button";
+              }
+            }
+          }
+        }
+      }
+    });
+
+    document.querySelector("#missing-items-modal").addEventListener("click", function(e) {
+
+      if (document.querySelector("#completemissing").contains(e.target))
+      {
+        if (document.querySelector(".additem"))
+        {
+          for (let i = 0; i < missinginv.length; i++)
+          {
+              if (missinginv[i].checked == true && document.querySelector("#completemissing").type == "button")
+              {
+                document.querySelector(".already-missing").style.display = "block";
+                break;
+              }
+              else if (i == missinginv.length - 1 && document.querySelector("#completemissing").type == "button")
+              {
+                for (let i = 0; i < emptyselection.length; i++)
+                {
+                  emptyselection[i].style.display = "block";
+                }
+              }
+            }
+        }
+        else 
+        {
+          if (document.querySelector("#completemissing").type == "button")
+          {
+            for (let i = 0; i < emptyselection.length; i++)
+            {
+              emptyselection[i].style.display = "block";
+            }
+          }
+        }
+      }
+
+    });
+
+    document.addEventListener("mouseover", function(e) {
+          
+      if (!(document.querySelector("#completemissing").contains(e.target)))
+      {
+        if (document.querySelector(".additem"))
         {
           for (let i = 0; i < emptyselection.length; i++)
           {
             emptyselection[i].style.display = "none";
           }
+          document.querySelector(".already-missing").style.display = "none";
+        }
+        else
+        {
+
+          for (let i = 0; i < emptyselection.length; i++)
+          {
+            for (let i = 0; i < emptyselection.length; i++)
+            {
+              emptyselection[i].style.display = "none";
+            }
+          }
         }
       }
-    }
 
-  });
-
-
+    });
+  }
 }
 
 // Code for editing multiple items and selecting items to edit
 
-if (document.querySelector(".editbutton"))
+if (document.querySelector(".additem"))
 {
- 
-  var editbutton = document.querySelector(".editbutton");
-  var editSingleItem = document.querySelector("#edit-item");
-  var confirmedit = document.querySelector("#confirmedit");
-  var editinventory = document.querySelectorAll(".editinventory");
-  var completeEdit = document.querySelector("#completeedit")
-   
-  for (let i = 0; i < editinventory.length; i++)
+  if (document.querySelector("#insert-action-menu"))
   {
-    editinventory[i].style.display = "none"; 
-  }
 
-  if (document.querySelector(".navpages"))
-  {
-    var togglenav = document.querySelector(".pages").firstElementChild.children
-  }
-
-  editbutton.addEventListener('click', function(e){ 
-
-    editbutton.style.display = "none";
-    confirmedit.style.display = "inline-block";
-    completeEdit.value = "edit"
-    document.querySelector("#hidden-edit-item").value = null
-    document.querySelector("#editInfoModalLabel").textContent = "Edit Items"
+    var editSingleItem = document.querySelector("#edit-item");
+    var editinventory = document.getElementsByClassName("editinventory");
+    var completeEdit = document.querySelector("#completeedit")
     
     for (let i = 0; i < editinventory.length; i++)
     {
-      editinventory[i].style.display = "inline-block";
+      editinventory[i].style.display = "none"; 
     }
 
-  });
+    document.querySelector("#insert-action-menu").addEventListener("click", function(e) {
+    
+      if (document.querySelector(".editbutton"))
+      { 
+        if (document.querySelector(".editbutton").contains(e.target))
+        { 
 
-  editSingleItem.addEventListener("click", function() {
+          document.querySelector(".editbutton").style.display = "none";
+          document.querySelector("#confirmedit").style.display = "inline-block";
+          completeEdit.value = "edit"
+          document.querySelector("#hidden-edit-item").value = null
+          document.querySelector("#editInfoModalLabel").textContent = "Edit Items"
+          
+          for (let i = 0; i < editinventory.length; i++)
+          {
+            editinventory[i].style.display = "inline-block";
+          }
 
-    completeEdit.value = "edit-single-item"
+        }
+      }
+    });
 
-  })
+    editSingleItem.addEventListener('click', function(e) {
 
-  document.querySelector("#closeedit").addEventListener('click', function(e){ 
+      completeEdit.value = "edit-single-item"
 
-    editbutton.style.display = "inline-block";
-    confirmedit.style.display = "none";
-    document.querySelector("#hidden-edit-item").value = ""
+    })
 
-    for (let i = 0; i < editinventory.length; i++)
-    {
+    document.querySelector("#closeedit").addEventListener('click', function(e){ 
 
-      editinventory[i].style.display = "none";
-      editinventory[i].checked = false;
+      document.querySelector(".editbutton").style.display = "inline-block";
+      document.querySelector("#confirmedit").style.display = "none";
+      document.querySelector("#hidden-edit-item").value = ""
 
-    }
+      for (let i = 0; i < editinventory.length; i++)
+      {
 
-  });
+        editinventory[i].style.display = "none";
+        editinventory[i].checked = false;
 
+      }
+
+    });
+    
+  }
 }
 
 // Code to prevent editing items without selection from inventory
@@ -941,325 +1489,477 @@ if (document.querySelector("#confirmedit"))
 
 // Code for sending items to archive page 
 
-if (document.querySelector(".archivebutton") || document.querySelector(".unarchivebutton"))
+if ((document.querySelector(".additem") || document.querySelector(".replaceditem") || document.querySelector(".inventory-archive")) && (!(document.querySelector(".user-view"))))
 {
-
-  if (document.querySelector(".archivebutton"))
+  if (document.querySelector("#insert-action-menu"))
   {
-    var archivebutton = document.querySelector(".archivebutton");
-    var confirmarchive = document.querySelector("#confirmarchive");
-    var archiveinventory = document.getElementsByClassName("archiveinventory")
-    var closearchive = document.querySelector("#closearchive")
-  }
-  else if (document.querySelector(".unarchivebutton"))
-  {
-    var archivebutton = document.querySelector(".unarchivebutton");
-    var confirmarchive = document.querySelector("#confirmunarchive");
-    var archiveinventory = document.getElementsByClassName("unarchiveinventory")
-    var closearchive = document.querySelector("#closeunarchive")
-  }
 
-  if (document.querySelector(".navpages"))
-  {
-    var togglenav = document.querySelector(".pages").firstElementChild.children
-  }
-
-  archivebutton.addEventListener('click', function(e){ 
-
-    archivebutton.style.display = "none";
-    confirmarchive.style.display = "inline-block";
-    
-    for (let i = 0; i < archiveinventory.length; i++)
-    {
-      archiveinventory[i].style.display = "inline-block";
-    }
-
-  });
-
-  closearchive.addEventListener('click', function(e){ 
-
-    archivebutton.style.display = "inline-block";
-    confirmarchive.style.display = "none";
-
-    for (let i = 0; i < archiveinventory.length; i++)
-    {
-
-      archiveinventory[i].style.display = "none";
-      archiveinventory[i].checked = false;
-    }
-
-  });
-
-}
-
-// Code to prevent sending items to archive without selection
-
-if (document.querySelector("#confirmarchive") || document.querySelector("#confirmunarchive"))
-{
-  if (document.querySelector("#confirmarchive"))
-  {
-    var archiveinv = document.getElementsByName("archiveinv")
-    var emptyselection = document.querySelectorAll(".emptyselection");
-    var confirmarchive = document.querySelector("#confirmarchive");
-    var completearchive = document.querySelector("#completearchive");
-  }
-  else if (document.querySelector("#confirmunarchive"))
-  {
-    var archiveinv = document.getElementsByName("unarchiveinv")
-    var emptyselection = document.querySelectorAll(".emptyselection");
-    var confirmarchive = document.querySelector("#confirmunarchive");
-    var completearchive = document.querySelector("#completeunarchive");
-  }
-
-  confirmarchive.addEventListener("click", function(e) {
-
-    for (let i = 0; i < archiveinv.length; i++)
-    {
-      if (archiveinv[i].checked == true)
-      { 
-        completearchive.type = "submit";
-        break;
-      }
-      else if (i == archiveinv.length - 1)
+    document.querySelector("#insert-action-menu").addEventListener("click", function(e) {
+      
+      if (document.querySelector(".archivebutton"))
       {
-        completearchive.type = "button";
+        if (document.querySelector(".archivebutton").contains(e.target))
+        {
+          var archivebutton = document.querySelector(".archivebutton");
+          var confirmarchive = document.querySelector("#confirmarchive");
+          var archiveinventory = document.getElementsByClassName("archiveinventory")
+          showArchiveCheckboxes(archivebutton, confirmarchive, archiveinventory)
+        }
       }
-    }
-
-  });
-
-  completearchive.addEventListener("click", function(e) {
-
-    if (completearchive.type == "button")
-    {
-      for (let i = 0; i < emptyselection.length; i++)
+      
+      if (document.querySelector(".unarchivebutton"))
       {
-        emptyselection[i].style.display = "block";
+        if (document.querySelector(".unarchivebutton").contains(e.target))
+        {
+          var archivebutton = document.querySelector(".unarchivebutton");
+          var confirmarchive = document.querySelector("#confirmunarchive");
+          var archiveinventory = document.getElementsByClassName("unarchiveinventory")
+          showArchiveCheckboxes(archivebutton, confirmarchive, archiveinventory)
+        }
       }
-    }
-  });
 
-  document.addEventListener("mouseover", function(e) {
+    });
+
+    document.querySelector("#moreinfo").addEventListener("click", function(e) {
+      
+      if (document.querySelector(".archivebutton"))
+      {
+        var confirmarchive = document.querySelector("#confirmarchive");
+        var completearchive = document.querySelector("#completearchive");
+        var archiveinventory = document.getElementsByClassName("archiveinventory");
+
+        if (document.querySelector("#single-item-archive").contains(e.target))
+        {
+          for (let i = 0; i < archiveinventory.length; i++)
+          { 
+            archiveinventory[i].style.display = "none";
+            archiveinventory[i].checked = false;
+          }
+
+          confirmarchive.style.display = "none";
+          document.querySelector(".action-menu-button").style.display = "block";
+          completearchive.type = "sumbit";
+          
+          if (document.querySelector("#single-item-archive"))
+          {
+            completearchive.value = "archive-single-item";
+          }
+          else if (document.querySelector("#single-item-unarchive"))
+          {
+            completearchive.value = "unarchive-single-item";
+          }
+        }
+
+      }
+      else if (document.querySelector(".unarchivebutton"))
+      {
+        var confirmarchive = document.querySelector("#confirmunarchive");
+        var completearchive = document.querySelector("#completeunarchive");
+        var archiveinventory = document.getElementsByClassName("unarchiveinventory");
+
+        if (document.querySelector("#single-item-unarchive").contains(e.target))
+        {
+          for (let i = 0; i < archiveinventory.length; i++)
+          { 
+            archiveinventory[i].style.display = "none";
+            archiveinventory[i].checked = false;
+          }
+
+          confirmarchive.style.display = "none";
+          document.querySelector(".action-menu-button").style.display = "block";
+          completearchive.type = "sumbit";
+          
+          if (document.querySelector("#single-item-archive"))
+          {
+            completearchive.value = "archive-single-item";
+          }
+          else if (document.querySelector("#single-item-unarchive"))
+          {
+            completearchive.value = "unarchive-single-item";
+          }
+        }
+
+      }
+
+    });
+
+
+    if (document.querySelector("#archive-items-modal"))
+    {
+      document.querySelector("#archive-items-modal").addEventListener("click", function(e) {
         
-    if (!(completearchive.contains(e.target)))
+        if (document.querySelector("#closearchive"))
+        {
+          if (document.querySelector("#closearchive").contains(e.target))
+          {
+            var archivebutton = document.querySelector(".archivebutton");
+            var confirmarchive = document.querySelector("#confirmarchive");
+            var archiveinventory = document.getElementsByClassName("archiveinventory")
+            hideArchiveCheckboxes(archivebutton, confirmarchive, archiveinventory)
+          }
+        }
+      
+      });
+    }
+    else if (document.querySelector("#unarchive-items-modal"))
     {
-      for (let i = 0; i < emptyselection.length; i++)
+      document.querySelector("#unarchive-items-modal").addEventListener("click", function(e) {
+
+        if (document.querySelector("#closeunarchive"))
+        {
+          if (document.querySelector("#closeunarchive").contains(e.target))
+          {
+            var archivebutton = document.querySelector(".unarchivebutton");
+            var confirmarchive = document.querySelector("#confirmunarchive");
+            var archiveinventory = document.getElementsByClassName("unarchiveinventory")
+            hideArchiveCheckboxes(archivebutton, confirmarchive, archiveinventory)
+          }
+        }
+
+      });
+    }
+
+    function showArchiveCheckboxes(archivebutton, confirmarchive, archiveinventory) 
+    {
+      archivebutton.style.display = "none";
+      confirmarchive.style.display = "inline-block";
+      
+      for (let i = 0; i < archiveinventory.length; i++)
       {
-        emptyselection[i].style.display = "none";
+        archiveinventory[i].style.display = "inline-block";
       }
 
     }
 
-  });
+    function hideArchiveCheckboxes(archivebutton, confirmarchive, archiveinventory)
+    {
+      archivebutton.style.display = "inline-block";
+      confirmarchive.style.display = "none";
 
+      for (let i = 0; i < archiveinventory.length; i++)
+      {
+        archiveinventory[i].style.display = "none";
+        archiveinventory[i].checked = false;
+      }
+
+    }
+
+    // Code to prevent sending items to archive without selection
+
+    document.querySelector("#insert-action-menu").addEventListener("click", function(e) {
+
+      if (document.querySelector("#confirmarchive"))
+      {
+        if (document.querySelector("#confirmarchive").contains(e.target))
+        {
+          var archiveinv = document.getElementsByName("archiveinv")
+          var completearchive = document.querySelector("#completearchive");
+          completearchive.value = "archive";
+          changeArchiveButtonType(archiveinv, completearchive)
+        }
+      }
+      
+      if (document.querySelector("#confirmunarchive"))
+      {
+        if (document.querySelector("#confirmunarchive").contains(e.target))
+        {
+          var archiveinv = document.getElementsByName("unarchiveinv")
+          var completearchive = document.querySelector("#completeunarchive");
+          completearchive.value = "unarchive";
+          changeArchiveButtonType(archiveinv, completearchive)
+        }
+      }
+    });
+
+    if (document.querySelector("#archive-items-modal"))
+    {
+      document.querySelector("#archive-items-modal").addEventListener("click", function(e) {
+      
+        if (document.querySelector("#completearchive"))
+        {
+          if (document.querySelector("#completearchive").contains(e.target))
+          {
+            var emptyselection = document.querySelectorAll(".emptyselection");
+            var completearchive = document.querySelector("#completearchive");
+            emptySelectionWarning(completearchive, emptyselection)
+          }
+        }
+
+      });
+    }
+    else if (document.querySelector("#unarchive-items-modal"))
+    {
+      document.querySelector("#unarchive-items-modal").addEventListener("click", function(e) {
+
+        if (document.querySelector("#completeunarchive"))
+        {
+          if (document.querySelector("#completeunarchive").contains(e.target))
+          {
+            var emptyselection = document.querySelectorAll(".emptyselection");
+            var completearchive = document.querySelector("#completeunarchive");
+            emptySelectionWarning(completearchive, emptyselection)
+          }
+        }
+
+      });
+    }
+    
+    function changeArchiveButtonType(archiveinv, completearchive)
+    {
+      for (let i = 0; i < archiveinv.length; i++)
+      {
+        if (archiveinv[i].checked == true)
+        { 
+          completearchive.type = "submit";
+          break;
+        }
+        else if (i == archiveinv.length - 1)
+        {
+          completearchive.type = "button";
+        }
+      }
+
+    }
+
+    function emptySelectionWarning(completearchive, emptyselection)
+    {
+      if (completearchive.type == "button")
+      {
+        for (let i = 0; i < emptyselection.length; i++)
+        {
+          emptyselection[i].style.display = "block";
+        }
+      }
+
+      document.addEventListener("mouseover", function(e) {
+          
+        if (completearchive)
+        {
+          if (!(completearchive.contains(e.target)))
+          {
+            for (let i = 0; i < emptyselection.length; i++)
+            {
+              emptyselection[i].style.display = "none";
+            }
+  
+          }
+        }
+  
+      });
+    }
+  }
 }
 
 // Code to toggle visibility of action buttons on pages that have an action button
 
-if (document.querySelector(".action-menu-wrapper"))
+function actionButtonToggle()
 {
-  if (document.querySelector(".additem") || document.querySelector(".userview") || document.querySelector(".replaceitem")  || document.querySelector(".replaceditem") || document.querySelector(".missingitem") 
+  if (document.querySelector(".additem") || document.querySelector(".user-inventory") || document.querySelector(".replaceitem")  || document.querySelector(".replaceditem") || document.querySelector(".missingitem") 
   || document.querySelector(".adduser") || document.querySelector(".inventory-archive") || document.querySelector(".offsiteitem") || document.querySelector(".uploaditem")) 
   {
 
     var actionMenuButton = document.querySelector(".action-menu-button")
     var actionMenu = document.querySelector(".action-menu")
 
-    actionMenuButton.addEventListener("click", function() {
-
-      if (actionMenuButton.className == "btn btn-primary action-menu-button")
-      {
-        actionMenuButton.removeAttribute("class")
-        actionMenuButton.classList.add("btn", "btn-secondary", "action-menu-button")
-        actionMenu.style.display = "flex"
-      }
-      else if (actionMenuButton.className == "btn btn-secondary action-menu-button")
-      {
-        actionMenuButton.removeAttribute("class")
-        actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-        actionMenu.style.display = "none"
-      }
-
-    })
-
-    if (document.querySelector(".additem")) 
+    if (actionMenuButton) 
     {
-      document.querySelector(".addbutton").addEventListener("click", function() {
-      
-        actionMenuButton.removeAttribute("class")
-        actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-        actionMenu.style.display = "none"
+      actionMenuButton.addEventListener("click", function() {
+
+        if (actionMenuButton.className == "btn btn-primary action-menu-button")
+        {
+          actionMenuButton.removeAttribute("class")
+          actionMenuButton.classList.add("btn", "btn-secondary", "action-menu-button")
+          actionMenu.style.display = "flex"
+        }
+        else if (actionMenuButton.className == "btn btn-secondary action-menu-button")
+        {
+          actionMenuButton.removeAttribute("class")
+          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+          actionMenu.style.display = "none"
+        }
 
       })
-
-      if (document.querySelector(".replacebutton"))
-      {
-        document.querySelector(".replacebutton").addEventListener("click", function() {
-        
-          actionMenuButton.removeAttribute("class")
-          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-          actionMenuButton.style.display = "none"
-          actionMenu.style.display = "none"
-          document.querySelector("#confirmreplace").style.display = "block"
-
-        })
-      }
-
-      if (document.querySelector(".editbutton"))
-      {
-        document.querySelector(".editbutton").addEventListener("click", function() {
-        
-          actionMenuButton.removeAttribute("class")
-          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-          actionMenuButton.style.display = "none"
-          actionMenu.style.display = "none"
-          document.querySelector("#confirmedit").style.display = "block"
-
-        })
-      }
-    }
-
-    if (document.querySelector(".additem") || document.querySelector(".offsiteitem") || document.querySelector(".replaceitem")) 
-    {
-      if (document.querySelector(".missingbutton"))
-      {
-        document.querySelector(".missingbutton").addEventListener("click", function() {
-        
-          actionMenuButton.removeAttribute("class")
-          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-          actionMenuButton.style.display = "none"
-          actionMenu.style.display = "none"
-          document.querySelector("#confirmmissing").style.display = "block"
-
-        })
-      }
-    }
-
-    if (document.querySelector(".additem") || document.querySelector(".adduser")) 
-    {
-      if (document.querySelector(".delbutton"))
-      {
-        document.querySelector(".delbutton").addEventListener("click", function() {
-        
-          actionMenuButton.removeAttribute("class")
-          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-          actionMenuButton.style.display = "none"
-          actionMenu.style.display = "none"
-          document.querySelector("#confirmdel").style.display = "block"
-
-        })
-      }
-    }
-
-    if (document.querySelector(".replaceitem") || document.querySelector(".missingitem")) 
-    {
-      if (document.querySelector(".replacedbutton"))
-      {
-        document.querySelector(".replacedbutton").addEventListener("click", function() {
-        
-          actionMenuButton.removeAttribute("class")
-          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-          actionMenuButton.style.display = "none"
-          actionMenu.style.display = "none"
-          document.querySelector("#confirmreplaced").style.display = "block"
-
-        })
-      }
-    }
-
-    if (document.querySelector(".additem") || document.querySelector(".replaceditem")) 
-    {
-      if (document.querySelector(".archivebutton"))
-      {
-        document.querySelector(".archivebutton").addEventListener("click", function() {
-        
-          actionMenuButton.removeAttribute("class")
-          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-          actionMenuButton.style.display = "none"
-          actionMenu.style.display = "none"
-          document.querySelector("#confirmarchive").style.display = "block"
-
-        })
-      }
-    }
-
-    if (document.querySelector(".inventory-archive")) 
-    {
-      if (document.querySelector(".unarchivebutton"))
-      {
-        document.querySelector(".unarchivebutton").addEventListener("click", function() {
-      
-          actionMenuButton.removeAttribute("class")
-          actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
-          actionMenuButton.style.display = "none"
-          actionMenu.style.display = "none"
-          document.querySelector("#confirmunarchive").style.display = "block"
-  
-        })
-      }
-    }
-
-    document.addEventListener("click", function(e) {
     
-      if (document.querySelector("#closereplace") || document.querySelector("#closemissing") || document.querySelector("#closedel") || document.querySelector("#closearchive") 
-      || document.querySelector("#closeunarchive") || document.querySelector("#closeedit"))
-      {
-        if (document.querySelector(".additem"))
-        {
-          if (document.querySelector("#closereplace").contains(e.target) || document.querySelector("#closemissing").contains(e.target) || document.querySelector("#closedel").contains(e.target) 
-          || document.querySelector("#closeedit").contains(e.target) || document.querySelector("#closearchive").contains(e.target))
-          {
-            actionMenuButton.style.display = "block"
-          }
-        }
-        else if (document.querySelector(".adduser"))
-        {
-          if (document.querySelector("#closedel").contains(e.target))
-          {
-            actionMenuButton.style.display = "block"
-          }
-        }
-        else if (document.querySelector(".offsiteitem") || document.querySelector(".replaceitem"))
-        {
-          if (document.querySelector("#closemissing").contains(e.target))
-          {
-            actionMenuButton.style.display = "block"
-          }
-        }
-        else if (document.querySelector(".replaceditem"))
-        {
-          if (document.querySelector("#closearchive").contains(e.target))
-          {
-            actionMenuButton.style.display = "block"
-          }
-        }
-        else if (document.querySelector(".inventory-archive"))
-        {
-          if (document.querySelector("#closeunarchive").contains(e.target))
-          {
-            actionMenuButton.style.display = "block"
-          }
-        }
-      }
-      else if (document.querySelector("#closereplaced"))
-      {
-        if (document.querySelector("#closereplaced").contains(e.target))
-        {
-          actionMenuButton.style.display = "block"
-        }
-      }
 
-      if (actionMenuButton.className == "btn btn-secondary action-menu-button")
+      if (document.querySelector(".additem")) 
       {
-        if (!(document.querySelector(".action-menu-button").contains(e.target)))
-        {
+        document.querySelector(".addbutton").addEventListener("click", function() {
+        
           actionMenuButton.removeAttribute("class")
           actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
           actionMenu.style.display = "none"
+
+        })
+
+        if (document.querySelector(".replacebutton"))
+        {
+          document.querySelector(".replacebutton").addEventListener("click", function() {
+          
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenuButton.style.display = "none"
+            actionMenu.style.display = "none"
+            document.querySelector("#confirmreplace").style.display = "block"
+
+          })
+        }
+
+        if (document.querySelector(".editbutton"))
+        {
+          document.querySelector(".editbutton").addEventListener("click", function() {
+          
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenuButton.style.display = "none"
+            actionMenu.style.display = "none"
+            document.querySelector("#confirmedit").style.display = "block"
+
+          })
         }
       }
 
-    })
+      if (document.querySelector(".additem") || document.querySelector(".offsiteitem") || document.querySelector(".replaceitem")) 
+      {
+        if (document.querySelector(".missingbutton"))
+        {
+          document.querySelector(".missingbutton").addEventListener("click", function() {
+          
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenuButton.style.display = "none"
+            actionMenu.style.display = "none"
+            document.querySelector("#confirmmissing").style.display = "block"
+
+          })
+        }
+      }
+
+      if (document.querySelector(".additem") || document.querySelector(".adduser")) 
+      {
+        if (document.querySelector(".delbutton"))
+        {
+          document.querySelector(".delbutton").addEventListener("click", function() {
+          
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenuButton.style.display = "none"
+            actionMenu.style.display = "none"
+            document.querySelector("#confirmdel").style.display = "block"
+
+          })
+        }
+      }
+
+      if (document.querySelector(".replaceitem") || document.querySelector(".missingitem")) 
+      {
+        if (document.querySelector(".replacedbutton"))
+        {
+          document.querySelector(".replacedbutton").addEventListener("click", function() {
+          
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenuButton.style.display = "none"
+            actionMenu.style.display = "none"
+            document.querySelector("#confirmreplaced").style.display = "block"
+
+          })
+        }
+      }
+
+      if (document.querySelector(".additem") || document.querySelector(".replaceditem")) 
+      {
+        if (document.querySelector(".archivebutton"))
+        {
+          document.querySelector(".archivebutton").addEventListener("click", function() {
+          
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenuButton.style.display = "none"
+            actionMenu.style.display = "none"
+            document.querySelector("#confirmarchive").style.display = "block"
+
+          })
+        }
+      }
+
+      if (document.querySelector(".inventory-archive")) 
+      {
+        if (document.querySelector(".unarchivebutton"))
+        {
+          document.querySelector(".unarchivebutton").addEventListener("click", function() {
+        
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenuButton.style.display = "none"
+            actionMenu.style.display = "none"
+            document.querySelector("#confirmunarchive").style.display = "block"
+    
+          })
+        }
+      }
+
+      document.addEventListener("click", function(e) {
+      
+        if (document.querySelector("#closereplace") || document.querySelector("#closemissing") || document.querySelector("#closedel") || document.querySelector("#closearchive") 
+        || document.querySelector("#closeunarchive") || document.querySelector("#closeedit"))
+        {
+          if (document.querySelector(".additem"))
+          {
+            if (document.querySelector("#closereplace").contains(e.target) || document.querySelector("#closemissing").contains(e.target) || document.querySelector("#closedel").contains(e.target) 
+            || document.querySelector("#closeedit").contains(e.target) || document.querySelector("#closearchive").contains(e.target))
+            {
+              actionMenuButton.style.display = "block"
+            }
+          }
+          else if (document.querySelector(".adduser"))
+          {
+            if (document.querySelector("#closedel").contains(e.target))
+            {
+              actionMenuButton.style.display = "block"
+            }
+          }
+          else if (document.querySelector(".offsiteitem") || document.querySelector(".replaceitem"))
+          {
+            if (document.querySelector("#closemissing").contains(e.target))
+            {
+              actionMenuButton.style.display = "block"
+            }
+          }
+          else if (document.querySelector(".replaceditem"))
+          {
+            if (document.querySelector("#closearchive").contains(e.target))
+            {
+              actionMenuButton.style.display = "block"
+            }
+          }
+          else if (document.querySelector(".inventory-archive"))
+          {
+            if (document.querySelector("#closeunarchive").contains(e.target))
+            {
+              actionMenuButton.style.display = "block"
+            }
+          }
+        }
+        else if (document.querySelector("#closereplaced"))
+        {
+          if (document.querySelector("#closereplaced").contains(e.target))
+          {
+            actionMenuButton.style.display = "block"
+          }
+        }
+
+        if (actionMenuButton.className == "btn btn-secondary action-menu-button")
+        {
+          if (!(document.querySelector(".action-menu-button").contains(e.target)))
+          {
+            actionMenuButton.removeAttribute("class")
+            actionMenuButton.classList.add("btn", "btn-primary", "action-menu-button")
+            actionMenu.style.display = "none"
+          }
+        }
+
+      })
+    }
   }
 }
 
@@ -1296,67 +1996,70 @@ if (document.querySelector(".additem"))
   var emptywarning = document.querySelectorAll(".emptywarning");
   var emptyselection = document.querySelectorAll(".emptyselection");
 
-  document.querySelector(".addbutton").addEventListener('click', function(e){ 
-
-    if (document.querySelector("#admin-li").style.display == "block")
+  document.querySelector(".additem").addEventListener('click', function(e){
+    
+    if (document.querySelector(".addbutton").contains(e.target))
     {
-
-      addequip = document.querySelector("#equipment").value;
-      addmodel = document.querySelector("#model").value;
-      addserial = document.querySelector("#serial").value;
-      addee = document.querySelector("#ee").value;
-      adddepti = document.querySelector("#dinput").value;
-      addroomi = document.querySelector("#rinput").value;
-      adddate = document.querySelector("#date_added").value;
-      addrepl = document.querySelector("#replace_date").value;
-      addinvi = [addequip, addmodel, addserial, addee, adddepti, addroomi, adddate, addrepl];
-
-      for (let i = 0; i < addinvi.length; i++)
+      if (document.querySelector("#admin-li").style.display == "block")
       {
-        if (addinvi[i] === "")
-        {
-          document.querySelector("#confirminv").type = "button";
-          break;
-        }
-        else if (i == addinvi.length - 1)
-        {
-          document.querySelector("#confirminv").type = "submit";
-        }
-      
-      }
-    }
-    else if (document.querySelector("#admin-ls").style.display == "block")
-    {
 
-      addequip = document.querySelector("#equipment").value;
-      addmodel = document.querySelector("#model").value;
-      addserial = document.querySelector("#serial").value;
-      addee = document.querySelector("#ee").value;
-      adddepts = document.querySelector("#dselect").value;
-      addrooms = document.querySelector("#rselect").value;
-      adddate = document.querySelector("#date_added").value;
-      addrepl = document.querySelector("#replace_date").value;
-      addinvs = [addequip, addmodel, addserial, addee, adddepts, addrooms, adddate, addrepl];
+        addequip = document.querySelector("#equipment").value;
+        addmodel = document.querySelector("#model").value;
+        addserial = document.querySelector("#serial").value;
+        addee = document.querySelector("#ee").value;
+        adddepti = document.querySelector("#dinput").value;
+        addroomi = document.querySelector("#rinput").value;
+        adddate = document.querySelector("#date_added").value;
+        addrepl = document.querySelector("#replace_date").value;
+        addinvi = [addequip, addmodel, addserial, addee, adddepti, addroomi, adddate, addrepl];
 
-      for (let i = 0; i < addinvs.length; i++)
-      {
-        if (addinvs[i] === "" || addinvs[4] === "Department" || addinvs[5] === "Room")
+        for (let i = 0; i < addinvi.length; i++)
         {
-          document.querySelector("#confirminv").type = "button";
-          break;
-        }
-        else if (i == addinvi.length - 1)
-        {
-          document.querySelector("#confirminv").type = "submit";
+          if (addinvi[i] === "")
+          {
+            document.querySelector("#confirminv").type = "button";
+            break;
+          }
+          else if (i == addinvi.length - 1)
+          {
+            document.querySelector("#confirminv").type = "submit";
+          }
+        
         }
       }
+      else if (document.querySelector("#admin-ls").style.display == "block")
+      {
+
+        addequip = document.querySelector("#equipment").value;
+        addmodel = document.querySelector("#model").value;
+        addserial = document.querySelector("#serial").value;
+        addee = document.querySelector("#ee").value;
+        adddepts = document.querySelector("#dselect").value;
+        addrooms = document.querySelector("#rselect").value;
+        adddate = document.querySelector("#date_added").value;
+        addrepl = document.querySelector("#replace_date").value;
+        addinvs = [addequip, addmodel, addserial, addee, adddepts, addrooms, adddate, addrepl];
+
+        for (let i = 0; i < addinvs.length; i++)
+        {
+          if (addinvs[i] === "" || addinvs[4] === "Department" || addinvs[5] === "Room")
+          {
+            document.querySelector("#confirminv").type = "button";
+            break;
+          }
+          else if (i == addinvi.length - 1)
+          {
+            document.querySelector("#confirminv").type = "submit";
+          }
+        }
+      }
+      else 
+      {
+        document.querySelector("#confirminv").type = "button";
+      }
+    
     }
-    else 
-    {
-      document.querySelector("#confirminv").type = "button";
-    }
-  
-  }); 
+  });
 
   document.querySelector("#addInvModal").addEventListener('input', function(e){ 
 
@@ -1917,213 +2620,6 @@ if (document.querySelector(".additem"))
     }
 
   });
-
-  // Code to prevent sending to replace page without selection for inventory
-
-  if (document.querySelector("#confirmreplace"))
-  {
-    var replaceinv = document.getElementsByName("replaceinv")
-    var hiddenaction = document.getElementsByName("hiddenaction")
-
-    if (document.querySelector(".additem"))
-    {
-      var hiddenstatus = document.getElementsByName("hiddenstatus")
-    }
-
-    document.querySelector("#confirmreplace").addEventListener("click", function(e) {
-
-      if (document.querySelector(".additem"))
-      {
-        for (let i = 0; i < replaceinv.length; i++)
-        {
-          if (replaceinv[i].checked == true)
-          { 
-            for (let j = i; j < replaceinv.length; j++)
-            {
-              if ((hiddenaction[j].value == "CHECKED OUT" && replaceinv[j].checked == true) || (hiddenstatus[j].value == "REPLACE" && replaceinv[j].checked == true) || 
-              (hiddenstatus[j].value == "REPLACED" && replaceinv[j].checked == true))
-              {
-                document.querySelector("#completereplace").type = "button";
-                break;
-              }
-              else if (j == replaceinv.length - 1)
-              {
-                document.querySelector("#completereplace").type = "submit";
-              }
-            }
-            break;
-          }
-        }
-      }
-
-      for (let i = 0; i < replaceinv.length; i++)
-      {
-        if (replaceinv[i].checked == true)
-        {
-          break;
-        }
-        else if (i == replaceinv.length - 1)
-        {
-          document.querySelector("#completereplace").type = "button";
-        }
-      }
-
-    });
-
-    document.querySelector("#completereplace").addEventListener("click", function(e) {
-
-      for (let i = 0; i < replaceinv.length; i++)
-      {
-
-        if (replaceinv[i].checked == true && (hiddenstatus[i].value == "REPLACE" || hiddenstatus[i].value == "REPLACED") && document.querySelector("#completereplace").type == "button")
-        {
-          document.querySelector(".already-replace").style.display = "block";
-
-          for (let j = 0; j < replaceinv.length; j++)
-          {
-            if (hiddenaction[j].value == "CHECKED OUT" && replaceinv[j].checked == true)
-            {
-              document.querySelector(".notcheckedin").style.display = "block";
-              break;
-            }
-          }
-
-          break;
-        }
-
-        if (replaceinv[i].checked == true && document.querySelector("#completereplace").type == "button")
-        {
-          document.querySelector(".notcheckedin").style.display = "block";
-
-          for (let j = 0; j < replaceinv.length; j++)
-          {
-            if ((hiddenstatus[j].value == "REPLACE" || hiddenstatus[j].value == "REPLACED") && replaceinv[j].checked == true)
-            {
-              document.querySelector(".already-replace").style.display = "block";
-              break;
-            }
-          }
-
-          break;
-        }
-        else if (i == replaceinv.length - 1 && document.querySelector("#completereplace").type == "button")
-        {
-          document.querySelector(".emptyselection").style.display = "block";
-        }
-      }
-
-    });
-
-    document.addEventListener("mouseover", function(e) {
-          
-      if (!(document.querySelector("#completereplace").contains(e.target)))
-      {
-        document.querySelector(".notcheckedin").style.display = "none";
-        document.querySelector(".emptyselection").style.display = "none";
-        document.querySelector(".already-replace").style.display = "none";
-      }
-
-    });
-
-
-  }
-
-  // Code to prevent confirming deletion without selection from inventory
-
-  if (document.getElementsByName("delinv") && document.querySelector("#confirmdel"))
-  {
-    var delinv = document.getElementsByName("delinv")
-    var emptyselection = document.querySelectorAll(".emptyselection");
-
-    document.querySelector("#confirmdel").addEventListener("click", function(e) {
-
-      for (let i = 0; i < delinv.length; i++)
-      {
-        if (delinv[i].checked == false)
-        {
-          document.querySelector("#completedel").type = "button";
-        }
-        else if (delinv[i].checked == true)
-        {
-          document.querySelector("#completedel").type = "submit";
-          break;
-        }
-      }
-
-      document.querySelector("#completedel").addEventListener("click", function(e) {
-
-        if (document.querySelector("#completedel").type == "button")
-        {
-          for (let i = 0; i < emptyselection.length; i++)
-          {
-            emptyselection[i].style.display = "inline-block";
-          }
-        }
-          
-      });
-
-      document.addEventListener("mouseover", function(e) {
-
-        if (!(document.querySelector("#completedel").contains(e.target)))
-        {
-          for (let i = 0; i < emptyselection.length; i++)
-          {
-            emptyselection[i].style.display = "none";
-          }
-        }
-
-      });
-    });
-  }
-}
-
-// Code to prevent sending to replaced item page without selection
-
-if (document.querySelector(".replaceitem") || document.querySelector(".missingitem")) 
-{
-  if (document.getElementsByName("replacedinv") && document.querySelector("#confirmreplaced"))
-  {
-    var replacedinv = document.getElementsByName("replacedinv")
-
-    document.querySelector("#confirmreplaced").addEventListener("click", function(e) {
-
-      for (let i = 0; i < replacedinv.length; i++)
-      {
-        if (replacedinv[i].checked == false)
-        {
-          document.querySelector("#completereplaced").type = "button";
-        }
-        else if (replacedinv[i].checked == true)
-        {
-          document.querySelector("#completereplaced").type = "submit";
-          break;
-        }
-      }
-
-      document.querySelector("#completereplaced").addEventListener("click", function(e) {
-
-        if (document.querySelector("#completereplaced").type == "button")
-        {
-          document.querySelector(".emptyselection").style.display = "inline-block";
-        }
-        else if (document.querySelector("#completereplaced").type = "submit")
-        {
-          document.querySelector(".emptyselection").style.display = "none";
-        }
-          
-      });
-
-      document.addEventListener("mouseover", function(e) {
-
-        if (!(document.querySelector("#completereplaced").contains(e.target)))
-        {
-          document.querySelector(".emptyselection").style.display = "none";
-        }
-
-      });
-
-    });
-  }
 }
 
 // Code for input formatting for scan
@@ -2840,52 +3336,11 @@ if (document.querySelector(".adduser"))
     }
 
   });
-
-  // Code to prevent confirming deletion without selection for users
-
-  if (document.getElementsByName("deluser") && document.querySelector("#confirmdel"))
-  {
-    var deluser = document.getElementsByName("deluser")
-
-    document.querySelector("#confirmdel").addEventListener("click", function(e) {
-
-      for (let i = 0; i < deluser.length; i++)
-      {
-        if (deluser[i].checked == false)
-        {
-          document.querySelector("#completedel").type = "button";
-        }
-        else if (deluser[i].checked == true)
-        {
-          document.querySelector("#completedel").type = "submit";
-          break;
-        }
-      }
-
-      document.querySelector("#completedel").addEventListener("click", function(e) {
-
-        if (document.querySelector("#completedel").type == "button")
-        {
-          document.querySelector(".emptyselection").style.display = "inline-block";
-        }
-          
-      });
-
-      document.addEventListener("mouseover", function(e) {
-
-        if (!(document.querySelector("#completedel").contains(e.target)))
-        {
-          document.querySelector(".emptyselection").style.display = "none";
-        }
-
-      });
-    });
-  }
 }
 
 // Code to switch between inventory categories
 
-if (document.querySelector(".additem") || document.querySelector(".replaceitem") || document.querySelector(".offsiteitem") || document.querySelector(".missingitem") || document.querySelector(".userview") 
+if (document.querySelector(".additem") || document.querySelector(".replaceitem") || document.querySelector(".offsiteitem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory") 
 || document.querySelector(".inventory-archive"))
 {
 
@@ -2915,10 +3370,10 @@ if (document.querySelector(".additem") || document.querySelector(".replaceitem")
 
 // Code to switch between item options
 
-if (document.querySelector(".inventory-archive"))
+function showInfoOrHistory()
 {
 
-  var showInfoOrHistory = document.getElementsByName("show-info-or-history")
+  var showInfoOrHistory = document.getElementsByClassName("show-info-or-history")
   var itemOptionSelect = document.getElementsByClassName("item-option-select")
   var itemOptionButton = document.getElementsByClassName("item-option-button")
 
@@ -2985,6 +3440,90 @@ if (document.querySelector(".inventory-archive"))
 
 }
 
+// Code to remove checkboxes if user clicks on single action options
+
+if (document.querySelector("#moreinfo"))
+{ 
+  document.querySelector("#moreinfo").addEventListener("click", function(e) {
+
+    var inventoryCheckbox = document.querySelectorAll(".inventory-checkbox")
+    var confirmButton = document.querySelectorAll(".confirm-button")
+
+    if (document.querySelector(".editbutton"))
+    {
+      if (document.querySelector("#edit-item").contains(e.target))
+      {
+        hideCheckboxes(inventoryCheckbox, confirmButton)
+      }
+    }
+
+    if (document.querySelector(".replacebutton"))
+    {
+      if (document.querySelector("#single-item-replace").contains(e.target))
+      {
+        hideCheckboxes(inventoryCheckbox, confirmButton)
+      }
+    }
+
+    if (document.querySelector(".replacedbutton"))
+    {
+      if (document.querySelector("#single-item-replaced").contains(e.target))
+      {
+        hideCheckboxes(inventoryCheckbox, confirmButton)
+      }
+    }
+
+    if (document.querySelector(".missingbutton"))
+    {
+      if (document.querySelector("#single-item-missing").contains(e.target))
+      {
+        hideCheckboxes(inventoryCheckbox, confirmButton)
+      }
+    }
+
+    if (document.querySelector(".archivebutton"))
+    {
+      if (document.querySelector("#single-item-archive").contains(e.target))
+      {
+        hideCheckboxes(inventoryCheckbox, confirmButton)
+      }
+    }
+
+    if (document.querySelector(".unarchivebutton"))
+    {
+      if (document.querySelector("#single-item-unarchive").contains(e.target))
+      {
+        hideCheckboxes(inventoryCheckbox, confirmButton)
+      }
+    }
+
+    if (document.querySelector(".delbutton"))
+    {
+      if (document.querySelector("#delete-item").contains(e.target))
+      {
+        hideCheckboxes(inventoryCheckbox, confirmButton)
+      }
+    }
+
+  })
+
+  function hideCheckboxes(inventoryCheckbox, confirmButton)
+  {
+    for (let i = 0; i < inventoryCheckbox.length; i++)
+    {
+      inventoryCheckbox[i].checked = false;
+      inventoryCheckbox[i].style.display = "none"
+    }
+
+    for (let i = 0; i < confirmButton.length; i++)
+    {
+      confirmButton[i].style.display = "none"
+    }
+
+    document.querySelector(".action-menu-button").style.display = "block"
+  }
+}
+
 // Code to show chosen file for upload inventory and prevent uploading without file selection
 
 if (document.querySelector(".uploaditem"))
@@ -3016,11 +3555,25 @@ if (document.querySelector(".uploaditem"))
 
   })
 
+  document.addEventListener("click", function(e) {
+
+    if (document.getElementById('close-upload').contains(e.target) || document.getElementById('close-upload-x').contains(e.target))
+    {
+      document.getElementById('upload-file').value = ""
+      document.getElementById('chosen-file').textContent = "No file chosen";
+      document.getElementById('completeupload').type = "button";
+    }
+
+  })
+
   document.addEventListener("mouseover", function(e) {
 
-    if (!(completeupload.contains(e.target)))
+    if (document.getElementById('completeupload'))
     {
-      document.querySelector(".emptywarning").style.display = "none"
+      if (!(completeupload.contains(e.target)))
+      {
+        document.querySelector(".emptywarning").style.display = "none"
+      }
     }
 
   })
@@ -3058,317 +3611,878 @@ if (document.querySelector(".prevent-click"))
 
 // Code to populate filter selection
 
-if (document.querySelector(".tboundary"))
+function filterTable() 
 {
-  if (document.querySelector(".additem") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem") || document.querySelector(".offsiteitem") || document.querySelector(".missingitem")  
-  || document.querySelector(".userview") || document.querySelector(".inventory-archive"))
+
+  if (document.querySelector(".tboundary"))
   {
-    if (document.querySelector(".offsiteitem"))
+    if (document.querySelector(".additem") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem") || document.querySelector(".offsiteitem") || document.querySelector(".missingitem")  
+    || document.querySelector(".user-inventory") || document.querySelector(".inventory-archive"))
     {
-
-      var filterdefault = ["Equipment", "Model", "Serial", "EE", "Off-site Location", "Scanned By", "Received By", "Action", "Point of Contact", "Phone Number", "Patient Name", "Added By"];
-
-    }
-    else if (document.querySelector(".missingitem"))
-    {
-      var filterdefault = ["Equipment", "Model", "Serial", "EE", "Assigned Location", "Location", "Department", "Room", "Current Location", "Location", "Department", "Room", "Off-site Location", 
-      "Scanned By", "Received By", "Action", "Point of Contact", "Phone Number", "Patient Name", "Added By"];
-    }
-    else if (document.querySelector(".additem") || document.querySelector(".userview"))
-    {
-      var filterdefault = ["Equipment", "Model", "Serial", "EE", "Assigned Location", "Location", "Department", "Room", "Current Location", "Location", "Department", "Room", "Off-site Location", "Status", 
-      "Scanned By", "Received By", "Action", "Added By"];
-    }
-    else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem") )
-    {
-      var filterdefault = ["Equipment", "Model", "Serial", "EE", "Assigned Location", "Location", "Department", "Room", "Current Location", "Location", "Department", "Room", 
-      "Scanned By", "Received By", "Action", "Added By"];
-    }
-    else if (document.querySelector(".inventory-archive"))
-    {
-      var filterdefault = ["Equipment", "Model", "Serial", "EE", "Assigned Location", "Location", "Department", "Room", "Added By"];
-    }
-
-    var filterbutton = document.getElementsByClassName("filterbutton");
-    var filterButtonDate = document.getElementsByClassName("filterButtonDate");
-    var filterselect = document.getElementsByName("filter");
-    var filterDateSelect = document.getElementsByName("filterdate");
-    var date_label = document.getElementsByClassName("date-label");
-    var filterDateDefault = ["", "", "", "", "", ""];
-    var filterDateDefaultArchive = ["", "", "", ""];
-
-    var filterStoreTemp = filterselect;
-
-    // Code to remove all filter option duplicates
-
-    for (let i = 0; i < filterselect.length; i++)
-    {
-      for (let k = 0; k < filterselect[i].children.length; k++)
+      if (document.querySelector(".offsiteitem"))
       {
-        for (let l = k + 1; l < filterselect[i].children.length; l++)
-        {
-          if (filterselect[i].children[k].value == filterStoreTemp[i].children[l].value)
-          {
-            filterStoreTemp[i].removeChild(filterStoreTemp[i].children[l])
-            l = 0;
-            k = 0
-            filterselect[i] = filterStoreTemp[i]
-            break;
-          }
-        }
+
+        var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter"];
+
       }
-    }
-
-    // Code to show filters if filter is not set to default and show clear filter button
-
-    for (let i = 0; i < filterselect.length; i++)
-    {
-      if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".userview"))
+      else if (document.querySelector(".missingitem"))
       {
-        if (i == 4)
-        {
-          if (filterselect[5].value == "Location" && filterselect[6].value == "Department" && filterselect[7].value == "Room")
-          {
-            filterselect[4].value = "Assigned Location"
-            filterselect[4].style.display = "none"
-          }
-          else 
-          {
-            filterselect[i].style.display = "block";
-            document.getElementById("clear-filters").style.display = "block"
-          }
-        }
-        else if (i == 8)
-        {
-          if (filterselect[9].value == "Location" && filterselect[10].value == "Department" && filterselect[11].value == "Room" && filterselect[12].value == "Off-site Location")
-          {
-            filterselect[8].value = "Current Location"
-            filterselect[8].style.display = "none"
-          }
-          else 
-          {
-            filterselect[i].style.display = "block";
-            document.getElementById("clear-filters").style.display = "block"
-          }
-        }
-        else if (filterselect[i].value != filterdefault[i])
-        {
-          filterselect[i].style.display = "block";
-          document.getElementById("clear-filters").style.display = "block"
-        }
+        var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "No Filter", 
+        "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter"];
       }
-      else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem"))
+      else if (document.querySelector(".additem") || document.querySelector(".user-inventory"))
       {
-        if (i == 4)
-        {
-          if (filterselect[5].value == "Location" && filterselect[6].value == "Department" && filterselect[7].value == "Room")
-          {
-            filterselect[4].value = "Assigned Location"
-            filterselect[4].style.display = "none"
-          }
-          else 
-          {
-            filterselect[i].style.display = "block";
-            document.getElementById("clear-filters").style.display = "block"
-          }
-        }
-        else if (i == 8)
-        {
-          if (filterselect[9].value == "Location" && filterselect[10].value == "Department" && filterselect[11].value == "Room")
-          {
-            filterselect[8].value = "Current Location"
-            filterselect[8].style.display = "none"
-          }
-          else 
-          {
-            filterselect[i].style.display = "block";
-            document.getElementById("clear-filters").style.display = "block"
-          }
-        }
-        else if (filterselect[i].value != filterdefault[i])
-        {
-          filterselect[i].style.display = "block";
-          document.getElementById("clear-filters").style.display = "block"
-        }
+        var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", 
+        "No Filter", "No Filter", "No Filter", "No Filter"];
+      }
+      else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem") )
+      {
+        var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", 
+        "No Filter", "No Filter", "No Filter", "No Filter"];
       }
       else if (document.querySelector(".inventory-archive"))
       {
-        if (i == 4)
+        var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "No Filter"];
+      }
+
+      var filterselect = document.getElementsByName("filter");
+      var filterDateSelect = document.getElementsByName("filterdate");
+      var date_label = document.getElementsByClassName("date-label");
+      var filterDateDefault = ["", "", "", "", "", ""];
+      var filterDateDefaultArchive = ["", "", "", ""];
+      var filterStoreTemp = filterselect;
+
+      // Code to remove all filter option duplicates
+
+      for (let i = 0; i < filterselect.length; i++)
+      {
+        for (let k = 0; k < filterselect[i].children.length; k++)
         {
-          if (filterselect[5].value == "Location" && filterselect[6].value == "Department" && filterselect[7].value == "Room")
+          for (let l = k + 1; l < filterselect[i].children.length; l++)
           {
-            filterselect[4].value = "Assigned Location"
-            filterselect[4].style.display = "none"
+            if (filterselect[i].children[k].value == filterStoreTemp[i].children[l].value)
+            {
+              filterStoreTemp[i].removeChild(filterStoreTemp[i].children[l])
+              l = 0;
+              k = 0
+              filterselect[i] = filterStoreTemp[i]
+              break;
+            }
           }
-          else 
-          {
-            filterselect[i].style.display = "block";
-            document.getElementById("clear-filters").style.display = "block"
-          }
-        }
-        else if (filterselect[i].value != filterdefault[i])
-        {
-          filterselect[i].style.display = "block";
-          document.getElementById("clear-filters").style.display = "block"
         }
       }
-      else 
-      {   
+
+      // Code to show filters if filter is not set to default and show clear filter button
+
+      for (let i = 0; i < filterselect.length; i++)
+      {
         if (filterselect[i].value != filterdefault[i])
         {
-          filterselect[i].style.display = "block";
-          document.getElementById("clear-filters").style.display = "block"
+
+          document.getElementById("clear-filter").style.display = "block"
+          document.getElementById("show-filter").style.display = "none"
+          document.getElementById("hide-filter").style.display = "none"
+
+          for (let j = 0; j < filterselect.length; j++)
+          {
+            if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory"))
+            { 
+              if ((j >= 5 && j <= 7) || (j >= 9 && j <= 12))
+              {
+                if (filterselect[j].value != filterdefault[j])
+                {
+                  filterselect[j].style.display = "block";
+
+                  if (j == 5 || j == 9)
+                  {
+                    filterselect[j - 1].value = "Location"
+                  }
+                  else if (j == 6 || j == 10)
+                  {
+                    filterselect[j - 2].value = "Department"
+                  }
+                  else if (j == 7 || j == 11)
+                  {
+                    filterselect[j - 3].value = "Room"
+                  }
+                  else if (j == 12)
+                  {
+                    filterselect[j - 4].value = "Off-site Location"
+                  }
+                }
+                
+                if (filterselect[5].value == filterdefault[5] && filterselect[6].value == filterdefault[6] && filterselect[7].value == filterdefault[7])
+                {
+                  filterselect[5].style.display = "block";
+                }
+                
+                if (filterselect[9].value == filterdefault[9] && filterselect[10].value == filterdefault[10] && filterselect[11].value == filterdefault[11] && filterselect[12].value == filterdefault[12])
+                {
+                  filterselect[9].style.display = "block";
+                }
+              }
+              else
+              {
+                filterselect[j].style.display = "block";
+              }
+            }
+            else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem"))
+            {
+              if ((j >= 5 && j <= 7) || (j >= 9 && j <= 11))
+              {
+                if (filterselect[j].value != filterdefault[j])
+                {
+                  filterselect[j].style.display = "block";
+
+                  if (j == 5 || j == 9)
+                  {
+                    filterselect[j - 1].value = "Location"
+                  }
+                  else if (j == 6 || j == 10)
+                  {
+                    filterselect[j - 2].value = "Department"
+                  }
+                  else if (j == 7 || j == 11)
+                  {
+                    filterselect[j - 3].value = "Room"
+                  }
+
+                }
+                
+                if (filterselect[5].value == filterdefault[5] && filterselect[6].value == filterdefault[6] && filterselect[7].value == filterdefault[7])
+                {
+                  filterselect[5].style.display = "block";
+                }
+                
+                if (filterselect[9].value == filterdefault[9] && filterselect[10].value == filterdefault[10] && filterselect[11].value == filterdefault[11])
+                {
+                  filterselect[9].style.display = "block";
+                }
+              }
+              else
+              {
+                filterselect[j].style.display = "block";
+              }
+            }
+            else if (document.querySelector(".inventory-archive"))
+            {
+              if ((j >= 5 && j <= 7))
+              {
+                if (filterselect[j].value != filterdefault[j])
+                {
+                  filterselect[j].style.display = "block";
+
+                  if (j == 5)
+                  {
+                    filterselect[j - 1].value = "Location"
+                  }
+                  else if (j == 6)
+                  {
+                    filterselect[j - 2].value = "Department"
+                  }
+                  
+                  if (j == 7)
+                  {
+                    filterselect[j - 3].value = "Room"
+                  }
+                  
+                  if (filterselect[5].value == filterdefault[5] && filterselect[6].value == filterdefault[6] && filterselect[7].value == filterdefault[7])
+                  {
+                    filterselect[5].style.display = "block";
+                  }
+                }
+              }
+              else
+              {
+                filterselect[j].style.display = "block";
+              }
+            }
+            else 
+            {   
+              filterselect[j].style.display = "block";
+            }
+          }
+
+          // Code to show date filters if filter is not set to default and show clear filter button
+
+          for (let j = 0; j < filterDateSelect.length; j++)
+          {
+            filterDateSelect[j].style.display = "block"
+            date_label[j].style.display = "block"
+          }
+
+          break;
         }
-      }
-    }
 
-    // Code to show date filters if filter is not set to default and show clear filter button
-
-    for (let i = 0; i < filterDateSelect.length; i++)
-    {
-      if (filterDateSelect[i].value != filterDateDefault[i])
-      {
-        filterDateSelect[i].style.display = "block"
-        date_label[i].style.display = "block"
-        document.getElementById("clear-filters").style.display = "block"
-      }
-    }
-
-    // Code for user to show/hide filters in assigned location depending on search by filter
-
-    if (!(document.querySelector(".offsiteitem")))
-    {
-      document.querySelector("#filtersbal").addEventListener("change", function() {
-
-        if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".userview") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem")
-        || document.querySelector(".inventory-archive"))
+        // Code in case that filters are all default except date filters
+        
+        else if (i == filterselect.length - 1)
         {
-          if (document.querySelector("#filtersbal").value == "Assigned Location")
+          if (!(document.querySelector(".inventory-archive")))
           {
-            document.querySelector("#filteral").style.display = "none"
-            document.querySelector("#filterad").style.display = "none"
-            document.querySelector("#filterar").style.display = "none"
-            document.querySelector("#filteral").value = "Location"
-            document.querySelector("#filterad").value = "Department"
-            document.querySelector("#filterar").value = "Room"
-          }
-          else if (document.querySelector("#filtersbal").value == "Location")
-          {
-            document.querySelector("#filteral").style.display = "block"
-            document.querySelector("#filterad").style.display = "none"
-            document.querySelector("#filterar").style.display = "none"
-            document.querySelector("#filterad").value = "Department"
-            document.querySelector("#filterar").value = "Room"
-          }
-          else if (document.querySelector("#filtersbal").value == "Department")
-          {
-            document.querySelector("#filteral").style.display = "none"
-            document.querySelector("#filterad").style.display = "block"
-            document.querySelector("#filterar").style.display = "none"
-            document.querySelector("#filteral").value = "Location"
-            document.querySelector("#filterar").value = "Room"
-          }
-          else if (document.querySelector("#filtersbal").value == "Room")
-          {
-            document.querySelector("#filteral").style.display = "none"
-            document.querySelector("#filterad").style.display = "none"
-            document.querySelector("#filterar").style.display = "block"
-            document.querySelector("#filteral").value = "Location"
-            document.querySelector("#filterad").value = "Department"
-          }
-        } 
+            for (let j = 0; j < filterDateSelect.length; j++)
+            {
+              if (filterDateSelect[j].value != filterDateDefault[j])
+              {
 
-      })
+                document.getElementById("clear-filter").style.display = "block"
+                document.getElementById("show-filter").style.display = "none"
+                document.getElementById("hide-filter").style.display = "none"
 
-      // Code for user to show/hide filters in current location depending on search by filter
+                for (let k = 0; k < filterDateSelect.length; k++)
+                {
+                  filterDateSelect[k].style.display = "block"
+                  date_label[k].style.display = "block"
+                }
 
-      if (!(document.querySelector(".inventory-archive")))
+                for (let k = 0; k < filterselect.length; k++)
+                {
+                  if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory"))
+                  { 
+                    if ((k >= 5 && k <= 7) || (k >= 9 && k <= 12))
+                    {
+                      if (filterselect[k].value != filterdefault[k])
+                      {
+                        filterselect[k].style.display = "block";
+
+                        if (k == 5 || k == 9)
+                        {
+                          filterselect[k - 1].value = "Location"
+                        }
+                        else if (k == 6 || k == 10)
+                        {
+                          filterselect[k - 2].value = "Department"
+                        }
+                        else if (k == 7 || k == 11)
+                        {
+                          filterselect[k - 3].value = "Room"
+                        }
+                        else if (k == 12)
+                        {
+                          filterselect[k - 4].value = "Off-site Location"
+                        }
+                      }
+                      
+                      if (filterselect[5].value == filterdefault[5] && filterselect[6].value == filterdefault[6] && filterselect[7].value == filterdefault[7])
+                      {
+                        filterselect[5].style.display = "block";
+                      }
+                      
+                      if (filterselect[9].value == filterdefault[9] && filterselect[10].value == filterdefault[10] && filterselect[11].value == filterdefault[11] && filterselect[12].value == filterdefault[12])
+                      {
+                        filterselect[9].style.display = "block";
+                      }
+                    }
+                    else
+                    {
+                      filterselect[k].style.display = "block";
+                    }
+                  }
+                  else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem"))
+                  {
+                    if ((k >= 5 && k <= 7) || (k >= 9 && k <= 11))
+                    {
+                      if (filterselect[k].value != filterdefault[k])
+                      {
+                        filterselect[k].style.display = "block";
+
+                        if (k == 5 || k == 9)
+                        {
+                          filterselect[k - 1].value = "Location"
+                        }
+                        else if (k == 6 || k == 10)
+                        {
+                          filterselect[k - 2].value = "Department"
+                        }
+                        else if (k == 7 || k == 11)
+                        {
+                          filterselect[k - 3].value = "Room"
+                        }
+
+                      }
+                      
+                      if (filterselect[5].value == filterdefault[5] && filterselect[6].value == filterdefault[6] && filterselect[7].value == filterdefault[7])
+                      {
+                        filterselect[5].style.display = "block";
+                      }
+                      
+                      if (filterselect[9].value == filterdefault[9] && filterselect[10].value == filterdefault[10] && filterselect[11].value == filterdefault[11])
+                      {
+                        filterselect[9].style.display = "block";
+                      }
+                    }
+                    else
+                    {
+                      filterselect[k].style.display = "block";
+                    }
+                  }
+                  else 
+                  {   
+                    filterselect[k].style.display = "block";
+                  }
+                }
+
+                break;
+
+              }
+              else if (j == filterDateSelect.length - 1)
+              {
+                document.getElementById("clear-filter").style.display = "none"
+                document.getElementById("show-filter").style.display = "block"
+                document.getElementById("hide-filter").style.display = "none"
+              }
+            }
+          }
+          else if (document.querySelector(".inventory-archive"))
+          {  
+            for (let j = 0; j < filterDateSelect.length; j++)
+            {
+              if (filterDateSelect[j].value != filterDateDefaultArchive[j])
+              {
+
+                document.getElementById("clear-filter").style.display = "block"
+                document.getElementById("show-filter").style.display = "none"
+                document.getElementById("hide-filter").style.display = "none"
+
+                for (let k = 0; k < filterDateSelect.length; k++)
+                {
+                  filterDateSelect[k].style.display = "block"
+                  date_label[k].style.display = "block"
+                }
+
+                for (let k = 0; k < filterselect.length; k++)
+                {
+                  if ((k >= 5 && k <= 7))
+                  {
+                    if (filterselect[k].value != filterdefault[k])
+                    {
+                      filterselect[k].style.display = "block";
+
+                      if (k == 5)
+                      {
+                        filterselect[k - 1].value = "Location"
+                      }
+                      else if (k == 6)
+                      {
+                        filterselect[k - 2].value = "Department"
+                      }
+                      else if (k == 7)
+                      {
+                        filterselect[k - 3].value = "Room"
+                      }
+                      
+                      if (filterselect[5].value == filterdefault[5] && filterselect[6].value == filterdefault[6] && filterselect[7].value == filterdefault[7])
+                      {
+                        filterselect[5].style.display = "block";
+                      }
+                    }
+                  }
+                  else
+                  {
+                    filterselect[k].style.display = "block";
+                  }
+                }
+
+                break;
+
+              }
+              else if (j == filterDateSelect.length - 1)
+              {
+                document.getElementById("clear-filter").style.display = "none"
+                document.getElementById("show-filter").style.display = "block"
+                document.getElementById("hide-filter").style.display = "none"
+              }
+            }
+          }
+        }       
+      }
+
+      // Code for user to show/hide filters in assigned location depending on search by filter
+
+      if (!(document.querySelector(".offsiteitem")))
       {
-        document.querySelector("#filtersbcl").addEventListener("change", function() {
-          
-          if ((!(document.querySelector(".offsiteitem"))) || (!(document.querySelector(".inventory-archive"))))
-          {
-            if (document.querySelector("#filtersbcl").value == "Current Location")
-            {
-              document.querySelector("#filtercl").style.display = "none"
-              document.querySelector("#filtercd").style.display = "none"
-              document.querySelector("#filtercr").style.display = "none"
-              document.querySelector("#filtercl").value = "Location"
-              document.querySelector("#filtercd").value = "Department"
-              document.querySelector("#filtercr").value = "Room"
-              
-              if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".userview"))
-              {
-                document.querySelector("#filterosl").style.display = "none"
-                document.querySelector("#filterosl").value = "Off-site Location"
-              }
-            }
-            else if (document.querySelector("#filtersbcl").value == "Location")
-            {
-              document.querySelector("#filtercl").style.display = "block"
-              document.querySelector("#filtercd").style.display = "none"
-              document.querySelector("#filtercr").style.display = "none"
-              document.querySelector("#filtercd").value = "Department"
-              document.querySelector("#filtercr").value = "Room"
-              
-              if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".userview"))
-              {
-                document.querySelector("#filterosl").style.display = "none"
-                document.querySelector("#filterosl").value = "Off-site Location"
-              }
-            }
-            else if (document.querySelector("#filtersbcl").value == "Department")
-            {
-              document.querySelector("#filtercl").style.display = "none"
-              document.querySelector("#filtercd").style.display = "block"
-              document.querySelector("#filtercr").style.display = "none"
-              document.querySelector("#filtercl").value = "Location"
-              document.querySelector("#filtercr").value = "Room"
-              
-              if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".userview"))
-              {
-                document.querySelector("#filterosl").style.display = "none"
-                document.querySelector("#filterosl").value = "Off-site Location"
-              }
-            }
-            else if (document.querySelector("#filtersbcl").value == "Room")
-            {
-              document.querySelector("#filtercl").style.display = "none"
-              document.querySelector("#filtercd").style.display = "none"
-              document.querySelector("#filtercr").style.display = "block"
-              document.querySelector("#filtercl").value = "Location"
-              document.querySelector("#filtercd").value = "Department"
+        document.querySelector("#filtersbal").addEventListener("change", function() {
 
-              if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".userview"))
-              {
-                document.querySelector("#filterosl").style.display = "none"
-                document.querySelector("#filterosl").value = "Off-site Location"
-              }
-            }
-            if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".userview"))
+          if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem")
+          || document.querySelector(".inventory-archive"))
+          {
+            if (document.querySelector("#filtersbal").value == "Location")
             {
-              if (document.querySelector("#filtersbcl").value == "Off-site Location")
-              {
-                document.querySelector("#filtercl").style.display = "none"
-                document.querySelector("#filtercd").style.display = "none"
-                document.querySelector("#filtercr").style.display = "none"
-                document.querySelector("#filterosl").style.display = "block"
-                document.querySelector("#filtercl").value = "Location"
-                document.querySelector("#filtercd").value = "Department"
-                document.querySelector("#filtercr").value = "Room"
-              }
+              document.querySelector("#filteral").style.display = "block"
+              document.querySelector("#filterad").style.display = "none"
+              document.querySelector("#filterar").style.display = "none"
+            }
+            else if (document.querySelector("#filtersbal").value == "Department")
+            {
+              document.querySelector("#filteral").style.display = "none"
+              document.querySelector("#filterad").style.display = "block"
+              document.querySelector("#filterar").style.display = "none"
+            }
+            else if (document.querySelector("#filtersbal").value == "Room")
+            {
+              document.querySelector("#filteral").style.display = "none"
+              document.querySelector("#filterad").style.display = "none"
+              document.querySelector("#filterar").style.display = "block"
             }
           } 
 
         })
+
+        // Code for user to show/hide filters in current location depending on search by filter
+
+        if (!(document.querySelector(".inventory-archive")))
+        {
+          document.querySelector("#filtersbcl").addEventListener("change", function() {
+            
+            if ((!(document.querySelector(".offsiteitem"))) || (!(document.querySelector(".inventory-archive"))))
+            {
+              if (document.querySelector("#filtersbcl").value == "Location")
+              {
+                document.querySelector("#filtercl").style.display = "block"
+                document.querySelector("#filtercd").style.display = "none"
+                document.querySelector("#filtercr").style.display = "none"
+                
+                if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".user-inventory"))
+                {
+                  document.querySelector("#filterosl").style.display = "none"
+                }
+              }
+              else if (document.querySelector("#filtersbcl").value == "Department")
+              {
+                document.querySelector("#filtercl").style.display = "none"
+                document.querySelector("#filtercd").style.display = "block"
+                document.querySelector("#filtercr").style.display = "none"
+                
+                if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".user-inventory"))
+                {
+                  document.querySelector("#filterosl").style.display = "none"
+                }
+              }
+              else if (document.querySelector("#filtersbcl").value == "Room")
+              {
+                document.querySelector("#filtercl").style.display = "none"
+                document.querySelector("#filtercd").style.display = "none"
+                document.querySelector("#filtercr").style.display = "block"
+
+                if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".user-inventory"))
+                {
+                  document.querySelector("#filterosl").style.display = "none"
+                }
+              }
+              if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".user-inventory"))
+              {
+                if (document.querySelector("#filtersbcl").value == "Off-site Location")
+                {
+                  document.querySelector("#filtercl").style.display = "none"
+                  document.querySelector("#filtercd").style.display = "none"
+                  document.querySelector("#filtercr").style.display = "none"
+                  document.querySelector("#filterosl").style.display = "block"
+                }
+              }
+            } 
+
+          })
+        }
+      }
+
+      // Code to allow users to clear all filters
+
+      if (document.getElementById("clear-filter"))
+      {
+        document.getElementById("clear-filter").addEventListener("click", function() {
+
+          document.getElementById("search").disabled = true;
+          loadingTable()
+          disableActionButton()
+
+          for (let i = 0; i < filterselect.length; i++)
+          {
+            if (filterselect[i] != filterdefault[i])
+            {
+              filterselect[i].value = filterdefault[i]
+            }
+          }
+
+          if (!(document.querySelector(".inventory-archive")))
+          {
+            for (let i = 0; i < filterDateSelect.length; i++)
+            {
+              if (filterDateSelect[i] != filterDateDefault[i])
+              {
+                filterDateSelect[i].value = filterDateDefault[i]
+              }
+            }
+          }
+          else
+          {
+            for (let i = 0; i < filterDateSelect.length; i++)
+            {
+              if (filterDateSelect[i] != filterDateDefaultArchive[i])
+              {
+                filterDateSelect[i].value = filterDateDefaultArchive[i]
+              }
+            }
+          }
+
+          submitFilter()
+
+        });
+      }
+
+      // Code to submit filter selections
+
+      for (let i = 0; i < filterselect.length; i++)
+      {
+
+        filterselect[i].addEventListener("change", function() {
+
+          if (!(document.querySelector(".inventory-archive")))
+          {
+            var startDateDoa = document.getElementById("filter-start-doa").value;
+            var endDateDoa = document.getElementById("filter-end-doa").value;
+          }
+
+          var startDateDa = document.getElementById("filter-start-da").value;
+          var endDateDa = document.getElementById("filter-end-da").value;
+          var startDateRd = document.getElementById("filter-start-rd").value;
+          var endDateRd = document.getElementById("filter-end-rd").value;
+        
+          if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem")
+          || document.querySelector(".offsiteitem"))
+          {
+            if (((startDateDoa == "" || endDateDoa == "") && (startDateDa == "" || endDateDa == "") && (startDateRd == "" || endDateRd == "")) 
+            || ((startDateDoa != "" && endDateDoa != "") || (startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != "")))
+            {
+              if ((startDateDoa == "" && endDateDoa != "") || (startDateDa == "" && endDateDa != "") || (startDateRd == "" && endDateRd != ""))
+              {
+                if (i != 4 && i != 8)
+                {
+                  document.getElementById("search").disabled = true;
+                  loadingTable()
+                  disableActionButton()
+                  submitFilter()
+                }
+
+              }
+              if ((startDateDoa != "" && endDateDoa == "") || (startDateDa != "" && endDateDa == "") || (startDateRd != "" && endDateRd == ""))
+              {
+                if (i != 4 && i != 8)
+                {
+                  document.getElementById("search").disabled = true;
+                  loadingTable()
+                  disableActionButton()
+                  submitFilter()
+                }
+              }
+              else if ((endDateDoa < startDateDoa) || (endDateDa < startDateDa) || (endDateRd < startDateRd))
+              {
+                alert("Start date must be a date before or the same as end date.")
+              }
+              else 
+              {
+                if (!(document.querySelector(".offsiteitem")))
+                {
+                  if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory"))
+                  { 
+                    if ((i >= 5 && i <= 7) || (i >= 9 && i <= 12))
+                    {
+                      if (i == 5 || i == 9)
+                      {
+                        filterselect[i + 1].value = "No Filter"
+                        filterselect[i + 2].value = "No Filter"
+                        
+                        if (i == 9)
+                        {
+                          filterselect[i + 3].value = "No Filter"
+                        }
+  
+                      }
+                      else if (i == 6 || i == 10)
+                      {
+                        filterselect[i - 1].value = "No Filter"
+                        filterselect[i + 1].value = "No Filter"
+                        
+                        if (i == 10)
+                        {
+                          filterselect[i + 2].value = "No Filter"
+                        }
+                      }
+                      else if (i == 7 || i == 11)
+                      {
+                        filterselect[i - 2].value = "No Filter"
+                        filterselect[i - 1].value = "No Filter"
+                        
+                        if (i == 11)
+                        {
+                          filterselect[i + 1].value = "No Filter"
+                        }
+                      }
+                      else if (i == 12)
+                      {
+                        filterselect[i - 3].value = "No Filter"
+                        filterselect[i - 2].value = "No Filter"
+                        filterselect[i - 1].value = "No Filter"
+                      }
+
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter()
+
+                    }
+                    else if (i != 4 && i != 8)
+                    {
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter()
+                    }
+                  }
+                  else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem"))
+                  {
+                    if ((i >= 5 && i <= 7) || (i >= 9 && i <= 11))
+                    {
+                      if (i == 5 || i == 9)
+                      {
+                        filterselect[i + 1].value = "No Filter"
+                        filterselect[i + 2].value = "No Filter"
+  
+                      }
+                      else if (i == 6 || i == 10)
+                      {
+                        filterselect[i - 1].value = "No Filter"
+                        filterselect[i + 1].value = "No Filter"
+                      }
+                      else if (i == 7 || i == 11)
+                      {
+                        filterselect[i - 2].value = "No Filter"
+                        filterselect[i - 1].value = "No Filter"
+                      }
+
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter()
+
+                    }
+                    else if (i != 4 && i != 8)
+                    {
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter()
+                    }
+                  }
+                }
+                else 
+                {
+                  document.getElementById("search").disabled = true;
+                  loadingTable()
+                  disableActionButton()
+                  submitFilter()
+                }
+              }
+            }
+          }
+          else if (document.querySelector(".inventory-archive"))
+          {
+            if (((startDateDa == "" || endDateDa == "") && (startDateRd == "" || endDateRd == "")) || ((startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != "")))
+            {
+              if ((startDateDa == "" && endDateDa != "") || (startDateRd == "" && endDateRd != ""))
+              {
+                document.getElementById("search").disabled = true;
+                loadingTable()
+                disableActionButton()
+                submitFilter()
+              }
+              if ((startDateDa != "" && endDateDa == "") || (startDateRd != "" && endDateRd == ""))
+              {
+                document.getElementById("search").disabled = true;
+                loadingTable()
+                disableActionButton()
+                submitFilter()
+              }
+              else if ((endDateDa < startDateDa) || (endDateRd < startDateRd))
+              {
+                alert("Start date must be a date before or the same as end date.")
+              }
+              else 
+              {
+                if ((i >= 5 && i <= 7))
+                {
+                  if (i == 5)
+                  {
+                    filterselect[i - 1].value = "Location"
+                  }
+                  else if (i == 6)
+                  {
+                    filterselect[i - 2].value = "Department"
+                  }
+                  else if (i == 7)
+                  {
+                    filterselect[i - 3].value = "Room"
+                  }
+                  
+                  document.getElementById("search").disabled = true;
+                  loadingTable()
+                  disableActionButton()
+                  submitFilter()
+
+                }
+                else if (i != 4)
+                {
+                  document.getElementById("search").disabled = true;
+                  loadingTable()
+                  disableActionButton()
+                  submitFilter()
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Code to submit filters if date input
+
+      for (let i = 0; i < filterDateSelect.length; i++)
+      {
+        filterDateSelect[i].addEventListener("change", function() {
+        
+          if (!(document.querySelector(".inventory-archive")))
+          {
+            var startDateDoa = document.getElementById("filter-start-doa").value;
+            var endDateDoa = document.getElementById("filter-end-doa").value;
+          }
+
+          var startDateDa = document.getElementById("filter-start-da").value;
+          var endDateDa = document.getElementById("filter-end-da").value;
+          var startDateRd = document.getElementById("filter-start-rd").value;
+          var endDateRd = document.getElementById("filter-end-rd").value;
+        
+          if (!(document.querySelector(".inventory-archive")))
+          {
+            if ((startDateDoa != "" && endDateDoa != "") || (startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != ""))
+            {
+              if (i == 0 || i == 2 || i == 4)
+              {
+                if (filterDateSelect[i + 1].value != "")
+                {
+                  if ((filterDateSelect[i + 1].value < filterDateSelect[i].value))
+                  {
+                    alert("Start date must be a date before or the same as end date.")
+                  }
+                  else
+                  {
+                    if (filterDateSelect[i].value != "")
+                    {
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter()
+                    }
+                  }
+                } 
+              }   
+              else if (i == 1 || i == 3 || i == 5)
+              {
+                if (filterDateSelect[i].value != "")
+                {
+                  if ((filterDateSelect[i].value < filterDateSelect[i - 1].value))
+                  {
+                    alert("Start date must be a date before or the same as end date.")
+                  }
+                  else
+                  { 
+                    if (filterDateSelect[i - 1].value != "")
+                    {
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter()
+                    }
+                  }
+                } 
+              }
+            }
+          }
+          else 
+          {
+            if ((startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != ""))
+            {
+              if (i == 0 || i == 2 || i == 4)
+              {
+                if (filterDateSelect[i + 1].value != "")
+                {
+                  if ((filterDateSelect[i + 1].value < filterDateSelect[i].value))
+                  {
+                    alert("Start date must be a date before or the same as end date.")
+                  }
+                  else
+                  {
+                    if (filterDateSelect[i].value != "")
+                    {
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter();
+                    }
+                  }
+                } 
+              }   
+              else if (i == 1 || i == 3)
+              {
+                if (filterDateSelect[i].value != "")
+                {
+                  if ((filterDateSelect[i].value < filterDateSelect[i - 1].value))
+                  {
+                    alert("Start date must be a date before or the same as end date.")
+                  }
+                  else
+                  { 
+                    if (filterDateSelect[i - 1].value != "")
+                    {
+                      document.getElementById("search").disabled = true;
+                      loadingTable()
+                      disableActionButton()
+                      submitFilter();
+                    }
+                  } 
+                }
+              }
+            }
+          }
+        });
       }
     }
+  }
+}
 
-    // Code to allow user show/hide filters
-    
-    for (let i = 0; i < filterbutton.length; i++)
+// Code to allow user show/hide filters
+
+if (document.querySelector("#inventory-tools-wrapper"))
+{
+  document.querySelector("#inventory-tools-wrapper").addEventListener("click", function(e) {
+
+    if (document.querySelector("#show-filter").contains(e.target) || document.querySelector("#hide-filter").contains(e.target))
     {
-      filterbutton[i].addEventListener("click", function() {
+
+      var filterselect = document.getElementsByName("filter");
+      var filterDateSelect = document.getElementsByName("filterdate");
+      var date_label = document.getElementsByClassName("date-label");
+
+      if (document.querySelector("#show-filter").style.display == "block")
+      {
+        document.querySelector("#show-filter").style.display = "none"
+        document.querySelector("#hide-filter").style.display = "block"
+      }
+      else if (document.querySelector("#hide-filter").style.display == "block")
+      {
+        document.querySelector("#show-filter").style.display = "block"
+        document.querySelector("#hide-filter").style.display = "none"
+      }
+
+      for (let i = 0; i < filterselect.length; i++)
+      {
 
         if (!(document.querySelector(".offsiteitem")))
         {
@@ -3378,12 +4492,6 @@ if (document.querySelector(".tboundary"))
             {
               filterselect[4].style.display = "block"
               
-              if (document.querySelector("#filtersbal").value == "Assigned Location")
-              {
-                document.querySelector("#filteral").style.display = "none"
-                document.querySelector("#filterad").style.display = "none"
-                document.querySelector("#filterar").style.display = "none"
-              }
               if (document.querySelector("#filtersbal").value == "Location")
               {
                 document.querySelector("#filteral").style.display = "block"
@@ -3418,24 +4526,13 @@ if (document.querySelector(".tboundary"))
 
               filterselect[8].style.display = "block"
 
-              if (document.querySelector("#filtersbcl").value == "Current Location")
-              {
-                document.querySelector("#filtercl").style.display = "none"
-                document.querySelector("#filtercd").style.display = "none"
-                document.querySelector("#filtercr").style.display = "none"
-                
-                if (document.querySelector(".missingitem") || document.querySelector(".additem") || document.querySelector(".userview"))
-                {
-                  document.querySelector("#filterosl").style.display = "none"
-                }
-              }
-              else if (document.querySelector("#filtersbcl").value == "Location")
+              if (document.querySelector("#filtersbcl").value == "Location")
               {
                 document.querySelector("#filtercl").style.display = "block"
                 document.querySelector("#filtercd").style.display = "none"
                 document.querySelector("#filtercr").style.display = "none"
 
-                if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".userview"))
+                if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory"))
                 {
                   document.querySelector("#filterosl").style.display = "none"
                 }
@@ -3457,12 +4554,12 @@ if (document.querySelector(".tboundary"))
                 document.querySelector("#filtercd").style.display = "none"
                 document.querySelector("#filtercr").style.display = "block"
 
-                if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".userview"))
+                if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory"))
                 {
                   document.querySelector("#filterosl").style.display = "none"
                 }
               }
-              else if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".userview"))
+              else if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory"))
               {
                 document.querySelector("#filtercl").style.display = "none"
                 document.querySelector("#filtercd").style.display = "none"
@@ -3477,7 +4574,7 @@ if (document.querySelector(".tboundary"))
               filterselect[10].style.display = "none"
               filterselect[11].style.display = "none"
               
-              if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".userview"))
+              if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".user-inventory"))
               {
                 filterselect[12].style.display = "none"
               }
@@ -3487,6 +4584,11 @@ if (document.querySelector(".tboundary"))
           {
             if (i > 5)
             {
+              if ((i + 7) == filterselect.length)
+              {
+                break;
+              }
+
               if (filterselect[i + 7].style.display == "none")
               {
                 filterselect[i + 7].style.display = "block"
@@ -3512,6 +4614,11 @@ if (document.querySelector(".tboundary"))
           {
             if (i > 5)
             {
+              if ((i + 6) == filterselect.length)
+              {
+                break;
+              }
+
               if (filterselect[i + 6].style.display == "none")
               {
                 filterselect[i + 6].style.display = "block"
@@ -3537,6 +4644,11 @@ if (document.querySelector(".tboundary"))
           {
             if (i > 4)
             {
+              if ((i + 3) == filterselect.length)
+              {
+                break;
+              }
+
               if (filterselect[i + 3].style.display == "none")
               {
                 filterselect[i + 3].style.display = "block"
@@ -3583,274 +4695,750 @@ if (document.querySelector(".tboundary"))
           }
           
         }
-      });
+      }
+
+      // Code to allow user show/hide filters for date inputs
+
+      for (let i = 0; i < filterDateSelect.length; i++)
+      {
+        if (filterDateSelect[i].style.display == "none")
+        {
+          filterDateSelect[i].style.display = "block";
+          date_label[i].style.display = "block";
+        }
+        else if (filterDateSelect[i].style.display == "block")
+        {
+          filterDateSelect[i].style.display = "none";
+          date_label[i].style.display = "none";
+        }
+      }
+    }
+  });
+}
+
+async function getInventoryTable() {
+    
+  if (searchFilter && (searchFilter.value == "IN USE" || searchFilter.value == "LOANED" || searchFilter.value == "OUT FOR REPAIR"))
+  {
+
+    if (searchFilter.value == "IN USE")
+    {
+      if (document.querySelector(".additem"))
+      {
+        var tableUrl = "admin_inventory_table"
+      }
+      else 
+      {
+        var tableUrl = "inventory_table"
+      }
+    }
+    else if (searchFilter.value == "LOANED")
+    {
+      if (document.querySelector(".additem"))
+      {
+        var tableUrl = "admin_inventory_table"
+      }
+      else 
+      {
+        var tableUrl = "inventory_table"
+      }
+    }
+    else if (searchFilter.value == "OUT FOR REPAIR")
+    {
+      if (document.querySelector(".additem"))
+      {
+        var tableUrl = "admin_inventory_table"
+      }
+      else 
+      {
+        var tableUrl = "inventory_table"
+      }
     }
 
-    // Code to allow user show/hide filters for date inputs
-
-    for (let i = 0, j = 0, k = 0; i < filterButtonDate.length; i++)
+    if (tableUrl == "admin_inventory_table" || tableUrl == "inventory_table")
     {
-      filterButtonDate[i].addEventListener("click", function() {
+      var data = new FormData()
+      data.append("sf", searchFilter.value)
+      await fetch(tableUrl, {
+        "method": "POST",
+        "body": data,
+      }).then(async (response) => {
+          return await response.text();
+      }).then((text) => {
+        let div = document.createElement("div")
+        div.innerHTML = text
 
-        if (i == 0)
+        if (div.querySelector(".action-menu-wrapper"))
         {
-          j = 0
-          k = 1
-        }
-        if (i == 1)
-        {
-          j = 1
-          k = 2
-        }
-        if (i == 2)
-        {
-          j = 2
-          k = 3
+          document.getElementById("insert-action-menu").prepend(div.querySelector(".action-menu-wrapper"))
         }
 
-        if (filterDateSelect[i + j].style.display == "none")
+        if (document.querySelector("#insert-inventory-table"))
         {
-          filterDateSelect[i + j].style.display = "block";
-          filterDateSelect[i + k].style.display = "block";
-          date_label[i + j].style.display = "block";
-          date_label[i + k].style.display = "block";
+          document.getElementById("insert-inventory-table").prepend(div.querySelector("#inventory-table"))
         }
-        else if (filterDateSelect[i + j].style.display == "block")
+        
+        tablePagination()
+        actionButtonToggle()
+        filterTable() 
+
+        if (!(document.querySelector(".user-inventory") || document.querySelector(".user-view")))
         {
-          filterDateSelect[i + j].style.display = "none";
-          filterDateSelect[i + k].style.display = "none";
-          date_label[i + j].style.display = "none";
-          date_label[i + k].style.display = "none";
-        }
+          showInfoOrHistory()
+          showItemOptions()
+        } 
 
       });
     }
+  }
+  else 
+  {
 
-    // Code to allow users to clear all filters
-
-    if (document.getElementById("clear-filters"))
+    if (document.querySelector(".offsiteitem"))
     {
-      document.getElementById("clear-filters").addEventListener("click", function() {
+      var tableUrl = "off-site_table"
+    }
+    else if (document.querySelector(".missingitem"))
+    {
+      var tableUrl = "missing_table"
+    }
+    else if (document.querySelector(".additem") || document.querySelector(".user-inventory"))
+    {
+      if (document.querySelector(".additem"))
+      {
+        var tableUrl = "admin_inventory_table"
+      }
+      else 
+      {
+        var tableUrl = "inventory_table"
+      }
+    }
+    else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem") )
+    {
+      if (document.querySelector(".replaceitem"))
+      {
+        var tableUrl = "replace_table"
+      }
+      else 
+      {
+        var tableUrl = "replaced_items_table"
+      }
+    }
+    else if (document.querySelector(".inventory-archive"))
+    {
+      var tableUrl = "archive_table"
+    }
+    else if (document.querySelector(".uploaditem"))
+    {
+      var tableUrl = "upload_inventory_table"
+    }
 
-        for (let i = 0; i < filterselect.length; i++)
+    await fetch(tableUrl, {
+      "method": "GET",
+    }).then(async (response) => {
+        return await response.text();
+    }).then((text) => {
+        let div = document.createElement("div")
+        div.innerHTML = text
+
+        if (div.querySelector(".action-menu-wrapper"))
         {
-          if (filterselect[i] != filterdefault[i])
+          document.getElementById("insert-action-menu").prepend(div.querySelector(".action-menu-wrapper"))
+        }
+
+        if (document.querySelector("#insert-inventory-table"))
+        {
+          document.getElementById("insert-inventory-table").prepend(div.querySelector("#inventory-table"))
+        }          
+
+        tablePagination()
+        actionButtonToggle()
+        
+        if (!(document.querySelector(".uploaditem")))
+        {
+          filterTable() 
+        }
+
+        if (!(document.querySelector(".user-inventory") || document.querySelector(".user-view") || document.querySelector(".uploaditem")))
+        {
+          showInfoOrHistory()
+          showItemOptions()
+        } 
+
+    });
+  }
+}
+
+function showItemOptions() 
+{
+  for (let i = 0; i < showinfo.length; i++)
+  {
+    showinfo[i].addEventListener("click", function() {
+        
+      var data = new FormData()
+      data.append("showinfo",  showinfo[i].value)
+      var admin_url = "admin_inventory"
+      fetch(admin_url, {
+          "method": "POST",
+          "body": data,
+      }).then((response) => {
+          
+          return response.json()
+
+      }).then((result) => {
+
+        img.src = "/static/qrcodes/"+ result['qr_code'] +".png";
+
+        if (document.querySelector(".additem"))
+        {
+          document.getElementById("hidden-edit-item").value = result['qr_code'];
+          document.getElementById("hidden-delete-item").value = result['qr_code'];
+          document.getElementById("downloadqrcode").href = "static/qrcodes/"+result['qr_code']+".png";
+        }
+        if (document.querySelector(".additem"))
+        {
+          document.getElementById("hidden-replace-item").value = result['qr_code'];
+        }
+        if (document.querySelector(".replaceitem") || document.querySelector(".missingitem"))
+        {
+          document.getElementById("hidden-replaced-item").value = result['qr_code'];
+        }
+        if (document.querySelector(".additem") || document.querySelector(".replaceitem") || document.querySelector(".offsiteitem"))
+        {
+          document.getElementById("hiddenmissingitem").value = result['qr_code'];
+        }
+        if (document.querySelector(".additem") || document.querySelector(".replaceditem"))
+        {
+        document.getElementById("hidden-archive-item").value = result['qr_code'];
+        }
+
+        if (document.querySelector(".additem"))
+        {
+          if (result['status'] == "REPLACE" || result['status'] == "REPLACED")
           {
-            filterselect[i].value = filterdefault[i]
+              document.querySelector("#single-item-replace").style.display = "none";
+              document.querySelector("#single-item-replace").disabled = true;
+          }
+          else if (result['status'] != "REPLACE" || result['status'] != "REPLACED")
+          {
+              document.querySelector("#single-item-replace").style.display = "block";
+              document.querySelector("#single-item-replace").disabled = false;
+          }
+
+          if (result['status'] == "MISSING")
+          {
+              document.querySelector("#single-item-missing").style.display = "none";
+              document.querySelector("#single-item-missing").disabled = true;
+          }
+          else if (result['status'] != "MISSING")
+          {
+              document.querySelector("#single-item-missing").style.display = "block";
+              document.querySelector("#single-item-missing").disabled = false;
+          }
+
+          if (result['status'] != "REPLACED")
+          {
+              document.querySelector("#single-item-archive").style.display = "none";
+              document.querySelector("#single-item-archive").disabled = true;
+          }
+          else if (result['status'] == "REPLACED")
+          {
+              document.querySelector("#single-item-archive").style.display = "block";
+              document.querySelector("#single-item-archive").disabled = false;
           }
         }
 
-        if (!(document.querySelector(".inventory-archive")))
-        {
-          for (let i = 0; i < filterDateSelect.length; i++)
-          {
-            if (filterDateSelect[i] != filterDateDefault[i])
-            {
-              filterDateSelect[i].value = filterDateDefault[i]
-            }
-          }
-        }
-        else
-        {
-          for (let i = 0; i < filterDateSelect.length; i++)
-          {
-            if (filterDateSelect[i] != filterDateDefaultArchive[i])
-            {
-              filterDateSelect[i].value = filterDateDefaultArchive[i]
-            }
-          }
-        }
-
-        document.getElementById("filterform").submit();
-
       });
+
+      moreInfoModal.show();
+
+    });
+  }
+
+  for (let i = 0; i < showhistory.length; i++)
+  {
+    showhistory[i].addEventListener("click", function() {
+
+        var data = new FormData()
+        data.append("showhistory",  showhistory[i].value)
+        var activity_url = "activity_history"
+        var activity_div = document.getElementById("activity_history")
+        fetch(activity_url, {
+            "method": "POST",
+            "body": data,
+        }).then((response) => {
+            return response.text();
+        }).then((text) => {
+            activity_div.innerHTML = text
+        });
+            
+        showHistoryModal.show();
+
+    });
+  }
+}
+
+function submitFilter()
+{
+  clearTimeout(timeout)
+
+  timeout = setTimeout(function() {
+
+    if (document.querySelector(".offsiteitem"))
+    {
+      var tableUrl = "off-site_table"
+    }
+    else if (document.querySelector(".missingitem"))
+    {
+      var tableUrl = "missing_table"
+    }
+    else if (document.querySelector(".additem") || document.querySelector(".user-inventory"))
+    {
+      if (document.querySelector(".additem"))
+      {
+        var tableUrl = "admin_inventory_table"
+      }
+      else 
+      {
+        var tableUrl = "inventory_table"
+      }
+    }
+    else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem") )
+    {
+      if (document.querySelector(".replaceitem"))
+      {
+        var tableUrl = "replace_table"
+      }
+      else 
+      {
+        var tableUrl = "replaced_items_table"
+      }
+    }
+    else if (document.querySelector(".inventory-archive"))
+    {
+      var tableUrl = "archive_table"
     }
 
-    // Code to submit filter selections
+    var filterData = document.getElementsByName("filter")
+    var filterDateData = document.getElementsByName("filterdate")
+    var searchInventory = document.getElementById("search");
+    var data = new FormData()
 
-    for (let i = 0; i < filterselect.length; i++)
+    for (let i = 0; i < filterData.length; i++)
     {
-      filterselect[i].addEventListener("change", function() {
-      
-        if (!(document.querySelector(".inventory-archive")))
-        {
-          var startDateDoa = document.getElementById("filter-start-doa").value;
-          var endDateDoa = document.getElementById("filter-end-doa").value;
-        }
+      data.append("filter", filterData[i].value)
+    }
 
-        var startDateDa = document.getElementById("filter-start-da").value;
-        var endDateDa = document.getElementById("filter-end-da").value;
-        var startDateRd = document.getElementById("filter-start-rd").value;
-        var endDateRd = document.getElementById("filter-end-rd").value;
-      
-        if (document.querySelector(".additem") || document.querySelector(".missingitem") || document.querySelector(".userview") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem")
-        || document.querySelector(".offsiteitem"))
+    for (let i = 0; i < filterDateData.length; i++)
+    {
+      data.append("filterdate", filterDateData[i].value)
+    }
+
+    data.append("search", searchInventory.value)
+
+    fetch(tableUrl, {
+      "method": "POST",
+      "body": data,
+    }).then(async (response) => {
+        return await response.text();
+    }).then((text) => {
+      let div = document.createElement("div")
+      div.innerHTML = text
+
+      if (div.querySelector(".action-menu-wrapper"))
+      {
+        document.getElementById("insert-action-menu").removeChild(document.getElementById("insert-action-menu").firstElementChild)
+      }
+
+      document.getElementById("insert-inventory-table").removeChild(document.getElementById("insert-inventory-table").querySelector("#inventory-table"))
+
+      if (div.querySelector(".action-menu-wrapper"))
+      {
+        document.getElementById("insert-action-menu").prepend(div.querySelector(".action-menu-wrapper"))
+      }
+
+      if (document.querySelector("#insert-inventory-table"))
+      {
+        document.getElementById("insert-inventory-table").prepend(div.querySelector("#inventory-table"))
+      }
+
+      if (document.querySelector(".pages").firstChild)
+      {
+        document.querySelector(".pages").removeChild(document.querySelector(".pages").firstChild)
+      }
+
+      tablePagination()
+      actionButtonToggle()
+      finishLoading()
+      filterTable() 
+
+      if (!(document.querySelector(".user-inventory") || document.querySelector(".user-view")))
+      {
+        showInfoOrHistory()
+        showItemOptions()
+      } 
+
+      if (document.querySelector(".nodate"))
+      {
+        document.querySelector(".nodate").addEventListener("animationend", function() {
+          document.querySelector(".nodate").style.display = "none";
+        });
+      }
+
+      if (document.querySelector(".no-search-match"))
+      {
+        var removeElement = document.querySelector(".no-search-match");
+        removeElement.remove();
+      }
+
+      if (div.querySelector(".no-search-match"))
+      {
+        document.querySelector("#insert-inventory-table").insertAdjacentElement("beforebegin", div.querySelector(".no-search-match"))
+        finishLoading()
+        enableActionButton()
+
+        document.querySelector(".no-search-match").addEventListener("animationend", function() {
+          var removeElement = document.querySelector(".no-search-match");
+          removeElement.remove();
+        });
+      }
+
+    })
+  }, 1000)
+}
+
+function loadingTable() {
+  
+  document.querySelector("#loading-table").style.display = "flex"
+
+  if (document.querySelector(".additem"))
+  {
+    document.getElementById("download-all-qr").disabled = true;
+  }
+
+  document.getElementById("show-filter").disabled = true;
+  document.getElementById("hide-filter").disabled = true;
+  document.getElementById("clear-filter").disabled = true;
+  document.getElementById("refresh-page").disabled = true;
+
+}
+
+function finishLoading() {
+  
+  document.querySelector("#loading-table").style.display = "none"
+  document.getElementById("search").disabled = false;
+
+  if (document.querySelector(".additem"))
+  {
+    document.getElementById("download-all-qr").disabled = false;
+  }
+
+  document.getElementById("show-filter").disabled = false;
+  document.getElementById("hide-filter").disabled = false;
+  document.getElementById("clear-filter").disabled = false;
+  document.getElementById("refresh-page").disabled = false;
+
+}
+
+function disableActionButton() 
+{
+
+  if (document.querySelector(".additem") || document.querySelector(".offsiteitem") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem") || document.querySelector(".missingitem")
+  || document.querySelector(".inventory-archive"))
+  {
+    if (document.querySelector(".action-menu-button"))
+    {
+      document.querySelector(".action-menu-button").disabled = true;
+    }
+  }
+
+  if (document.querySelector(".additem"))
+  {
+    if (document.querySelector("#confirmedit"))
+    {
+      document.querySelector("#confirmedit").disabled = true;
+    }
+    if (document.querySelector("#confirmreplace"))
+    {
+      document.querySelector("#confirmreplace").disabled = true;
+    }
+    if (document.querySelector("#confirmdel"))
+    {
+      document.querySelector("#confirmdel").disabled = true;
+    }
+  }
+
+  if (document.querySelector(".additem") || document.querySelector(".offsiteitem") || document.querySelector(".replaceitem"))
+  {
+    if (document.querySelector("#confirmmissing"))
+    {
+      document.querySelector("#confirmmissing").disabled = true;
+    }
+    
+  }
+  
+  if (document.querySelector(".additem") || document.querySelector(".replaceditem"))
+  {
+    if (document.querySelector("#confirmarchive"))
+    {
+      document.querySelector("#confirmarchive").disabled = true;
+    }
+  }
+
+  if (document.querySelector(".replaceitem") || document.querySelector(".missingitem"))
+  {
+    if (document.querySelector("#confirmreplaced"))
+    {
+      document.querySelector("#confirmreplaced").disabled = true;
+    }
+  }
+
+  if (document.querySelector(".inventory-archive"))
+  {
+    if (document.querySelector("#confirmunarchive"))
+    {
+      document.querySelector("#confirmunarchive").disabled = true;
+    }
+  }
+
+}
+
+function enableActionButton() 
+{
+  if (document.querySelector(".additem") || document.querySelector(".offsiteitem") || document.querySelector(".replaceitem") || document.querySelector(".replaceditem") || document.querySelector(".missingitem")
+  || document.querySelector(".inventory-archive"))
+  {
+    if (document.querySelector(".action-menu-button"))
+    {
+      document.querySelector(".action-menu-button").disabled = false;
+    }
+  }
+
+  if (document.querySelector(".additem"))
+  {
+    if (document.querySelector("#confirmedit"))
+    {
+      document.querySelector("#confirmedit").disabled = false;
+    }
+    if (document.querySelector("#confirmreplace"))
+    {
+      document.querySelector("#confirmreplace").disabled = false;
+    }
+    if (document.querySelector("#confirmdel"))
+    {
+      document.querySelector("#confirmdel").disabled = false;
+    }
+  }
+
+  if (document.querySelector(".additem") || document.querySelector(".offsiteitem") || document.querySelector(".replaceitem"))
+  {
+    if (document.querySelector("#confirmmissing"))
+    {
+      document.querySelector("#confirmmissing").disabled = false;
+    }
+    
+  }
+  
+  if (document.querySelector(".additem") || document.querySelector(".replaceditem"))
+  {
+    if (document.querySelector("#confirmarchive"))
+    {
+      document.querySelector("#confirmarchive").disabled = false;
+    }
+  }
+
+  if (document.querySelector(".replaceitem") || document.querySelector(".missingitem"))
+  {
+    if (document.querySelector("#confirmreplaced"))
+    {
+      document.querySelector("#confirmreplaced").disabled = false;
+    }
+  }
+
+  if (document.querySelector(".inventory-archive"))
+  {
+    if (document.querySelector("#confirmunarchive"))
+    {
+      document.querySelector("#confirmunarchive").disabled = false;
+    }
+  }
+}
+
+// Code for search feature
+
+function searchTool() {
+  document.addEventListener("input", function(e) {
+
+    clearTimeout(timeout)
+
+    if (document.getElementById("search").contains(e.target))
+    {
+
+      loadingTable()
+      disableActionButton()
+
+      if (document.querySelector("#search").value == "")
+      {
+        if (document.querySelector(".no-search-match"))
         {
-          if (((startDateDoa == "" || endDateDoa == "") && (startDateDa == "" || endDateDa == "") && (startDateRd == "" || endDateRd == "")) 
-          || ((startDateDoa != "" && endDateDoa != "") || (startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != "")))
+          var removeElement = document.querySelector(".no-search-match");
+          removeElement.remove();
+        }
+      }
+        
+      timeout = setTimeout(function() {
+        if (document.querySelector(".offsiteitem"))
+        {
+          var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter"];
+          var tableUrl = "off-site_table"
+        }
+        else if (document.querySelector(".missingitem"))
+        {
+          var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "No Filter", 
+          "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter"];
+          var tableUrl = "missing_table"
+        }
+        else if (document.querySelector(".additem") || document.querySelector(".user-inventory"))
+        {
+          var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "No Filter", "No Filter", 
+          "No Filter", "No Filter", "No Filter", "No Filter"];
+          
+          if (document.querySelector(".additem"))
           {
-            if ((startDateDoa == "" && endDateDoa != "") || (startDateDa == "" && endDateDa != "") || (startDateRd == "" && endDateRd != ""))
-            {
-              document.getElementById("filterform").submit();
-            }
-            if ((startDateDoa != "" && endDateDoa == "") || (startDateDa != "" && endDateDa == "") || (startDateRd != "" && endDateRd == ""))
-            {
-              document.getElementById("filterform").submit();
-            }
-            else if ((endDateDoa < startDateDoa) || (endDateDa < startDateDa) || (endDateRd < startDateRd))
-            {
-              alert("Start date must be a date before or the same as end date.")
-            }
-            else 
-            {
-              if (i == 4 || i == 8)
-              {
-                if (filterselect[i].value == "Assigned Location" || filterselect[i].value == "Current Location")
-                {
-                  document.getElementById("filterform").submit();
-                }
-              }
-              else 
-              {
-                document.getElementById("filterform").submit();
-              }
-            }
+            var tableUrl = "admin_inventory_table"
+          }
+          else 
+          {
+            var tableUrl = "inventory_table"
+          }
+        }
+        else if (document.querySelector(".replaceitem") || document.querySelector(".replaceditem") )
+        {
+          var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", 
+          "No Filter", "No Filter", "No Filter", "No Filter"];
+          
+          if (document.querySelector(".replaceitem"))
+          {
+            var tableUrl = "replace_table"
+          }
+          else 
+          {
+            var tableUrl = "replaced_items_table"
           }
         }
         else if (document.querySelector(".inventory-archive"))
         {
-          if (((startDateDa == "" || endDateDa == "") && (startDateRd == "" || endDateRd == "")) || ((startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != "")))
+          var filterdefault = ["No Filter", "No Filter", "No Filter", "No Filter", "Location", "No Filter", "No Filter", "No Filter", "No Filter"];
+          var tableUrl = "archive_table"
+        }
+        
+        var filterDateData = document.getElementsByName("filterdate")
+        
+        if (document.querySelector(".inventory-archive"))
+        {
+          var filterDateDefault = ["", "", "", ""];
+        }
+        else
+        {
+          var filterDateDefault = ["", "", "", "", "", ""];
+          
+        }
+
+        var filterData = document.getElementsByName("filter")
+        var filterDateData = document.getElementsByName("filterdate")
+        var searchInventory = document.getElementById("search");
+        var data = new FormData()
+        data.append("search", searchInventory.value)
+
+        if ((!(filterData && filterDateData)) || (filterData.length == 0 && filterDateData.length == 0))
+        {
+          for (let i = 0; i < filterdefault.length; i++)
           {
-            if ((startDateDa == "" && endDateDa != "") || (startDateRd == "" && endDateRd != ""))
-            {
-              document.getElementById("filterform").submit();
-            }
-            if ((startDateDa != "" && endDateDa == "") || (startDateRd != "" && endDateRd == ""))
-            {
-              document.getElementById("filterform").submit();
-            }
-            else if ((endDateDa < startDateDa) || (endDateRd < startDateRd))
-            {
-              alert("Start date must be a date before or the same as end date.")
-            }
-            else 
-            {
-              if (i == 4)
-              {
-                if (filterselect[i].value == "Assigned Location")
-                {
-                  document.getElementById("filterform").submit();
-                }
-              }
-              else 
-              {
-                document.getElementById("filterform").submit();
-              }
-            }
+            data.append("filter", filterdefault[i])
           }
-        }
-      });
-    }
 
-    // Code to submit filters if date input
-
-    for (let i = 0; i < filterDateSelect.length; i++)
-    {
-      filterDateSelect[i].addEventListener("change", function() {
-      
-        if (!(document.querySelector(".inventory-archive")))
-        {
-          var startDateDoa = document.getElementById("filter-start-doa").value;
-          var endDateDoa = document.getElementById("filter-end-doa").value;
-        }
-
-        var startDateDa = document.getElementById("filter-start-da").value;
-        var endDateDa = document.getElementById("filter-end-da").value;
-        var startDateRd = document.getElementById("filter-start-rd").value;
-        var endDateRd = document.getElementById("filter-end-rd").value;
-      
-        if (!(document.querySelector(".inventory-archive")))
-        {
-          if ((startDateDoa != "" && endDateDoa != "") || (startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != ""))
+          for (let i = 0; i < filterDateDefault.length; i++)
           {
-            if (i == 0 || i == 2 || i == 4)
-            {
-              if (filterDateSelect[i + 1].value != "")
-              {
-                if ((filterDateSelect[i + 1].value < filterDateSelect[i].value))
-                {
-                  alert("Start date must be a date before or the same as end date.")
-                }
-                else
-                {
-                  if (filterDateSelect[i].value != "")
-                  {
-                    document.getElementById("filterform").submit();
-                  }
-                }
-              } 
-            }   
-            else if (i == 1 || i == 3 || i == 5)
-            {
-              if (filterDateSelect[i].value != "")
-              {
-                if ((filterDateSelect[i].value < filterDateSelect[i - 1].value))
-                {
-                  alert("Start date must be a date before or the same as end date.")
-                }
-                else
-                { 
-                  if (filterDateSelect[i - 1].value != "")
-                  {
-                    document.getElementById("filterform").submit();
-                  }
-                }
-              } 
-            }
+            data.append("filterdate", filterDateDefault[i])
           }
         }
         else 
         {
-          if ((startDateDa != "" && endDateDa != "") || (startDateRd != "" && endDateRd != ""))
+          for (let i = 0; i < filterData.length; i++)
           {
-            if (i == 0 || i == 2 || i == 4)
-            {
-              if (filterDateSelect[i + 1].value != "")
-              {
-                if ((filterDateSelect[i + 1].value < filterDateSelect[i].value))
-                {
-                  alert("Start date must be a date before or the same as end date.")
-                }
-                else
-                {
-                  if (filterDateSelect[i].value != "")
-                  {
-                    document.getElementById("filterform").submit();
-                  }
-                }
-              } 
-            }   
-            else if (i == 1 || i == 3)
-            {
-              if (filterDateSelect[i].value != "")
-              {
-                if ((filterDateSelect[i].value < filterDateSelect[i - 1].value))
-                {
-                  alert("Start date must be a date before or the same as end date.")
-                }
-                else
-                { 
-                  if (filterDateSelect[i - 1].value != "")
-                  {
-                    document.getElementById("filterform").submit();
-                  }
-                }
-              } 
-            }
+            data.append("filter", filterData[i].value)
+          }
+      
+          for (let i = 0; i < filterDateData.length; i++)
+          {
+            data.append("filterdate", filterDateData[i].value)
           }
         }
-      });
-    }
 
-  }
+        fetch(tableUrl, {
+            "method": "POST",
+            "body": data,
+        }).then((response) => {
+            return response.text();
+        }).then((text) => {
+          let div = document.createElement("div")
+          div.innerHTML = text
+
+          if (!(div.querySelector(".no-search-match")))
+          {
+            if (div.querySelector(".action-menu-wrapper"))
+            {
+              document.getElementById("insert-action-menu").removeChild(document.getElementById("insert-action-menu").firstElementChild)
+            }
+            
+            document.getElementById("insert-inventory-table").removeChild(document.getElementById("insert-inventory-table").querySelector("#inventory-table"))
+            
+            if (div.querySelector(".action-menu-wrapper"))
+            {
+              document.getElementById("insert-action-menu").prepend(div.querySelector(".action-menu-wrapper"))
+            }
+
+            if (document.querySelector("#insert-inventory-table"))
+            {
+              document.getElementById("insert-inventory-table").prepend(div.querySelector("#inventory-table"))
+            }
+            
+            if (document.querySelector(".pages").firstChild)
+            {
+              document.querySelector(".pages").removeChild(document.querySelector(".pages").firstChild)
+            }
+            
+            tablePagination()
+            actionButtonToggle()
+            finishLoading()
+            filterTable() 
+
+            if (!(document.querySelector(".user-inventory") || document.querySelector(".user-view")))
+            {
+              showInfoOrHistory()
+              showItemOptions()
+            } 
+          }
+          else
+          {
+            if (document.querySelector(".no-search-match"))
+            {
+              var removeElement = document.querySelector(".no-search-match");
+              removeElement.remove();
+            }
+
+            document.querySelector("#insert-inventory-table").insertAdjacentElement("beforebegin", div.querySelector(".no-search-match"))
+            finishLoading()
+            enableActionButton()
+
+            document.querySelector(".no-search-match").addEventListener("animationend", function() {
+              var removeElement = document.querySelector(".no-search-match");
+              removeElement.remove();
+            });
+          }
+
+        });
+      }, 1000)
+    }
+  })
 }

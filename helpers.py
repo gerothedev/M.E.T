@@ -8,6 +8,11 @@ def apology(message, code=400, redirect_link="/"):
     return render_template("apology.html", top=code, bottom=message, redirect_link=redirect_link)
 
 
+def upload_apology(message, code=400, redirect_link="/"):
+    """Render message as an apology to user."""
+    return render_template("upload_apology.html", top=code, bottom=message, redirect_link=redirect_link)
+
+
 def login_apology(message, code=400, redirect_link="/login"):
     """Render message as an apology to user."""
     return render_template("loginapology.html", top=code, bottom=message, redirect_link=redirect_link)

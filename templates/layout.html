@@ -65,9 +65,6 @@
                                 <li class="nav-item">
                                     <a class="nav-link active" aria-current="page" href="/scan">{{ menu.action }}</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/search">{{ menu.search }}</a>
-                                </li>
                                 {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
                                     <li class="nav-item">
                                         <a class="nav-link" href="/admin_inventory">Inventory Management</a>

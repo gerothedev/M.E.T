@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1088.54 1080" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<clipPath id="ArtboardFrame">
+<rect height="1080" width="1088.54" x="0" y="0"/>
+</clipPath>
+<g clip-path="url(#ArtboardFrame)" id="Layer-1" vectornator:layerName="Layer 1">
+<path d="M36.4062 0C-2.53207 5.08626e-06-11.673 24.8187 15.9688 55.4375L467.562 555.656L467.562 1080L621 968.719L621 893.219C599.004 913.018 567.638 914.983 549.5 896.938L548.844 896.281C530.033 877.567 532.667 844.604 554.719 822.688L621 756.812L621 600.75L554.719 534.875C532.667 512.959 530.033 480.027 548.844 461.312L549.5 460.656C568.311 441.942 601.448 444.521 623.5 466.438L664.625 507.312L1072.56 55.4375C1100.2 24.8187 1091.06 0 1052.12 0L36.4062 0Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Curve 1"/>
+<path d="M986.404 467.191C1002.55 483.006 998.938 512.188 978.333 532.369L621.475 881.882C600.869 902.063 571.075 905.603 554.927 889.787L554.359 889.231C538.212 873.416 541.825 844.235 562.431 824.053L919.289 474.54C939.894 454.359 969.688 450.819 985.836 466.635L986.404 467.191Z" fill="#000002" fill-rule="nonzero" opacity="0.962441" stroke="none" vectornator:layerName="Rectangle 2"/>
+<path d="M554.927 466.635C571.075 450.819 600.869 454.359 621.475 474.54L978.333 824.053C998.938 844.235 1002.55 873.416 986.404 889.231L985.836 889.787C969.688 905.603 939.894 902.063 919.289 881.882L562.431 532.369C541.825 512.188 538.212 483.006 554.359 467.191L554.927 466.635Z" fill="#000002" fill-rule="nonzero" opacity="1" stroke="none" vectornator:layerName="Rectangle 1"/>
+</g>
+</svg>

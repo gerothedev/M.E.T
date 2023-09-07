@@ -1,0 +1,353 @@
+{% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+    {% if not inventory %}
+    {% else %}
+        <div class="action-menu-wrapper">
+            <button type="button" class="btn btn-primary action-menu-button">
+                Action
+            </button>
+            <button type="button" class="btn btn-primary confirm-button" id='confirmmissing' data-bs-toggle='modal' data-bs-target='#missing-items-modal'>
+                Missing
+            </button>
+            <ul class="action-menu" style="display: none;">
+                <li class="action-option"><button type="button" class="missingbutton action-option-button">Mark as Missing</button></li>
+            </ul>
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if no_results == 1 %}
+    <h3 class="no-search-match">No data matches search.</h3>    
+{% endif %}
+
+<div id="inventory-table">
+{% if no_date_match %}
+        {% if no_date_match == 1 %}
+        <h3 class="nodate">No date matches filter selection.</h3>
+        {% endif %}
+    {% endif %}
+    <!-- Table -->
+    <div class="tboundary">
+        <table class="table table-striped">
+            <form  id="filterform" autocomplete="off">
+                <thead>
+                    <tr>
+
+                        <!-- Equipment filter -->
+                        <th class="text-center">
+                            Equipment
+                            <select id="filterequipment" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterequipment %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterequipment }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["equipment"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Model filter -->
+                        <th class="text-center">
+                            Model
+                            <select id="filtermodel" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filtermodel %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filtermodel }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["model"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Serial filter -->
+                        <th class="text-center">
+                            Serial
+                            <select id="filterserial" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterserial %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterserial }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["serial"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- EE filter -->
+                        <th class="text-center">
+                            EE
+                            <select id="filteree" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filteree %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filteree }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["ee"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Off-site location filter -->
+                        <th class="text-center">
+                            Off-site Location
+                            <select id="filterosl" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterosl %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterosl }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["off_site_location"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Status (no filter) -->
+                        <th class="text-center">Status</th>
+
+                        <!-- Scanned Name filter -->
+                        <th class="text-center">
+                            Scanned By
+                            <select id="filtersb" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filtersb %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filtersb }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    {% if item["scanned_first_name"] == "NA" %}
+                                        <option>{{ item["scanned_first_name"] }}</option> 
+                                    {% else %}
+                                        <option>{{ item["scanned_name"] }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Received Name filter -->
+                        <th class="text-center">
+                            Received By
+                            <select id="filterrb" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterrb %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterrb }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    {% if item["received_first_name"] == "NA" %}
+                                        <option>{{ item["received_first_name"] }}</option> 
+                                    {% else %}
+                                        <option>{{ item["received_name"] }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Action filter -->
+                        <th class="text-center">
+                            Action
+                            <select id="filteraction" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filteraction %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filteraction }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["action"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Date of action filter -->
+                        <th class="text-center">
+                            Date of Action
+                            <div class="start-date-wrapper">
+                                {% if filter_start_doa %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-doa" name="filterdate" value="{{ filter_start_doa }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-doa" name="filterdate" style="display: none;">
+                                {% endif %}
+                            </div>
+                            <div class="end-date-wrapper">
+                                {% if filter_end_doa %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-doa" name="filterdate" value="{{ filter_end_doa }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-doa" name="filterdate" style="display: none;">
+                                {% endif %}
+                            </div>
+                        </th>
+
+                        <!-- Point of contat filter -->
+                        <th class="text-center">
+                            Point of Contact
+                            <select id="filterpoc" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterpoc %}
+                                    <option>No Filter</option>
+                                    <option hidden selected>{{ filterpoc }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["point_of_contact"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Phone Number filter -->
+                        <th class="text-center">
+                            Phone Number
+                            <select id="filterpn" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterpn %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterpn }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["phone_number"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Patient Name filter -->
+                        <th class="text-center">
+                            Patient Name
+                            <select id="filterpatient" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filterpatient %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filterpatient }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    {% if item["patient_first_name"] == "NA" %}
+                                        <option>{{ item["patient_first_name"] }}</option> 
+                                    {% else %}
+                                        <option>{{ item["patient_name"] }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </th>
+
+                        <!-- Date added filter -->
+                        <th class="text-center">
+                            Date Added
+                            <div class="start-date-wrapper">
+                                {% if filter_start_da %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate" value="{{ filter_start_da }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-da" name="filterdate"  style="display: none;">
+                                {% endif %}
+                            </div>
+                            <div class="end-date-wrapper">
+                                {% if filter_end_da %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate" value="{{ filter_end_da }}"  style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-da" name="filterdate"  style="display: none;">
+                                {% endif %}
+                            </div>
+                        </th>
+                        
+                        <!-- Added by filter -->
+                        <th class="text-center">
+                            Added By
+                            <select id="filteraddedby" class="form-select w-auto" name="filter" style="display: none;">
+                                {% if filteraddedby %}
+                                    <option>No Filter</option>
+                                    <option selected>{{ filteraddedby }}</option>
+                                {% else %}
+                                    <option selected>No Filter</option>
+                                {% endif %}
+                                {% for item in inventory %} 
+                                    <option>{{ item["added_name"] }}</option> 
+                                {% endfor %}
+                            </select>
+                        </th> 
+
+                        <!-- Replace date filter -->
+                        <th class="text-center">
+                            Replace Date
+                            <div class="start-date-wrapper">
+                                {% if filter_start_rd %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" value="{{ filter_start_rd }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">Start Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-start-rd" name="filterdate" style="display: none;"> 
+                                {% endif %}
+                            </div>
+                            <div class="end-date-wrapper">
+                                {% if filter_end_rd %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" value="{{ filter_end_rd }}" style="display: none;">
+                                {% else %}
+                                    <p class="date-label" style="display: none;">End Date:</p>
+                                    <input autocomplete="off" type="date" class="form-control w-auto" id="filter-end-rd" name="filterdate" style="display: none;">
+                                {% endif %}
+                            </div>
+                        </th>
+
+                    </tr>
+                </thead>
+            </form>
+            <tbody id="tables" class="click_for_info">
+                {% for i in range(inventory | length) %}
+                    <tr class="showrow">                            
+                        {% if session.user_role == "Super Administrator" or session.user_role == "Dept Administrator" or session.user_role == "Administrator"%}
+                            <td class="text-center cell-content0">
+                                <input type="checkbox" value="{{ inventory[i]['qr_code'] }}" class="missinginventory inventory-checkbox" name="missinginv" form="checkbox-form">
+                                <button type="button" name="showinfo" value="{{ inventory[i]['qr_code'] }}">{{ inventory[i]["equipment"] }}</button>
+                            </td>
+                        {% else %}
+                            <td class="text-center cell-content0">{{ inventory[i]["equipment"] }}</td>
+                        {% endif %}
+                        <td class="text-center cell-content1">{{ inventory[i]["model"] }}</td>
+                        <td class="text-center cell-content2">{{ inventory[i]["serial"] }}</td>
+                        <td class="text-center cell-content2">{{ inventory[i]["ee"] }}</td>
+                        <td class="text-center cell-content4">{{ inventory[i]["off_site_location"] }}</td>
+                        <td class="text-center cell-content5">{{ inventory[i]["status"] }}</td>
+                        {% if inventory[i]["scanned_first_name"] == "NA" %} 
+                            <td class="text-center">{{ inventory[i]["scanned_first_name"] }}</td>
+                        {% else %}
+                            <td class="text-center">{{ inventory[i]["scanned_name"] }}</td>
+                        {% endif %}
+                        {% if inventory[i]["received_first_name"] == "NA" %} 
+                            <td class="text-center">{{ inventory[i]["received_first_name"] }}</td>
+                        {% else %}
+                            <td class="text-center">{{ inventory[i]["received_name"] }}</td>
+                        {% endif %}
+                        <td class="text-center cell-content7">{{ inventory[i]["action"] }}</td>
+                        <td class="text-center cell-content8">{{ inventory[i]["date_of_action"] }}</td>
+                        <td class="text-center cell-content9">{{ inventory[i]["point_of_contact"] }}</td>
+                        <td class="text-center cell-content10">{{ inventory[i]["phone_number"] }}</td>
+                        <td class="text-center cell-content11">{{ inventory[i]["patient_name"] }}</td>
+                        <td class="text-center cell-content12">{{ inventory[i]["date_added"] }}</td>
+                        <td class="text-center cell-content13">{{ inventory[i]["added_name"] }}</td>
+                        <td class="text-center cell-content14">{{ inventory[i]["repl_date"] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

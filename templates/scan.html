@@ -14,7 +14,7 @@
         <img src="/static/icons/qr-code-scanner-icon.png" class="img-fluid">
     </picture>
     <div id="qrcodewrapper">
-        <button type="button" class="btn btn-primary mx-auto" id="startscan" data-bs-toggle='modal' data-bs-target='#changestatus'> 
+        <button type="button" class="btn btn-primary mx-auto" id="startscan"> 
             Scan QR Code
         </button>
         <button type="button" class="btn btn-primary mx-auto" id="start-bulk-scan"> 
@@ -159,10 +159,15 @@
                     <div class="modal-footer">
                         <div class="mod-flexbox">
                             <button type="button" class="btn btn-secondary modal-footer-buttons" data-bs-dismiss="modal" id="cancel-change-status">Cancel</button>
-                            <button type="button" class="btn btn-primary modal-footer-buttons" id="check-in" style="display: block;">Check In</button>
-                            <button type="button" class="btn btn-primary modal-footer-buttons" id="check-out" style="display: none;">Check Out</button>
-                            <button type="button" class="btn btn-primary modal-footer-buttons prevent-click" name="invbutton" value="archive">
-                                <span class="confirm-default-text">Confirm</span>
+                            <button type="button" class="btn btn-primary modal-footer-buttons prevent-click" id="check-in">
+                                <span class="confirm-default-text">Check In</span>
+                                <div class="loading-alert">
+                                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span role="status">Loading...</span>
+                                </div>
+                            </button>
+                            <button type="button" class="btn btn-primary modal-footer-buttons prevent-click" id="check-out">
+                                <span class="confirm-default-text">Check Out</span>
                                 <div class="loading-alert">
                                     <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                                     <span role="status">Loading...</span>
